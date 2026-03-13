@@ -982,7 +982,7 @@ class WorkManagerApp {
             theme: 'light',
             primaryColor: '#3b82f6',
             accentColor: '#10b981',
-            fontSize: 'medium'
+            fontSize: 'small'
         };
 
         // Update form fields
