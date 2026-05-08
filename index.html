@@ -1,1143 +1,864 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Management System</title>
+    <title>Garage TFT</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loading-screen">
-        <div class="loading-container">
-            <div class="loading-logo">
-                <div class="logo-icon">
-                    <i class="fas fa-briefcase"></i>
-                </div>
-                <h2 class="logo-text" data-en="Work Manager" data-ar="مدير العمل">Work Manager</h2>
-                <p class="logo-subtitle" data-en="Professional Work Management System" data-ar="نظام إدارة العمل الاحترافي">Professional Work Management System</p>
-            </div>
-            
-            <div class="loading-animation">
-                <div class="loading-spinner">
-                    <div class="spinner-ring"></div>
-                    <div class="spinner-ring"></div>
-                    <div class="spinner-ring"></div>
-                </div>
-                <div class="loading-text">
-                    <span data-en="Loading..." data-ar="جاري التحميل...">Loading...</span>
-                    <div class="loading-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
+
+
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-motorcycle"></i>
+                    <div class="logo-text">
+                        <div class="title-address-row">
+                            <h1 data-key="appTitle">Garage TFT</h1>
+                            <div class="garage-address">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span data-key="garageAddress">Aristomenous 69</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="loading-progress">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill"></div>
+                <div class="header-datetime">
+                    <div class="datetime-box">
+                        <i class="far fa-clock"></i>
+                        <span id="currentTime">--:--</span>
+                    </div>
+                    <div class="datetime-box">
+                        <i class="far fa-calendar-alt"></i>
+                        <span id="currentDate">--/--/----</span>
+                    </div>
                 </div>
-                <div class="progress-text" id="progress-text">0%</div>
-            </div>
-            
-            <div class="loading-features">
-                <div class="feature-item">
-                    <i class="fas fa-chart-line"></i>
-                    <span data-en="Smart Analytics" data-ar="تحليلات ذكية">Smart Analytics</span>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-shield-alt"></i>
-                    <span data-en="Secure Data" data-ar="بيانات آمنة">Secure Data</span>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-mobile-alt"></i>
-                    <span data-en="Responsive Design" data-ar="تصميم متجاوب">Responsive Design</span>
-                </div>
-            </div>
-            
-            <div class="loading-footer">
-                <p data-en="Version 2.0" data-ar="الإصدار 2.0">Version 2.0</p>
-            </div>
-        </div>
-    </div>
+                <nav class="main-nav">
 
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <i class="fas fa-briefcase"></i>
-                <span class="brand-text" data-en="Work Manager" data-ar="مدير العمل">Work Manager</span>
-            </div>
-            
-            <div class="nav-menu" id="nav-menu">
-                <div class="nav-item">
-                    <a href="#dashboard" class="nav-link active" data-en="Dashboard" data-ar="لوحة التحكم">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
+                    <a href="#drivers" class="nav-link active" onclick="showView('drivers')">
+                        <i class="fas fa-users"></i>
+                        <span data-key="drivers">Drivers</span>
                     </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#work-entry" class="nav-link" data-en="Work Entry" data-ar="إدخال العمل">
-                        <i class="fas fa-clock"></i>
-                        <span>Work Entry</span>
+                    <a href="#bikes" class="nav-link" onclick="showView('bikes')">
+                        <i class="fas fa-motorcycle"></i>
+                        <span data-key="bikes">Bikes</span>
                     </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#work-schedule" class="nav-link" data-en="Work Schedule" data-ar="مواعيد العمل">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Work Schedule</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#expenses" class="nav-link" data-en="Expenses" data-ar="المصاريف">
-                        <i class="fas fa-receipt"></i>
-                        <span>Expenses</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#debts" class="nav-link" data-en="Debts" data-ar="الديون">
-                        <i class="fas fa-credit-card"></i>
-                        <span>Debts</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#settings" class="nav-link" data-en="Settings" data-ar="الإعدادات">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="nav-controls">
-                <button class="language-toggle" id="language-toggle">
-                    <i class="fas fa-globe"></i>
-                    <span data-en="العربية" data-ar="English">العربية</span>
-                </button>
-                <button id="logout-button" class="logout-button" style="display:none">
-                    <i class="fas fa-right-from-bracket"></i>
-                    <span data-en="Logout" data-ar="تسجيل الخروج">Logout</span>
-                </button>
-                <button class="menu-toggle" id="menu-toggle">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+                </nav>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Dashboard Section -->
-        <section id="dashboard" class="content-section active">
-            <div class="section-header">
-                <h1 data-en="Dashboard" data-ar="لوحة التحكم">Dashboard</h1>
-                <p data-en="Overview of your work and financial status" data-ar="نظرة عامة على عملك وحالتك المالية">Overview of your work and financial status</p>
-            </div>
-            
+        <div class="container">
+            <!-- Home View (Main Dashboard) -->
 
-            
-            <div class="dashboard-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 data-en="Work Days" data-ar="أيام العمل">Work Days</h3>
-                        <p class="stat-value" id="work-days">0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 data-en="Work Hours" data-ar="ساعات العمل">Work Hours</h3>
-                        <p class="stat-value" id="work-hours">0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-euro-sign"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 data-en="Total Salary" data-ar="الراتب الإجمالي">Total Salary</h3>
-                        <p class="stat-value" id="total-salary">€0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-hand-holding-usd"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 data-en="Withdrawn" data-ar="المسحوب">Withdrawn</h3>
-                        <p class="stat-value" id="withdrawn-amount">€0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-receipt"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 data-en="Expenses" data-ar="المصاريف">Expenses</h3>
-                        <p class="stat-value" id="total-expenses">€0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-credit-card"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 data-en="Debts" data-ar="الديون">Debts</h3>
-                        <p class="stat-value" id="total-debts">€0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card highlight">
-                    <div class="stat-icon">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 data-en="Remaining Balance" data-ar="الرصيد المتبقي">Remaining Balance</h3>
-                        <p class="stat-value" id="remaining-balance">€0</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="recent-activity">
-                <h2 data-en="Recent Activity" data-ar="النشاط الأخير">Recent Activity</h2>
-                <div class="activity-list" id="recent-activity-list">
-                    <!-- Activity items will be populated by JavaScript -->
-                </div>
-            </div>
-            
 
-        </section>
-
-        <!-- Work Schedule Section -->
-        <section id="work-schedule" class="content-section">
-            <div class="section-header">
-                <h1 data-en="Work Schedule" data-ar="جدول العمل">Work Schedule</h1>
-                <p data-en="Manage your regular work schedule and holidays" data-ar="إدارة جدول العمل العادي وأيام العطل">Manage your regular work schedule and holidays</p>
-            </div>
-            
-            <!-- Schedule Overview Cards -->
-            <div class="schedule-overview">
-                <div class="overview-card">
-                    <div class="overview-icon">
-                        <i class="fas fa-calendar-day"></i>
+            <!-- Drivers View -->
+            <div id="driversView" class="app-view active">
+                <!-- Search Section -->
+                <section class="search-section">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" data-placeholder="searchPlaceholder"
+                            placeholder="Search by driver name or bike number...">
+                        <button class="search-btn" data-key="search">Search</button>
                     </div>
-                    <div class="overview-content">
-                        <h3 data-en="Work Days" data-ar="أيام العمل">Work Days</h3>
-                        <p class="overview-number" id="work-days-count">5</p>
-                    </div>
-                </div>
-                
-                <div class="overview-card">
-                    <div class="overview-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="overview-content">
-                        <h3 data-en="Daily Hours" data-ar="الساعات اليومية">Daily Hours</h3>
-                        <p class="overview-number" id="daily-hours">8</p>
-                    </div>
-                </div>
-                
-                <div class="overview-card">
-                    <div class="overview-icon">
-                        <i class="fas fa-umbrella-beach"></i>
-                    </div>
-                    <div class="overview-content">
-                        <h3 data-en="Holidays" data-ar="أيام العطل">Holidays</h3>
-                        <p class="overview-number" id="holidays-count">2</p>
-                    </div>
-                </div>
-                
-                <div class="overview-card">
-                    <div class="overview-icon">
-                        <i class="fas fa-calendar-week"></i>
-                    </div>
-                    <div class="overview-content">
-                        <h3 data-en="Weekly Hours" data-ar="الساعات الأسبوعية">Weekly Hours</h3>
-                        <p class="overview-number" id="weekly-hours">40</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Monthly Schedule -->
-            <div class="monthly-schedule-section">
-                <div class="section-subheader">
-                    <h2 data-en="Monthly Work Schedule" data-ar="جدول العمل الشهري">Monthly Work Schedule</h2>
-                    <div class="schedule-controls">
-                        <div class="calendar-controls">
-                            <button class="btn btn-secondary" id="prev-month-btn">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <h3 class="current-month" id="current-month">December 2024</h3>
-                            <button class="btn btn-secondary" id="next-month-btn">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                        <div class="schedule-actions">
-                            <button class="btn btn-primary" id="edit-schedule-btn">
-                                <i class="fas fa-edit"></i>
-                                <span data-en="Edit Schedule" data-ar="تعديل الجدول">Edit Schedule</span>
-                            </button>
-                            <button class="btn btn-secondary" id="today-btn">
-                                <i class="fas fa-calendar-day"></i>
-                                <span data-en="Today" data-ar="اليوم">Today</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="calendar-container">
-                    <div class="calendar-header">
-                        <div class="calendar-day-header" data-en="Sun" data-ar="أحد">Sun</div>
-                        <div class="calendar-day-header" data-en="Mon" data-ar="اثن">Mon</div>
-                        <div class="calendar-day-header" data-en="Tue" data-ar="ثلا">Tue</div>
-                        <div class="calendar-day-header" data-en="Wed" data-ar="أرب">Wed</div>
-                        <div class="calendar-day-header" data-en="Thu" data-ar="خمي">Thu</div>
-                        <div class="calendar-day-header" data-en="Fri" data-ar="جمع">Fri</div>
-                        <div class="calendar-day-header" data-en="Sat" data-ar="سبت">Sat</div>
-                    </div>
-                    <div class="calendar-grid" id="calendar-grid">
-                        <!-- Calendar days will be populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Weekly Schedule (Hidden by default, can be toggled) -->
-            <div class="weekly-schedule-section" style="display: none;">
-                <div class="section-subheader">
-                    <h2 data-en="Weekly Work Schedule" data-ar="جدول العمل الأسبوعي">Weekly Work Schedule</h2>
-                    <button class="btn btn-primary" id="edit-weekly-schedule-btn">
-                        <i class="fas fa-edit"></i>
-                        <span data-en="Edit Schedule" data-ar="تعديل الجدول">Edit Schedule</span>
-                    </button>
-                </div>
-                
-                <div class="weekly-schedule-grid" id="weekly-schedule-grid">
-                    <!-- Weekly schedule will be populated by JavaScript -->
-                </div>
-            </div>
-            
-            <!-- Holidays Section -->
-            <div class="holidays-section">
-                <div class="section-subheader">
-                    <h2 data-en="Holidays & Days Off" data-ar="أيام العطل والإجازات">Holidays & Days Off</h2>
-                    <button class="btn btn-primary" id="add-holiday-btn">
+                    <button class="add-driver-btn" onclick="showAddDriverModal()">
                         <i class="fas fa-plus"></i>
-                        <span data-en="Add Holiday" data-ar="إضافة عطلة">Add Holiday</span>
+                        <span data-key="addDriver">Add New Driver</span>
                     </button>
-                </div>
-                
-                <div class="holidays-list" id="holidays-list">
-                    <!-- Holidays will be populated by JavaScript -->
-                </div>
-            </div>
-        </section>
+                </section>
 
-        <!-- Work Entry Section -->
-        <section id="work-entry" class="content-section">
-            <div class="section-header">
-                <h1 data-en="Work Entry" data-ar="إدخال العمل">Work Entry</h1>
-                <p data-en="Add your work hours and details" data-ar="أضف ساعات عملك والتفاصيل">Add your work hours and details</p>
-            </div>
-            
-            <div class="form-container">
-                <form id="work-entry-form" class="modern-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="work-date" data-en="Date" data-ar="التاريخ">Date</label>
-                            <input type="date" id="work-date" required>
+                <!-- Statistics Overview -->
+                <section class="stats-overview">
+                    <div class="stat-card clickable active" id="stat-total" onclick="filterDriversByStat('all')">
+                        <div class="stat-icon green">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalDrivers">0</h3>
+                            <span data-key="totalDrivers">Total Drivers</span>
+                            <span class="filter-indicator">SHOWING</span>
                         </div>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="start-time" data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                            <input type="time" id="start-time" required>
+                    <div class="stat-card clickable" id="stat-outside" onclick="filterDriversByStat('outside')">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-motorcycle"></i>
                         </div>
-                        <div class="form-group">
-                            <label for="end-time" data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                            <input type="time" id="end-time" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="total-hours" data-en="Total Hours" data-ar="مجموع الساعات">Total Hours</label>
-                            <input type="number" id="total-hours" step="0.01" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="total-salary-calc" data-en="Total Salary (€)" data-ar="الراتب الإجمالي (€)">Total Salary (€)</label>
-                            <input type="number" id="total-salary-calc" step="0.01" readonly>
+                        <div class="stat-info">
+                            <h3 id="outsideDrivers">0</h3>
+                            <span data-key="outside">Outside</span>
+                            <span class="filter-indicator">SHOWING</span>
                         </div>
                     </div>
-                    
+                    <div class="stat-card clickable" id="stat-inside" onclick="filterDriversByStat('inside')">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="insideDrivers">0</h3>
+                            <span data-key="inside">Inside</span>
+                            <span class="filter-indicator">SHOWING</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="stat-orders">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalOrders">0</h3>
+                            <span data-key="totalOrders">Total Orders</span>
+                        </div>
+                    </div>
+                </section>
 
-                    
-                    <div class="form-row">
-                        <div class="form-group full-width">
-                            <label for="work-notes" data-en="Notes" data-ar="ملاحظات">Notes</label>
-                            <textarea id="work-notes" rows="3" placeholder="Add any notes about your work day..."></textarea>
-                        </div>
+                <!-- Drivers Grid -->
+                <section class="drivers-section" id="drivers">
+                    <h2 class="section-title" data-key="driversList">Drivers List</h2>
+                    <div class="drivers-grid" id="driversGrid">
+                        <!-- Drivers will be dynamically added here -->
                     </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i>
-                            <span data-en="Save Work Entry" data-ar="حفظ إدخال العمل">Save Work Entry</span>
-                        </button>
-                        <button type="reset" class="btn btn-secondary">
-                            <i class="fas fa-undo"></i>
-                            <span data-en="Reset" data-ar="إعادة تعيين">Reset</span>
-                        </button>
-                    </div>
-                </form>
+                </section>
             </div>
-            
-            <div class="work-history">
-                <h2 data-en="Work History" data-ar="تاريخ العمل">Work History</h2>
-                <div class="table-container">
-                    <table class="modern-table" id="work-history-table">
-                        <thead>
-                            <tr>
-                                <th data-en="Date" data-ar="التاريخ">Date</th>
-                                <th data-en="Start" data-ar="البداية">Start</th>
-                                <th data-en="End" data-ar="النهاية">End</th>
-                                <th data-en="Hours" data-ar="الساعات">Hours</th>
-                                <th data-en="Rate" data-ar="المعدل">Rate</th>
-                                <th data-en="Salary" data-ar="الراتب">Salary</th>
-                                <th data-en="Actions" data-ar="الإجراءات">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="work-history-body">
-                            <!-- Work entries will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
 
-        <!-- Expenses Section -->
-        <section id="expenses" class="content-section">
-            <div class="section-header">
-                <h1 data-en="Expenses" data-ar="المصاريف">Expenses</h1>
-                <p data-en="Track your expenses and withdrawals" data-ar="تتبع مصاريفك وسحوباتك">Track your expenses and withdrawals</p>
-            </div>
-            
-            <div class="form-container">
-                <form id="expense-form" class="modern-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="expense-date" data-en="Date" data-ar="التاريخ">Date</label>
-                            <input type="date" id="expense-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="expense-amount" data-en="Amount (€)" data-ar="المبلغ (€)">Amount (€)</label>
-                            <input type="number" id="expense-amount" step="0.01" required>
-                        </div>
+            <!-- Bikes View -->
+            <div id="bikesView" class="app-view" style="display: none;">
+                <section class="search-section">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="bikeSearchInput" placeholder="Search by bike number or driver...">
+                        <button class="search-btn" data-key="search">Search</button>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="expense-category" data-en="Category" data-ar="الفئة">Category</label>
-                            <select id="expense-category" required>
-                                <option value="" data-en="Select Category" data-ar="اختر الفئة">Select Category</option>
-                                <option value="food" data-en="Food" data-ar="طعام">Food</option>
-                                <option value="transport" data-en="Transport" data-ar="مواصلات">Transport</option>
-                                <option value="bills" data-en="Bills" data-ar="فواتير">Bills</option>
-                                <option value="entertainment" data-en="Entertainment" data-ar="ترفيه">Entertainment</option>
-                                <option value="shopping" data-en="Shopping" data-ar="تسوق">Shopping</option>
-                                <option value="withdrawal" data-en="Withdrawal" data-ar="سحب">Withdrawal</option>
-                                <option value="other" data-en="Other" data-ar="أخرى">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="expense-description" data-en="Description" data-ar="الوصف">Description</label>
-                            <input type="text" id="expense-description" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus"></i>
-                            <span data-en="Add Expense" data-ar="إضافة مصروف">Add Expense</span>
-                        </button>
-                        <button type="reset" class="btn btn-secondary">
-                            <i class="fas fa-undo"></i>
-                            <span data-en="Reset" data-ar="إعادة تعيين">Reset</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-            
-            <div class="expenses-summary">
-                <div class="summary-cards">
-                    <div class="summary-card">
-                        <h3 data-en="Total Expenses" data-ar="إجمالي المصاريف">Total Expenses</h3>
-                        <p id="total-expenses-summary">€0</p>
-                    </div>
-                    <div class="summary-card">
-                        <h3 data-en="This Month" data-ar="هذا الشهر">This Month</h3>
-                        <p id="monthly-expenses">€0</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="expenses-history">
-                <h2 data-en="Expenses History" data-ar="تاريخ المصاريف">Expenses History</h2>
-                <div class="table-container">
-                    <table class="modern-table" id="expenses-table">
-                        <thead>
-                            <tr>
-                                <th data-en="Date" data-ar="التاريخ">Date</th>
-                                <th data-en="Category" data-ar="الفئة">Category</th>
-                                <th data-en="Description" data-ar="الوصف">Description</th>
-                                <th data-en="Amount" data-ar="المبلغ">Amount</th>
-                                <th data-en="Actions" data-ar="الإجراءات">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expenses-body">
-                            <!-- Expenses will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- Debts Section -->
-        <section id="debts" class="content-section">
-            <div class="section-header">
-                <h1 data-en="Debts" data-ar="الديون">Debts</h1>
-                <p data-en="Manage your debts and loans" data-ar="إدارة ديونك وقروضك">Manage your debts and loans</p>
-            </div>
-            
-            <div class="form-container">
-                <form id="debt-form" class="modern-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="debt-date" data-en="Date" data-ar="التاريخ">Date</label>
-                            <input type="date" id="debt-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="debt-amount" data-en="Amount (€)" data-ar="المبلغ (€)">Amount (€)</label>
-                            <input type="number" id="debt-amount" step="0.01" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="debt-type" data-en="Type" data-ar="النوع">Type</label>
-                            <select id="debt-type" required>
-                                <option value="" data-en="Select Type" data-ar="اختر النوع">Select Type</option>
-                                <option value="loan" data-en="Loan" data-ar="قرض">Loan</option>
-                                <option value="credit" data-en="Credit Card" data-ar="بطاقة ائتمان">Credit Card</option>
-                                <option value="personal" data-en="Personal Debt" data-ar="دين شخصي">Personal Debt</option>
-                                <option value="other" data-en="Other" data-ar="أخرى">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="debt-description" data-en="Description" data-ar="الوصف">Description</label>
-                            <input type="text" id="debt-description" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="debt-status" data-en="Status" data-ar="الحالة">Status</label>
-                            <select id="debt-status" required>
-                                <option value="pending" data-en="Not Done" data-ar="لم يتم">Not Done</option>
-                                <option value="completed" data-en="Done" data-ar="تم">Done</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="debt-due-date" data-en="Due Date" data-ar="تاريخ الاستحقاق">Due Date</label>
-                            <input type="date" id="debt-due-date">
-                        </div>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus"></i>
-                            <span data-en="Add Debt" data-ar="إضافة دين">Add Debt</span>
-                        </button>
-                        <button type="reset" class="btn btn-secondary">
-                            <i class="fas fa-undo"></i>
-                            <span data-en="Reset" data-ar="إعادة تعيين">Reset</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-            
-            <div class="debts-summary">
-                <div class="summary-cards">
-                    <div class="summary-card">
-                        <h3 data-en="Total Debts" data-ar="إجمالي الديون">Total Debts</h3>
-                        <p id="total-debts-summary">€0</p>
-                    </div>
-                    <div class="summary-card">
-                        <h3 data-en="Pending Debts" data-ar="الديون المعلقة">Pending Debts</h3>
-                        <p id="active-debts">€0</p>
-                    </div>
-                    <div class="summary-card">
-                        <h3 data-en="Completed Debts" data-ar="الديون المكتملة">Completed Debts</h3>
-                        <p id="paid-debts">€0</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="debts-history">
-                <h2 data-en="Debts History" data-ar="تاريخ الديون">Debts History</h2>
-                <div class="table-container">
-                    <table class="modern-table" id="debts-table">
-                        <thead>
-                            <tr>
-                                <th data-en="Date" data-ar="التاريخ">Date</th>
-                                <th data-en="Type" data-ar="النوع">Type</th>
-                                <th data-en="Description" data-ar="الوصف">Description</th>
-                                <th data-en="Amount" data-ar="المبلغ">Amount</th>
-                                <th data-en="Status" data-ar="الحالة">Status</th>
-                                <th data-en="Due Date" data-ar="تاريخ الاستحقاق">Due Date</th>
-                                <th data-en="Actions" data-ar="الإجراءات">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="debts-body">
-                            <!-- Debts will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- Schedule Edit Modal -->
-        <div class="modal-container" id="schedule-edit-modal">
-            <div class="modal-overlay" onclick="app.closeScheduleModal()"></div>
-            <div class="modal schedule-modal">
-                <div class="modal-header">
-                    <h3 id="schedule-modal-title" data-en="Edit Work Schedule" data-ar="تعديل جدول العمل">Edit Work Schedule</h3>
-                    <button class="modal-close" onclick="app.closeScheduleModal()">
-                        <i class="fas fa-times"></i>
+                    <button class="add-driver-btn" onclick="showAddBikeModal()">
+                        <i class="fas fa-plus"></i>
+                        <span data-key="addBike">Add New Bike</span>
                     </button>
-                </div>
-                <div class="modal-body">
-                    <form id="schedule-form" class="modern-form">
-                        <div class="schedule-days">
-                            <div class="schedule-day-item">
-                                <div class="day-header">
-                                    <label class="day-checkbox">
-                                        <input type="checkbox" id="monday-work" checked>
-                                        <span data-en="Monday" data-ar="الاثنين">Monday</span>
-                                    </label>
-                                </div>
-                                <div class="day-hours">
-                                    <div class="form-group">
-                                        <label data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                                        <input type="time" id="monday-start" value="09:00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                                        <input type="time" id="monday-end" value="17:00">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="schedule-day-item">
-                                <div class="day-header">
-                                    <label class="day-checkbox">
-                                        <input type="checkbox" id="tuesday-work" checked>
-                                        <span data-en="Tuesday" data-ar="الثلاثاء">Tuesday</span>
-                                    </label>
-                                </div>
-                                <div class="day-hours">
-                                    <div class="form-group">
-                                        <label data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                                        <input type="time" id="tuesday-start" value="09:00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                                        <input type="time" id="tuesday-end" value="17:00">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="schedule-day-item">
-                                <div class="day-header">
-                                    <label class="day-checkbox">
-                                        <input type="checkbox" id="wednesday-work" checked>
-                                        <span data-en="Wednesday" data-ar="الأربعاء">Wednesday</span>
-                                    </label>
-                                </div>
-                                <div class="day-hours">
-                                    <div class="form-group">
-                                        <label data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                                        <input type="time" id="wednesday-start" value="09:00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                                        <input type="time" id="wednesday-end" value="17:00">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="schedule-day-item">
-                                <div class="day-header">
-                                    <label class="day-checkbox">
-                                        <input type="checkbox" id="thursday-work" checked>
-                                        <span data-en="Thursday" data-ar="الخميس">Thursday</span>
-                                    </label>
-                                </div>
-                                <div class="day-hours">
-                                    <div class="form-group">
-                                        <label data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                                        <input type="time" id="thursday-start" value="09:00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                                        <input type="time" id="thursday-end" value="17:00">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="schedule-day-item">
-                                <div class="day-header">
-                                    <label class="day-checkbox">
-                                        <input type="checkbox" id="friday-work" checked>
-                                        <span data-en="Friday" data-ar="الجمعة">Friday</span>
-                                    </label>
-                                </div>
-                                <div class="day-hours">
-                                    <div class="form-group">
-                                        <label data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                                        <input type="time" id="friday-start" value="09:00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                                        <input type="time" id="friday-end" value="17:00">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="schedule-day-item">
-                                <div class="day-header">
-                                    <label class="day-checkbox">
-                                        <input type="checkbox" id="saturday-work">
-                                        <span data-en="Saturday" data-ar="السبت">Saturday</span>
-                                    </label>
-                                </div>
-                                <div class="day-hours">
-                                    <div class="form-group">
-                                        <label data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                                        <input type="time" id="saturday-start" value="09:00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                                        <input type="time" id="saturday-end" value="17:00">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="schedule-day-item">
-                                <div class="day-header">
-                                    <label class="day-checkbox">
-                                        <input type="checkbox" id="sunday-work">
-                                        <span data-en="Sunday" data-ar="الأحد">Sunday</span>
-                                    </label>
-                                </div>
-                                <div class="day-hours">
-                                    <div class="form-group">
-                                        <label data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                                        <input type="time" id="sunday-start" value="09:00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                                        <input type="time" id="sunday-end" value="17:00">
-                                    </div>
-                                </div>
-                            </div>
+                </section>
+
+                <!-- Bikes Statistics -->
+                <section class="stats-overview bike-stats-overview">
+                    <div class="stat-card clickable active" onclick="filterBikesByStat('all')">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-motorcycle"></i>
                         </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i>
-                                <span data-en="Save Schedule" data-ar="حفظ الجدول">Save Schedule</span>
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="app.closeScheduleModal()">
-                                <i class="fas fa-times"></i>
-                                <span data-en="Cancel" data-ar="إلغاء">Cancel</span>
-                            </button>
+                        <div class="stat-info">
+                            <h3 id="totalBikesCount">0</h3>
+                            <span data-key="totalBikes">Total Bikes</span>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="filterBikesByStat('active')">
+                        <div class="stat-icon green">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="activeBikesCount">0</h3>
+                            <span data-key="activeBikes">Active</span>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="filterBikesByStat('broken')">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="brokenBikesCount">0</h3>
+                            <span data-key="brokenBikes">Broken</span>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="filterBikesByStat('withDriver')">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="withDriverCount">0</h3>
+                            <span data-key="bikesWithDriver">With Driver</span>
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="filterBikesByStat('withoutDriver')">
+                        <div class="stat-icon red">
+                            <i class="fas fa-user-slash"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="withoutDriverCount">0</h3>
+                            <span data-key="bikesWithoutDriver">No Driver</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bikes-section">
+                    <h2 class="section-title" data-key="bikes">Bikes List</h2>
+                    <div class="bikes-grid" id="bikesGrid">
+                        <!-- Bikes will be dynamically added here -->
+                    </div>
+                </section>
             </div>
         </div>
-
-        <!-- Holiday Modal -->
-        <div class="modal-container" id="holiday-modal">
-            <div class="modal-overlay" onclick="app.closeHolidayModal()"></div>
-            <div class="modal holiday-modal">
-                <div class="modal-header">
-                    <h3 id="holiday-modal-title" data-en="Add Holiday" data-ar="إضافة عطلة">Add Holiday</h3>
-                    <button class="modal-close" onclick="app.closeHolidayModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="holiday-form" class="modern-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="holiday-name" data-en="Holiday Name" data-ar="اسم العطلة">Holiday Name</label>
-                                <input type="text" id="holiday-name" required placeholder="New Year's Day">
-                            </div>
-                            <div class="form-group">
-                                <label for="holiday-type" data-en="Type" data-ar="النوع">Type</label>
-                                <select id="holiday-type" required>
-                                    <option value="public" data-en="Public Holiday" data-ar="عطلة رسمية">Public Holiday</option>
-                                    <option value="personal" data-en="Personal Leave" data-ar="إجازة شخصية">Personal Leave</option>
-                                    <option value="sick" data-en="Sick Leave" data-ar="إجازة مرضية">Sick Leave</option>
-                                    <option value="vacation" data-en="Vacation" data-ar="إجازة">Vacation</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="holiday-start-date" data-en="Start Date" data-ar="تاريخ البداية">Start Date</label>
-                                <input type="date" id="holiday-start-date" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="holiday-end-date" data-en="End Date" data-ar="تاريخ النهاية">End Date</label>
-                                <input type="date" id="holiday-end-date" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="holiday-description" data-en="Description" data-ar="الوصف">Description</label>
-                                <textarea id="holiday-description" rows="3" placeholder="Add details about the holiday..."></textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i>
-                                <span data-en="Save Holiday" data-ar="حفظ العطلة">Save Holiday</span>
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="app.closeHolidayModal()">
-                                <i class="fas fa-times"></i>
-                                <span data-en="Cancel" data-ar="إلغاء">Cancel</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Day Edit Modal -->
-        <div class="modal-container" id="day-edit-modal">
-            <div class="modal-overlay" onclick="app.closeDayEditModal()"></div>
-            <div class="modal day-edit-modal">
-                <div class="modal-header">
-                    <h3 id="day-edit-modal-title" data-en="Edit Day" data-ar="تعديل اليوم">Edit Day</h3>
-                    <button class="modal-close" onclick="app.closeDayEditModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="day-edit-form" class="modern-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="day-start-time" data-en="Start Time" data-ar="وقت البداية">Start Time</label>
-                                <input type="time" id="day-start-time" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="day-end-time" data-en="End Time" data-ar="وقت النهاية">End Time</label>
-                                <input type="time" id="day-end-time" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="day-type" data-en="Day Type" data-ar="نوع اليوم">Day Type</label>
-                                <select id="day-type" required>
-                                    <option value="work" data-en="Work Day" data-ar="يوم عمل">Work Day</option>
-                                    <option value="off" data-en="Day Off" data-ar="يوم عطلة">Day Off</option>
-                                    <option value="holiday" data-en="Holiday" data-ar="عطلة">Holiday</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="day-notes" data-en="Notes" data-ar="ملاحظات">Notes</label>
-                                <textarea id="day-notes" rows="3" placeholder="Add notes about this day..."></textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-primary" id="save-day-btn" onclick="app.saveDaySettings()">
-                                <i class="fas fa-save"></i>
-                                <span data-en="Save Changes" data-ar="حفظ التغييرات">Save Changes</span>
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="app.closeDayEditModal()">
-                                <i class="fas fa-times"></i>
-                                <span data-en="Cancel" data-ar="إلغاء">Cancel</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edit Modal -->
-        <div class="modal-container" id="edit-modal">
-            <div class="modal-overlay" onclick="app.closeModal()"></div>
-            <div class="modal">
-                <div class="modal-header">
-                    <h3 id="edit-modal-title" data-en="Edit Item" data-ar="تعديل العنصر">Edit Item</h3>
-                    <button class="modal-close" onclick="app.closeModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="edit-form" class="modern-form">
-                        <!-- Form fields will be dynamically populated -->
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Section -->
-        <section id="settings" class="content-section">
-            <div class="section-header">
-                <h1 data-en="Settings" data-ar="الإعدادات">Settings</h1>
-                <p data-en="Customize your application preferences" data-ar="تخصيص تفضيلات التطبيق">Customize your application preferences</p>
-            </div>
-            
-            <div class="settings-container">
-                <div class="settings-section">
-                    <h2 data-en="General" data-ar="عام">General</h2>
-                    <form id="general-settings-form" class="modern-form">
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="company-name" data-en="Company Name" data-ar="اسم الشركة">Company Name</label>
-                                <input type="text" id="company-name" placeholder="Acme Inc.">
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i>
-                                <span data-en="Save" data-ar="حفظ">Save</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                <div class="settings-section">
-                    <h2 data-en="Account" data-ar="الحساب">Account</h2>
-                    <form id="account-settings-form" class="modern-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="account-username" data-en="Username" data-ar="اسم المستخدم">Username</label>
-                                <input type="text" id="account-username" placeholder="admin" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="account-current-password" data-en="Current Password" data-ar="كلمة المرور الحالية">Current Password</label>
-                                <input type="password" id="account-current-password" placeholder="••••••••" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="account-new-password" data-en="New Password (optional)" data-ar="كلمة مرور جديدة (اختياري)">New Password (optional)</label>
-                                <input type="password" id="account-new-password" placeholder="••••••••">
-                            </div>
-                            <div class="form-group">
-                                <label for="account-confirm-password" data-en="Confirm New Password" data-ar="تأكيد كلمة المرور الجديدة">Confirm New Password</label>
-                                <input type="password" id="account-confirm-password" placeholder="••••••••">
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-user-check"></i>
-                                <span data-en="Save Account" data-ar="حفظ الحساب">Save Account</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                <div class="settings-section">
-                    <h2 data-en="Salary Settings" data-ar="إعدادات الراتب">Salary Settings</h2>
-                    <form id="salary-settings-form" class="modern-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="rate-mode" data-en="Rate Mode" data-ar="وضع الحساب">Rate Mode</label>
-                                <select id="rate-mode">
-                                    <option value="hourly" data-en="Set hourly rate manually" data-ar="تحديد معدل الساعة يدويًا">Set hourly rate manually</option>
-                                    <option value="monthly" data-en="Use monthly salary" data-ar="استخدام الراتب الشهري">Use monthly salary</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-row hidden" id="monthly-settings-group">
-                            <div class="form-group">
-                                <label for="monthly-salary" data-en="Monthly Salary (€)" data-ar="الراتب الشهري (€)">Monthly Salary (€)</label>
-                                <input type="number" id="monthly-salary" step="0.01" value="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="work-hours-per-day" data-en="Work Hours per Day" data-ar="ساعات العمل في اليوم">Work Hours per Day</label>
-                                <input type="number" id="work-hours-per-day" step="0.1" value="8">
-                            </div>
-                        </div>
-
-                        <div class="form-row hidden" id="monthly-settings-group-2">
-                            <div class="form-group">
-                                <label for="work-days-per-week" data-en="Work Days per Week" data-ar="أيام العمل في الأسبوع">Work Days per Week</label>
-                                <input type="number" id="work-days-per-week" step="0.1" value="5">
-                            </div>
-                            <div class="form-group">
-                                <label for="weeks-per-month" data-en="Weeks per Month" data-ar="عدد الأسابيع في الشهر">Weeks per Month</label>
-                                <input type="number" id="weeks-per-month" step="0.01" value="4">
-                            </div>
-                        </div>
-
-                        <div class="form-row hidden" id="calculated-rates-group">
-                            <div class="form-group">
-                                <label for="calculated-weekly-rate" data-en="Calculated Weekly Rate (€)" data-ar="المعدل الأسبوعي المحسوب (€)">Calculated Weekly Rate (€)</label>
-                                <input type="number" id="calculated-weekly-rate" step="0.01" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label for="calculated-daily-rate" data-en="Calculated Daily Rate (€)" data-ar="المعدل اليومي المحسوب (€)">Calculated Daily Rate (€)</label>
-                                <input type="number" id="calculated-daily-rate" step="0.01" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label for="calculated-hourly-rate" data-en="Calculated Hourly Rate (€)" data-ar="معدل الساعة المحسوب (€)">Calculated Hourly Rate (€)</label>
-                                <input type="number" id="calculated-hourly-rate" step="0.01" readonly>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="default-hourly-rate" data-en="Default Hourly Rate (€)" data-ar="معدل الساعة الافتراضي (€)">Default Hourly Rate (€)</label>
-                                <input type="number" id="default-hourly-rate" step="0.01" value="10.00">
-                            </div>
-                            <div class="form-group">
-                                <label for="currency" data-en="Currency" data-ar="العملة">Currency</label>
-                                <select id="currency">
-                                    <option value="EUR">EUR (€)</option>
-                                    <option value="USD">USD ($)</option>
-                                    <option value="GBP">GBP (£)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i>
-                                <span data-en="Save Settings" data-ar="حفظ الإعدادات">Save Settings</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                
-                <div class="settings-section">
-                    <h2 data-en="Appearance" data-ar="المظهر">Appearance</h2>
-                    <form id="appearance-settings-form" class="modern-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="theme" data-en="Theme" data-ar="المظهر">Theme</label>
-                                <select id="theme">
-                                    <option value="light" data-en="Light" data-ar="فاتح">Light</option>
-                                    <option value="dark" data-en="Dark" data-ar="داكن">Dark</option>
-                                    <option value="auto" data-en="Auto" data-ar="تلقائي">Auto</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="primary-color" data-en="Primary Color" data-ar="اللون الأساسي">Primary Color</label>
-                                <input type="color" id="primary-color" value="#3b82f6">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="accent-color" data-en="Accent Color" data-ar="لون التمييز">Accent Color</label>
-                                <input type="color" id="accent-color" value="#10b981">
-                            </div>
-                            <div class="form-group">
-                                <label for="font-size" data-en="Font Size" data-ar="حجم الخط">Font Size</label>
-                                <select id="font-size">
-                                    <option value="small" data-en="Small" data-ar="صغير" selected>Small</option>
-                                    <option value="medium" data-en="Medium" data-ar="متوسط">Medium</option>
-                                    <option value="large" data-en="Large" data-ar="كبير">Large</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-palette"></i>
-                                <span data-en="Apply Theme" data-ar="تطبيق المظهر">Apply Theme</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                
-                <div class="settings-section">
-                    <h2 data-en="Data Management" data-ar="إدارة البيانات">Data Management</h2>
-                    <div class="data-actions">
-                        <button class="btn btn-secondary" id="export-data">
-                            <i class="fas fa-download"></i>
-                            <span data-en="Export Data" data-ar="تصدير البيانات">Export Data</span>
-                        </button>
-                        <button class="btn btn-secondary" id="export-pdf">
-                            <i class="fas fa-file-pdf"></i>
-                            <span data-en="Export PDF" data-ar="تصدير PDF">Export PDF</span>
-                        </button>
-                        <button class="btn btn-secondary" id="import-data">
-                            <i class="fas fa-upload"></i>
-                            <span data-en="Import Data" data-ar="استيراد البيانات">Import Data</span>
-                        </button>
-                        <button class="btn btn-warning" id="reset-settings">
-                            <i class="fas fa-undo-alt"></i>
-                            <span data-en="Reset Settings to Default" data-ar="إعادة تعيين الإعدادات للافتراضي">Reset Settings to Default</span>
-                        </button>
-                        <button class="btn btn-danger" id="clear-data">
-                            <i class="fas fa-trash"></i>
-                            <span data-en="Clear All Data" data-ar="مسح جميع البيانات">Clear All Data</span>
-                        </button>
-                    </div>
-                </div>
-
-
-            </div>
-        </section>
     </main>
 
-    <!-- Modal Container -->
-    <div id="modal-container" class="modal-container">
-        <div class="modal-overlay" id="modal-overlay"></div>
-        <div class="modal" id="modal">
+    <!-- Add Driver Modal -->
+    <div class="modal" id="addDriverModal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-title">Modal Title</h3>
-                <button class="modal-close" id="modal-close">
+                <h2 data-key="addNewDriver">إضافة سائق جديد</h2>
+                <button class="close-btn" onclick="closeAddDriverModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Modal content will be inserted here -->
+            <form class="driver-form" id="addDriverForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label data-key="driverName">اسم السائق</label>
+                        <input type="text" id="driverName" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-key="driverId">رقم الهوية</label>
+                        <input type="text" id="driverId" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label data-key="phoneNumber">رقم الهاتف</label>
+                        <input type="tel" id="phoneNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-motorcycle"></i> <span data-key="bikeNumber">Bike Number</span></label>
+                        <div class="custom-search-dropdown" id="driverBikeDropdown">
+                            <div class="dropdown-selected" onclick="toggleDriverBikeDropdown()">
+                                <span id="selectedDriverBikeName" data-key="selectBike">Select Available Bike</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="dropdown-menu" id="driverBikeMenu">
+                                <div class="dropdown-search-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="driverBikeSearch" placeholder="Search bike number..."
+                                        oninput="filterDriverBikeDropdown()">
+                                </div>
+                                <ul class="dropdown-list" id="driverBikeList">
+                                    <!-- Items added dynamically -->
+                                </ul>
+                            </div>
+                            <input type="hidden" id="bikeNumber" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label data-key="rating">التقييم</label>
+                    <div class="rating-input no-bar">
+                        <input type="number" id="rating" min="50" max="100" value="100" step="1">
+                        <div class="rating-display-value">
+                            <span id="ratingValue">100</span>
+                            <span class="rating-label">/100</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 32px;">
+                    <i class="fas fa-save"></i>
+                    <span data-key="save">Save</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Driver Dashboard Modal -->
+    <div class="modal" id="driverDashboardModal">
+        <div class="modal-content large">
+            <div class="modal-header dashboard-modal-header">
+                <div class="header-title">
+                    <i class="fas fa-id-card-alt"></i>
+                    <span data-key="driverProfile">Driver Profile</span>
+                </div>
+                <div class="header-actions">
+                    <button class="status-badge-btn" id="statusToggle" onclick="toggleDriverStatus()">
+                        <i class="fas fa-toggle-off"></i>
+                        <span id="statusText">Inside</span>
+                    </button>
+                    <button class="close-btn" onclick="closeDashboardModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="dashboard-body">
+                <!-- Driver Profile Header Card -->
+                <div class="dashboard-header-card">
+                    <div class="driver-profile-header">
+                        <div class="driver-profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="driver-profile-info">
+                            <div class="name-rating-row">
+                                <h2 id="dashboardDriverName">Driver Name</h2>
+                                <span id="dashboardRatingIcon" class="rating-status-icon"></span>
+                                <button type="button" class="profile-edit-btn" onclick="openEditDriverModal()">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <span class="bike-number-display">
+                                <i class="fas fa-motorcycle"></i>
+                                <span id="dashboardBikeNumber">Bike Number: 123</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Driver Stats Grid -->
+                    <div class="dashboard-stats-grid">
+                        <div class="dashboard-stat-item">
+                            <div class="dashboard-stat-icon id-card">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <div class="dashboard-stat-content">
+                                <span class="dashboard-stat-label" data-key="driverId">ID Number</span>
+                                <span class="dashboard-stat-value" id="dashboardDriverId">-</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-item">
+                            <div class="dashboard-stat-icon phone">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="dashboard-stat-content">
+                                <span class="dashboard-stat-label" data-key="phoneNumber">Phone Number</span>
+                                <span class="dashboard-stat-value" id="dashboardPhone">-</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-item">
+                            <div class="dashboard-stat-icon rating">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="dashboard-stat-content">
+                                <span class="dashboard-stat-label" data-key="rating">Current Rating</span>
+                                <span class="dashboard-stat-value" id="dashboardRating">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Movement Entry Form -->
+                <div class="movement-section">
+                    <h3 data-key="movementEntry">Record Movement</h3>
+                    <form class="movement-form" id="movementForm">
+                        <div class="movement-buttons-row">
+                            <div class="movement-button-group">
+                                <button type="button" class="movement-btn exit-btn" id="recordExitBtn"
+                                    onclick="recordExit()">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span data-key="recordExit">Record Exit</span>
+                                </button>
+                                <button type="button" class="movement-btn entry-btn" id="recordEntryBtn"
+                                    onclick="recordEntry()">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    <span data-key="recordEntry">Record Entry</span>
+                                </button>
+                            </div>
+                            <div class="last-recorded-time" id="lastRecordedTime">
+                                <span class="time-label" data-key="lastRecorded">Last Recorded:</span>
+                                <span class="time-value" id="lastTimeValue">--:--</span>
+                            </div>
+                        </div>
+
+                        <div class="exit-details-section" id="exitDetailsSection" style="display: none;">
+                            <h4 data-key="exitDetails">Exit Details</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label data-key="exitTime">Exit Time</label>
+                                    <input type="datetime-local" id="manualExitTime">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group rating-group">
+                                    <label data-key="rating">Rating</label>
+                                    <div class="rating-input compact">
+                                        <input type="number" id="exitRating" min="50" max="100" value="100" step="1">
+                                        <div class="rating-display-value">
+                                            <span id="exitRatingValue">100</span>
+                                            <span class="rating-label">/100</span>
+                                        </div>
+                                        <div class="rating-bar small">
+                                            <div class="rating-fill" id="exitRatingFill" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rating-alert" id="exitRatingAlert">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span data-key="ratingWarning">Warning: Low rating (less than 80). Performance review
+                                    required!</span>
+                            </div>
+                            <button type="button" class="submit-btn exit-submit-btn" onclick="saveExitDetails()">
+                                <i class="fas fa-save"></i>
+                                <span data-key="saveExitDetails">Save Exit Details</span>
+                            </button>
+                        </div>
+
+                        <div class="entry-details-section" id="entryDetailsSection" style="display: none;">
+                            <h4 data-key="entryDetails">Entry Details</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label data-key="entryTime">Entry Time</label>
+                                    <input type="datetime-local" id="manualEntryTime">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label data-key="ordersCount">Orders Count</label>
+                                    <input type="number" id="ordersCount" min="0" value="0">
+                                </div>
+                                <div class="form-group rating-group">
+                                    <label data-key="rating">التقييم</label>
+                                    <div class="rating-input compact">
+                                        <input type="number" id="movementRating" min="50" max="100" value="100"
+                                            step="1">
+                                        <div class="rating-display-value">
+                                            <span id="movementRatingValue">100</span>
+                                            <span class="rating-label">/100</span>
+                                        </div>
+                                        <div class="rating-bar small">
+                                            <div class="rating-fill" id="movementRatingFill" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rating-alert" id="ratingAlert">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span data-key="ratingWarning">Warning: Low rating (less than 80). Performance review
+                                    required!</span>
+                            </div>
+                            <button type="button" class="submit-btn entry-submit-btn" onclick="saveEntryDetails()">
+                                <i class="fas fa-save"></i>
+                                <span data-key="saveEntryDetails">Save Entry Details</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Movement History -->
+                <div class="history-section">
+                    <h3 data-key="movementHistory">Movement History</h3>
+                    <div class="history-table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th data-key="date">Date</th>
+                                    <th data-key="movementDetails">Movement Details</th>
+                                    <th data-key="ordersCount">Orders</th>
+                                    <th data-key="rating">Rating</th>
+                                    <th data-key="duration">Duration</th>
+                                    <th data-key="actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movementHistory">
+                                <!-- History rows will be added dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Hidden file input for import -->
-    <input type="file" id="import-file-input" accept=".json" style="display: none;">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="script.js"></script>
+    <!-- Edit Movement Modal -->
+    <div class="modal" id="editMovementModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-key="editMovement">Edit Movement</h2>
+                <button class="close-btn" onclick="closeEditMovementModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="movement-form" id="editMovementForm">
+                <input type="hidden" id="editMovementId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label data-key="date">Date</label>
+                        <input type="date" id="editMovementDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label data-key="exitTime">Exit Time</label>
+                        <input type="datetime-local" id="editMovementExitTime">
+                    </div>
+                    <div class="form-group">
+                        <label data-key="entryTime">Entry Time</label>
+                        <input type="datetime-local" id="editMovementEntryTime">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label data-key="ordersCount">Orders Count</label>
+                        <input type="number" id="editMovementOrders" min="0" value="0">
+                    </div>
+                    <div class="form-group rating-group">
+                        <label data-key="rating">Rating</label>
+                        <div class="rating-input compact">
+                            <input type="number" id="editMovementRating" min="50" max="100" value="100" step="1">
+                            <div class="rating-display-value">
+                                <span id="editMovementRatingValue">100</span>
+                                <span class="rating-label">/100</span>
+                            </div>
+                            <div class="rating-bar small">
+                                <div class="rating-fill" id="editMovementRatingFill" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" onclick="closeEditMovementModal()">
+                        <i class="fas fa-times"></i>
+                        <span data-key="cancel">Cancel</span>
+                    </button>
+                    <button type="submit" class="save-btn">
+                        <i class="fas fa-save"></i>
+                        <span data-key="saveChanges">Save Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">Operation successful</span>
+    </div>
+
+    <!-- Edit Driver Modal -->
+    <div class="modal" id="editDriverModal">
+        <div class="modal-content premium-modal">
+            <div class="modal-header">
+                <div class="header-title-wrapper">
+                    <div class="header-icon-circle">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <div class="header-text">
+                        <h2 data-key="editDriverInfo">Edit Driver Info</h2>
+                        <p class="header-subtitle">Update driver profile and vehicle assignment</p>
+                    </div>
+                </div>
+                <button class="close-btn-circle" onclick="closeEditDriverModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editDriverForm" class="modern-form">
+                <div class="form-section">
+                    <h3 class="section-subtitle">Personal Information</h3>
+                    <div class="form-grid-2">
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-user"></i> <span data-key="driverName">Driver Name</span></label>
+                            <input type="text" id="editDriverName" required>
+                        </div>
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-id-card"></i> <span data-key="driverId">ID Number</span></label>
+                            <input type="text" id="editDriverId" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-subtitle">Contact & Assignment</h3>
+                    <div class="form-grid-2">
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-phone"></i> <span data-key="phoneNumber">Phone Number</span></label>
+                            <input type="tel" id="editPhoneNumber" required>
+                        </div>
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-motorcycle"></i> <span data-key="bikeNumber">Bike
+                                    Number</span></label>
+                            <div class="custom-search-dropdown" id="editDriverBikeDropdown">
+                                <div class="dropdown-selected" onclick="toggleEditDriverBikeDropdown()">
+                                    <span id="selectedEditDriverBikeName" data-key="selectBike">Select Available
+                                        Bike</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="dropdown-menu" id="editDriverBikeMenu">
+                                    <div class="dropdown-search-wrapper">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="editDriverBikeSearch" placeholder="Search bike number..."
+                                            oninput="filterEditDriverBikeDropdown()">
+                                    </div>
+                                    <ul class="dropdown-list" id="editDriverBikeList">
+                                        <!-- Items added dynamically -->
+                                    </ul>
+                                </div>
+                                <input type="hidden" id="editDriverBikeNumber" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-footer-modern">
+                    <button type="button" class="btn-secondary-modern" onclick="closeEditDriverModal()">
+                        <span data-key="cancel">Cancel</span>
+                    </button>
+                    <button type="submit" class="btn-primary-modern">
+                        <i class="fas fa-save"></i>
+                        <span data-key="saveChanges">Save Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Bike Modal -->
+    <div class="modal" id="addBikeModal">
+        <div class="modal-content premium-modal">
+            <div class="modal-header">
+                <div class="header-title-wrapper">
+                    <div class="header-icon-circle">
+                        <i class="fas fa-motorcycle"></i>
+                    </div>
+                    <div class="header-text">
+                        <h2 data-key="addBike">Add New Bike</h2>
+                        <p class="header-subtitle">Register a new vehicle to the fleet</p>
+                    </div>
+                </div>
+                <button class="close-btn-circle" onclick="closeAddBikeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="addBikeForm" class="modern-form">
+                <div class="form-section">
+                    <h3 class="section-subtitle">Basic Information</h3>
+                    <div class="form-grid-2">
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-hashtag"></i> <span data-key="bikeNumber">Bike Number</span></label>
+                            <input type="text" id="newBikeNumber" placeholder="e.g. B-1024" required>
+                        </div>
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-info-circle"></i> <span data-key="bikeStatus">Bike
+                                    Status</span></label>
+                            <div class="custom-search-dropdown" id="bikeStatusDropdown">
+                                <div class="dropdown-selected" onclick="toggleStatusDropdown()">
+                                    <span id="selectedStatusName" data-key="active">Active</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="dropdown-menu" id="bikeStatusMenu">
+                                    <ul class="dropdown-list">
+                                        <li class="dropdown-item status-active"
+                                            onclick="selectCustomStatus('active', 'Active')">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span data-key="active">Active</span>
+                                        </li>
+                                        <li class="dropdown-item status-maintenance"
+                                            onclick="selectCustomStatus('maintenance', 'Maintenance')">
+                                            <i class="fas fa-wrench"></i>
+                                            <span data-key="maintenance">Maintenance</span>
+                                        </li>
+                                        <li class="dropdown-item status-outOfService"
+                                            onclick="selectCustomStatus('outOfService', 'Out of Service')">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <span data-key="outOfService">Out of Service</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <input type="hidden" id="newBikeStatus" value="active">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-subtitle">Performance & Assignment</h3>
+                    <div class="form-grid-2">
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-battery-full"></i> <span data-key="batteryLife">Battery
+                                    Life</span></label>
+                            <div class="input-with-unit">
+                                <input type="number" id="newBatteryLife" min="0" step="0.5" placeholder="8.5" required>
+                                <span class="unit-tag">Hours</span>
+                            </div>
+                        </div>
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-user-tag"></i> <span data-key="assignedDriver">Assign
+                                    Driver</span></label>
+                            <div class="custom-search-dropdown" id="bikeDriverDropdown">
+                                <div class="dropdown-selected" onclick="toggleCustomDropdown()">
+                                    <span id="selectedDriverName" data-key="noDriver">No Driver Assigned</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="dropdown-menu" id="bikeDriverMenu">
+                                    <div class="dropdown-search-wrapper">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="customDriverSearch" placeholder="Search driver..."
+                                            oninput="filterCustomDropdown()">
+                                    </div>
+                                    <ul class="dropdown-list" id="customDriverList">
+                                        <!-- Items added dynamically -->
+                                    </ul>
+                                </div>
+                                <input type="hidden" id="newBikeDriver" value="">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-subtitle">Additional Details</h3>
+                    <div class="form-group-modern">
+                        <label><i class="fas fa-comment-alt"></i> <span data-key="notes">Notes</span></label>
+                        <textarea id="newBikeNotes" rows="3"
+                            placeholder="Any specific details about the bike condition..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-footer-modern">
+                    <button type="button" class="btn-secondary-modern" onclick="closeAddBikeModal()">
+                        <span data-key="cancel">Cancel</span>
+                    </button>
+                    <button type="submit" class="btn-primary-modern">
+                        <i class="fas fa-plus"></i>
+                        <span data-key="save">Create Bike Record</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Bike Modal -->
+    <div class="modal" id="editBikeModal">
+        <div class="modal-content premium-modal">
+            <div class="modal-header">
+                <div class="header-title-wrapper">
+                    <div class="header-icon-circle">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="header-text">
+                        <h2 data-key="editBikeInfo">Edit Bike Info</h2>
+                        <p class="header-subtitle">Update vehicle details and assignment</p>
+                    </div>
+                </div>
+                <button class="close-btn-circle" onclick="closeEditBikeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="editBikeForm" class="modern-form">
+                <input type="hidden" id="editBikeId">
+                <div class="form-section">
+                    <h3 class="section-subtitle">Basic Information</h3>
+                    <div class="form-grid-2">
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-hashtag"></i> <span data-key="bikeNumber">Bike Number</span></label>
+                            <input type="text" id="editBikeModalNumber" required>
+                        </div>
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-info-circle"></i> <span data-key="bikeStatus">Bike
+                                    Status</span></label>
+                            <div class="custom-search-dropdown" id="editBikeStatusDropdown">
+                                <div class="dropdown-selected" onclick="toggleEditStatusDropdown()">
+                                    <span id="selectedEditStatusName" data-key="active">Active</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="dropdown-menu" id="editBikeStatusMenu">
+                                    <ul class="dropdown-list">
+                                        <li class="dropdown-item status-active"
+                                            onclick="selectEditCustomStatus('active', 'Active')">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span data-key="active">Active</span>
+                                        </li>
+                                        <li class="dropdown-item status-maintenance"
+                                            onclick="selectEditCustomStatus('maintenance', 'Maintenance')">
+                                            <i class="fas fa-wrench"></i>
+                                            <span data-key="maintenance">Maintenance</span>
+                                        </li>
+                                        <li class="dropdown-item status-outOfService"
+                                            onclick="selectEditCustomStatus('outOfService', 'Out of Service')">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <span data-key="outOfService">Out of Service</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <input type="hidden" id="editBikeStatus" value="active">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-subtitle">Performance & Assignment</h3>
+                    <div class="form-grid-2">
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-battery-full"></i> <span data-key="batteryLife">Battery
+                                    Life</span></label>
+                            <div class="input-with-unit">
+                                <input type="number" id="editBatteryLife" min="0" step="0.5" required>
+                                <span class="unit-tag">Hours</span>
+                            </div>
+                        </div>
+                        <div class="form-group-modern">
+                            <label><i class="fas fa-user-tag"></i> <span data-key="assignedDriver">Assign
+                                    Driver</span></label>
+                            <div class="custom-search-dropdown" id="editBikeDriverDropdown">
+                                <div class="dropdown-selected" onclick="toggleEditDriverDropdown()">
+                                    <span id="selectedEditDriverName" data-key="noDriver">No Driver Assigned</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="dropdown-menu" id="editBikeDriverMenu">
+                                    <div class="dropdown-search-wrapper">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="editCustomDriverSearch" placeholder="Search driver..."
+                                            oninput="filterEditCustomDropdown()">
+                                    </div>
+                                    <ul class="dropdown-list" id="editCustomDriverList">
+                                        <!-- Items added dynamically -->
+                                    </ul>
+                                </div>
+                                <input type="hidden" id="editBikeDriver" value="">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-subtitle">Additional Details</h3>
+                    <div class="form-group-modern">
+                        <label><i class="fas fa-comment-alt"></i> <span data-key="notes">Notes</span></label>
+                        <textarea id="editBikeNotes" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-footer-modern">
+                    <button type="button" class="btn-secondary-modern" onclick="closeEditBikeModal()">
+                        <span data-key="cancel">Cancel</span>
+                    </button>
+                    <button type="submit" class="btn-primary-modern">
+                        <i class="fas fa-save"></i>
+                        <span data-key="saveChanges">Update Bike Record</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTopBtn" onclick="scrollToTop()" aria-label="Scroll to top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-bottom">
+                    <p class="copyright">
+                        <span data-key="copyright">© 2026 Garage TFT. All rights reserved.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
 </body>
+
 </html>
