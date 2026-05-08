@@ -41,20 +41,58 @@
                         <span id="currentDate">--/--/----</span>
                     </div>
                 </div>
-                <nav class="main-nav">
-
-                    <a href="#drivers" class="nav-link active" onclick="showView('drivers')">
-                        <i class="fas fa-users"></i>
-                        <span data-key="drivers">Drivers</span>
-                    </a>
-                    <a href="#bikes" class="nav-link" onclick="showView('bikes')">
-                        <i class="fas fa-motorcycle"></i>
-                        <span data-key="bikes">Bikes</span>
-                    </a>
-                </nav>
+                <div class="page-indicator" id="pageIndicator">
+                    <i class="fas fa-chart-pie"></i>
+                    <span data-key="dashboard">Dashboard</span>
+                </div>
             </div>
         </div>
     </header>
+
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-motorcycle"></i>
+                <span>Garage TFT</span>
+            </div>
+            <button class="sidebar-close" onclick="toggleSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#dashboard" class="sidebar-link active" onclick="showView('dashboard'); toggleSidebar();">
+                <i class="fas fa-chart-pie"></i>
+                <span data-key="dashboard">Dashboard</span>
+            </a>
+            <a href="#drivers" class="sidebar-link" onclick="showView('drivers'); toggleSidebar();">
+                <i class="fas fa-users"></i>
+                <span data-key="drivers">Drivers</span>
+            </a>
+            <a href="#bikes" class="sidebar-link" onclick="showView('bikes'); toggleSidebar();">
+                <i class="fas fa-motorcycle"></i>
+                <span data-key="bikes">Bikes</span>
+            </a>
+            <a href="#settings" class="sidebar-link" onclick="showView('settings'); toggleSidebar();">
+                <i class="fas fa-cog"></i>
+                <span data-key="settings">Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-datetime">
+                <i class="far fa-clock"></i>
+                <span id="sidebarTime">--:--</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- Main Content -->
     <main class="main-content">

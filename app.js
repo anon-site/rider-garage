@@ -15,9 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBikes();
     updateStatistics();
     setupEventListeners();
+    updateSidebarTime();
 
-    // Restore saved view or default to drivers
-    const savedView = localStorage.getItem('garageAppCurrentView') || 'drivers';
+    // Restore saved view or default to dashboard
+    const savedView = localStorage.getItem('garageAppCurrentView') || 'dashboard';
     showView(savedView);
 
     // Bike search listener
@@ -1826,7 +1827,7 @@ function showView(viewName) {
         view.classList.remove('active');
     });
 
-    document.querySelectorAll('.nav-link').forEach(link => {
+    document.querySelectorAll('.sidebar-link').forEach(link => {
         link.classList.remove('active');
     });
 
@@ -1836,9 +1837,12 @@ function showView(viewName) {
         targetView.classList.add('active');
     }
 
-    const targetLink = document.querySelector(`.nav-link[href="#${viewName}"]`);
-    if (targetLink) {
-        targetLink.classList.add('active');
+    // Update page indicator
+    updatePageIndicator(viewName);
+
+    const sidebarLink = document.querySelector(`.sidebar-link[href="#${viewName}"]`);
+    if (sidebarLink) {
+        sidebarLink.classList.add('active');
     }
 
     if (viewName === 'home') {
@@ -2542,4 +2546,70 @@ function scrollToTop() {
         top: 0,
         behavior: 'smooth'
     });
+}
+
+// ===== Sidebar Functions =====
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.getElementById('sidebarToggle');
+
+    if (sidebar && overlay) {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+
+        if (toggle) {
+            toggle.classList.toggle('hidden', sidebar.classList.contains('open'));
+        }
+
+        // Prevent body scroll when sidebar is open
+        if (sidebar.classList.contains('open')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+function updateSidebarTime() {
+    const sidebarTime = document.getElementById('sidebarTime');
+    if (sidebarTime) {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        sidebarTime.textContent = `${hours}:${minutes}`;
+    }
+}
+
+// Update sidebar time every minute
+setInterval(updateSidebarTime, 60000);
+
+// Close sidebar when pressing Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('open')) {
+            toggleSidebar();
+        }
+    }
+});
+
+// Update page indicator in header
+function updatePageIndicator(viewName) {
+    const indicator = document.getElementById('pageIndicator');
+    if (!indicator) return;
+
+    const pageData = {
+        'drivers': { icon: 'fa-users', key: 'drivers', text: 'Drivers' },
+        'bikes': { icon: 'fa-motorcycle', key: 'bikes', text: 'Bikes' },
+        'dashboard': { icon: 'fa-chart-pie', key: 'dashboard', text: 'Dashboard' },
+        'settings': { icon: 'fa-cog', key: 'settings', text: 'Settings' }
+    };
+
+    const page = pageData[viewName];
+    if (page) {
+        const currentLang = localStorage.getItem('garageAppLanguage') || 'en';
+        const text = currentLang === 'en' ? page.text : t(page.key);
+        indicator.innerHTML = `<i class="fas ${page.icon}"></i><span>${text}</span>`;
+    }
 }
