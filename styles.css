@@ -4582,7 +4582,7 @@ body.rtl .activity-time { margin-inline-start: auto; margin-inline-end: 0; }
 }
 
 .copyright {
-    color: var(--gray-500);
+    color: white;
     font-size: 13px;
     text-align: center;
 }
