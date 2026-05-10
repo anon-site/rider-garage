@@ -874,6 +874,10 @@ body[dir="ltr"] .language-selector {
 
 .modal-content.large {
     max-width: 1000px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
 }
 
 @keyframes modalSlide {
@@ -1309,10 +1313,11 @@ body[dir="ltr"] .language-selector {
     background: var(--gradient-primary);
     color: white;
     padding: 24px 32px;
-    border-radius: 32px 32px 0 0;
+    border-radius: 20px 20px 0 0;
     margin: 0;
     border-bottom: none;
     box-shadow: inset 0 -10px 20px -10px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
 .dashboard-modal-header .header-title {
@@ -1370,11 +1375,36 @@ body[dir="ltr"] .language-selector {
 .dashboard-body {
     padding: 24px;
     background: var(--gray-50);
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-300) transparent;
+}
+
+.dashboard-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dashboard-body::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 10px 0;
+}
+
+.dashboard-body::-webkit-scrollbar-thumb {
+    background-color: var(--gray-300);
+    border-radius: 20px;
+    border: 2px solid transparent;
+}
+
+.dashboard-body::-webkit-scrollbar-thumb:hover {
+    background-color: var(--gray-400);
 }
 
 .dashboard-header-card {
     background: white;
-    border-radius: 24px;
+    border-radius: 16px;
     padding: 32px;
     margin-bottom: 24px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -2268,7 +2298,7 @@ body[dir="ltr"] .language-selector {
 .movement-section,
 .history-section {
     background: white;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-lg);
     padding: 28px;
     margin-bottom: 24px;
     box-shadow: var(--shadow-sm);
@@ -4920,3 +4950,14 @@ body.rtl .activity-time { margin-inline-start: auto; margin-inline-end: 0; }
     }
 }
 
+/ * 
+ 
+ E n d 
+ 
+ o f 
+ 
+ s t y l e s 
+ 
+ * / 
+ 
+ 
