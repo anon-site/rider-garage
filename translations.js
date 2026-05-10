@@ -132,7 +132,7 @@ const translations = {
         fleetReadiness: "Fleet Readiness",
         maintenanceAlerts: "Maintenance",
         fleetDistribution: "Fleet Distribution",
-        topPerforming: "Top Performing Drivers",
+        topPerforming: "Top Drivers by Orders",
         recentActivity: "Recent Fleet Activity",
         footerTagline: "Manage your fleet with ease",
         copyright: "© 2026 Garage TFT. All rights reserved."

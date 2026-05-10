@@ -1845,7 +1845,7 @@ function showView(viewName) {
         sidebarLink.classList.add('active');
     }
 
-    if (viewName === 'home') {
+    if (viewName === 'dashboard') {
         renderHomeDashboard();
     }
 }
@@ -2399,10 +2399,14 @@ function renderHomeDashboard() {
     const maintenanceVal = document.getElementById('maintenanceValue');
     if (maintenanceVal) animateNumber('maintenanceValue', maintenanceCount);
 
-    // 5. Fleet Distribution Chart
+    // 5. Total Orders Summary
+    const totalOrders = drivers.reduce((sum, d) => sum + (parseInt(d.totalOrders) || 0), 0);
+    animateNumber('dashboardTotalOrders', totalOrders);
+
+    // 6. Fleet Distribution Chart
     updateFleetDistributionChart();
 
-    // 6. Top Performing Drivers
+    // 7. Top Performing Drivers
     renderTopDrivers();
 
     // 7. Recent Activity
@@ -2453,23 +2457,23 @@ function renderTopDrivers() {
     const list = document.getElementById('homeTopDrivers');
     if (!list) return;
 
-    const sortedDrivers = [...drivers].sort((a, b) => b.rating - a.rating).slice(0, 4);
+    const sortedDrivers = [...drivers].sort((a, b) => b.totalOrders - a.totalOrders).slice(0, 5);
 
     if (sortedDrivers.length === 0) {
-        list.innerHTML = `<p style="text-align:center; color:var(--text-light); padding:20px;">No driver data available</p>`;
+        list.innerHTML = `<p style="text-align:center; color:var(--gray-400); padding:20px;">No driver data available</p>`;
         return;
     }
 
+    const medalClass = (i) => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+
     list.innerHTML = sortedDrivers.map((d, index) => `
-        <div class="top-driver-item">
-            <div class="top-driver-rank">${index + 1}</div>
-            <div class="top-driver-info">
-                <span class="top-driver-name">${escapeHtml(d.name)}</span>
-                <span class="top-driver-rating"><i class="fas fa-star"></i> ${d.rating}/100</span>
+        <div class="db-rank-item">
+            <div class="db-rank-medal ${medalClass(index)}">${index + 1}</div>
+            <div class="db-rank-info">
+                <span class="db-rank-name">${escapeHtml(d.name)}</span>
+                <span class="db-rank-orders"><i class="fas fa-shopping-bag"></i> ${d.totalOrders} Orders</span>
             </div>
-            <div class="top-driver-status">
-                <span class="status-badge-mini ${d.status}">${t(d.status)}</span>
-            </div>
+            <span class="db-rank-badge ${d.status}">${t(d.status)}</span>
         </div>
     `).join('');
 }
@@ -2478,25 +2482,20 @@ function renderRecentActivity() {
     const list = document.getElementById('homeRecentActivity');
     if (!list) return;
 
-    // Get all movements from all drivers
     let allMovements = [];
     drivers.forEach(d => {
         if (d.movements) {
             d.movements.forEach(m => {
-                allMovements.push({
-                    driverName: d.name,
-                    ...m
-                });
+                allMovements.push({ driverName: d.name, ...m });
             });
         }
     });
 
-    // Sort by date (newest first)
     allMovements.sort((a, b) => new Date(b.exitTime || b.timestamp) - new Date(a.exitTime || a.timestamp));
-    const recent = allMovements.slice(0, 5);
+    const recent = allMovements.slice(0, 6);
 
     if (recent.length === 0) {
-        list.innerHTML = `<p style="text-align:center; color:var(--text-light); padding:20px;">No recent activity</p>`;
+        list.innerHTML = `<p style="text-align:center; color:var(--gray-400); padding:20px;">No recent activity</p>`;
         return;
     }
 
@@ -2505,16 +2504,13 @@ function renderRecentActivity() {
         const time = new Date(m.exitTime || m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         return `
-            <div class="activity-item">
-                <div class="activity-icon ${isExit ? 'exit' : 'entry'}">
+            <div class="db-activity-item">
+                <div class="db-activity-icon ${isExit ? 'exit' : 'entry'}">
                     <i class="fas fa-sign-${isExit ? 'out' : 'in'}-alt"></i>
                 </div>
-                <div class="activity-details">
-                    <div class="activity-title">${escapeHtml(m.driverName)} - ${isExit ? 'Departure' : 'Arrival'}</div>
-                    <div class="activity-time">${time}</div>
-                </div>
-                <div class="activity-meta">
-                    ${m.orderNumber ? `#${m.orderNumber}` : ''}
+                <div class="db-activity-body">
+                    <div class="db-activity-title">${escapeHtml(m.driverName)} <span>${isExit ? 'Left' : 'Returned'}</span></div>
+                    <div class="db-activity-time">${time}</div>
                 </div>
             </div>
         `;
