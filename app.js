@@ -657,7 +657,7 @@ function renderDrivers(searchTerm = '') {
                 </div>
 
                 <div class="driver-card-footer" onclick="event.stopPropagation()">
-                    <button class="btn-primary-subtle" onclick="showDriverDashboard('${driver.id}')">
+                    <button class="btn-primary-subtle" onclick="safeShowDriverDashboard('${driver.id}')">
                         <i class="fas fa-external-link-alt"></i>
                         ${t('dashboard')}
                     </button>
@@ -690,10 +690,52 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Safe wrapper for showing driver dashboard
+function safeShowDriverDashboard(driverId) {
+    try {
+        showDriverDashboard(driverId);
+    } catch (error) {
+        console.error('Critical error opening driver dashboard:', error);
+        showNotification('Failed to open driver profile. Please try again.', 'error');
+    }
+}
+
 // Show Driver Dashboard
 function showDriverDashboard(driverId) {
+    // Check if data is still loading
+    if (isLoadingData) {
+        showNotification('Please wait for data to load', 'warning');
+        return;
+    }
+
+    // Validate driver ID
+    if (!driverId) {
+        console.error('Driver ID is required');
+        showNotification('Invalid driver ID', 'error');
+        return;
+    }
+
     currentDriverId = driverId;
     const driver = drivers.find(d => d.id === driverId);
+
+    // Comprehensive driver validation
+    if (!driver) {
+        console.error('Driver not found:', driverId);
+        showNotification('Driver not found in database', 'error');
+        return;
+    }
+
+    // Validate driver data structure
+    if (!driver.name || !driver.driverId) {
+        console.error('Invalid driver data structure:', driver);
+        showNotification('Invalid driver data', 'error');
+        return;
+    }
+
+    // Initialize movements array if it doesn't exist
+    if (!driver.movements || !Array.isArray(driver.movements)) {
+        driver.movements = [];
+    }
 
     // Hide edit button for viewers
     const editBtn = document.querySelector('.profile-edit-btn');
@@ -701,24 +743,40 @@ function showDriverDashboard(driverId) {
         editBtn.style.display = isAdmin() ? 'flex' : 'none';
     }
 
-    if (!driver) return;
-
     // Reset current movement when switching drivers
     currentMovement = null;
 
-    // Update dashboard info
-    document.getElementById('dashboardDriverName').textContent = driver.name;
-    const bikeNumberEl = document.getElementById('dashboardBikeNumber');
-    bikeNumberEl.textContent = `${t('bikeNumber')}: ${driver.bikeNumber}`;
-
-    if (driver.bikeNumber === 'Waiting') {
-        bikeNumberEl.classList.add('waiting-pulse');
-    } else {
-        bikeNumberEl.classList.remove('waiting-pulse');
+    // Update dashboard info with null checks
+    const nameElement = document.getElementById('dashboardDriverName');
+    if (nameElement) {
+        nameElement.textContent = driver.name || 'Unknown Driver';
     }
-    document.getElementById('dashboardDriverId').textContent = driver.driverId;
-    document.getElementById('dashboardPhone').textContent = driver.phone;
-    document.getElementById('dashboardRating').textContent = `${driver.rating}/100`;
+
+    const bikeNumberEl = document.getElementById('dashboardBikeNumber');
+    if (bikeNumberEl) {
+        bikeNumberEl.textContent = `${t('bikeNumber')}: ${driver.bikeNumber || 'Not assigned'}`;
+        
+        if (driver.bikeNumber === 'Waiting') {
+            bikeNumberEl.classList.add('waiting-pulse');
+        } else {
+            bikeNumberEl.classList.remove('waiting-pulse');
+        }
+    }
+
+    const driverIdElement = document.getElementById('dashboardDriverId');
+    if (driverIdElement) {
+        driverIdElement.textContent = driver.driverId || '-';
+    }
+
+    const phoneElement = document.getElementById('dashboardPhone');
+    if (phoneElement) {
+        phoneElement.textContent = driver.phone || '-';
+    }
+
+    const ratingElement = document.getElementById('dashboardRating');
+    if (ratingElement) {
+        ratingElement.textContent = `${driver.rating || 100}/100`;
+    }
 
     // Update Rating Icon
     updateRatingIcon(driver.rating);
@@ -743,8 +801,19 @@ function showDriverDashboard(driverId) {
     // Render movement history
     renderMovementHistory(driver);
 
-    // Show modal
-    document.getElementById('driverDashboardModal').classList.add('active');
+    // Show modal with error handling
+    try {
+        const modal = document.getElementById('driverDashboardModal');
+        if (modal) {
+            modal.classList.add('active');
+        } else {
+            console.error('Driver dashboard modal not found');
+            showNotification('Error: Driver profile window not available', 'error');
+        }
+    } catch (error) {
+        console.error('Error showing driver dashboard modal:', error);
+        showNotification('Error opening driver profile', 'error');
+    }
 }
 
 // Close Dashboard Modal
@@ -1141,6 +1210,32 @@ function handleRecordMovement(e) {
 // Render Movement History - Complete Movements in Single Cards
 function renderMovementHistory(driver) {
     const tbody = document.getElementById('movementHistory');
+    
+    // Check if tbody exists
+    if (!tbody) {
+        console.error('Movement history table body not found');
+        return;
+    }
+
+    // Validate driver and movements
+    if (!driver) {
+        console.error('Driver is null or undefined');
+        tbody.innerHTML = `
+            <tr class="empty-state">
+                <td colspan="6">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Error: Driver data not available</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    // Ensure movements array exists
+    if (!driver.movements || !Array.isArray(driver.movements)) {
+        console.warn('Driver movements array is missing or invalid:', driver.movements);
+        driver.movements = [];
+    }
 
     if (driver.movements.length === 0) {
         tbody.innerHTML = `
@@ -1155,19 +1250,42 @@ function renderMovementHistory(driver) {
     }
 
     tbody.innerHTML = driver.movements.slice(0, 50).map((movement, index) => {
+        // Validate movement object
+        if (!movement || typeof movement !== 'object') {
+            console.warn('Invalid movement data at index', index, movement);
+            return `
+                <tr data-movement-id="invalid-${index}" class="error">
+                    <td colspan="6">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Invalid movement data</span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Ensure movement has an ID
+        if (!movement.id) {
+            movement.id = `movement-${Date.now()}-${index}`;
+        }
+
         const exitDate = movement.exitTime ? new Date(movement.exitTime) : null;
         const entryDate = movement.entryTime ? new Date(movement.entryTime) : null;
 
-        // Get current locale
+        // Get current locale with fallback
         const locale = getCurrentLocale();
 
-        // Format date
-        const dateObj = new Date(movement.date);
-        const dateDisplay = dateObj.toLocaleDateString(locale, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+        // Format date with error handling
+        let dateDisplay = 'Invalid Date';
+        try {
+            const dateObj = new Date(movement.date || Date.now());
+            dateDisplay = dateObj.toLocaleDateString(locale, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch (error) {
+            console.warn('Error formatting date for movement:', movement.date);
+        }
 
         // Orders display
         const ordersCount = movement.orders || 0;
