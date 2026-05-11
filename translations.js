@@ -140,7 +140,8 @@ const translations = {
         topPerforming: "Top Drivers by Orders",
         recentActivity: "Recent Fleet Activity",
         footerTagline: "Manage your fleet with ease",
-        copyright: "© 2026 Garage TFT. All rights reserved."
+        copyright: "© 2026 Garage TFT. All rights reserved.",
+        designedBy: "Designed & Developed by"
     }
 };
 

@@ -3409,6 +3409,11 @@ body[dir="ltr"] .language-selector {
     color: white;
 }
 
+/* Bikes Section */
+.bikes-section {
+    margin-bottom: 60px;
+}
+
 /* Bikes Grid Adjustment */
 .bikes-grid {
     display: grid;
@@ -5995,6 +6000,25 @@ body.rtl .activity-time { margin-inline-start: auto; margin-inline-end: 0; }
     color: white;
     font-size: 13px;
     text-align: center;
+}
+
+.developer-credit {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    text-align: center;
+    margin-top: 4px;
+}
+
+.developer-link-footer {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.developer-link-footer:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
 }
 
 /* Responsive Footer */
