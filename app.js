@@ -822,24 +822,22 @@ function closeDashboardModal() {
     currentDriverId = null;
 }
 
-// Update Status Toggle
+// Update Status Toggle (Display Only)
 function updateStatusToggle(status) {
     const toggle = document.getElementById('statusToggle');
     const text = document.getElementById('statusText');
-    const icon = toggle.querySelector('i');
+    
+    if (!toggle || !text) return;
 
+    // Remove existing status classes
+    toggle.classList.remove('status-inside', 'status-outside');
+    
     if (status === 'inside') {
-        toggle.classList.add('active');
-        icon.className = 'fas fa-warehouse';
-        text.textContent = t('statusInside');
-        toggle.style.background = 'rgba(16, 185, 129, 0.3)';
-        toggle.style.borderColor = '#10b981';
+        toggle.classList.add('status-inside');
+        text.textContent = t('statusInside') || 'Inside';
     } else {
-        toggle.classList.remove('active');
-        icon.className = 'fas fa-motorcycle';
-        text.textContent = t('statusOutside');
-        toggle.style.background = 'rgba(245, 158, 11, 0.3)';
-        toggle.style.borderColor = '#f59e0b';
+        toggle.classList.add('status-outside');
+        text.textContent = t('statusOutside') || 'Outside';
     }
 }
 
@@ -884,6 +882,62 @@ function toggleDriverStatus() {
 // Global variable to track current movement
 let currentMovement = null;
 
+// Global variables for confirmation modal
+let confirmCallback = null;
+let confirmActionType = '';
+
+// Show Custom Confirmation Modal
+function showConfirmModal(title, message, callback, type = 'default') {
+    confirmCallback = callback;
+    confirmActionType = type;
+    
+    const modal = document.getElementById('confirmModal');
+    const titleElement = document.getElementById('confirmTitle');
+    const messageElement = document.getElementById('confirmMessage');
+    const iconElement = document.getElementById('confirmIcon');
+    
+    // Update content
+    titleElement.textContent = title;
+    messageElement.textContent = message;
+    
+    // Update icon based on type
+    if (type === 'exit') {
+        iconElement.className = 'fas fa-sign-out-alt';
+        iconElement.style.color = '#f59e0b';
+    } else if (type === 'entry') {
+        iconElement.className = 'fas fa-sign-in-alt';
+        iconElement.style.color = '#10b981';
+    } else if (type === 'delete') {
+        iconElement.className = 'fas fa-trash-alt';
+        iconElement.style.color = '#ef4444';
+    } else if (type === 'logout') {
+        iconElement.className = 'fas fa-sign-out-alt';
+        iconElement.style.color = '#8b5cf6';
+    } else {
+        iconElement.className = 'fas fa-question-circle';
+        iconElement.style.color = '#3b82f6';
+    }
+    
+    // Show modal
+    modal.classList.add('active');
+}
+
+// Close Confirmation Modal
+function closeConfirmModal() {
+    const modal = document.getElementById('confirmModal');
+    modal.classList.remove('active');
+    confirmCallback = null;
+    confirmActionType = '';
+}
+
+// Confirm Action
+function confirmAction() {
+    if (confirmCallback) {
+        confirmCallback();
+    }
+    closeConfirmModal();
+}
+
 // Record Exit Function
 function recordExit() {
     const driver = drivers.find(d => d.id === currentDriverId);
@@ -893,6 +947,18 @@ function recordExit() {
         showNotification("Cannot record exit: No bike assigned", "error");
         return;
     }
+
+    // Show custom confirmation dialog
+    showConfirmModal(
+        t('confirmRecordExit') || 'Record Exit Confirmation',
+        `Are you sure you want to record exit for ${driver.name}?`,
+        () => recordExitConfirmed(driver),
+        'exit'
+    );
+}
+
+// Record Exit Confirmed Function
+function recordExitConfirmed(driver) {
 
     const now = new Date();
 
@@ -972,6 +1038,18 @@ function recordEntry() {
         showNotification("Cannot record entry: No bike assigned", "error");
         return;
     }
+
+    // Show custom confirmation dialog
+    showConfirmModal(
+        t('confirmRecordEntry') || 'Record Entry Confirmation',
+        `Are you sure you want to record entry for ${driver.name}?`,
+        () => recordEntryConfirmed(driver),
+        'entry'
+    );
+}
+
+// Record Entry Confirmed Function
+function recordEntryConfirmed(driver) {
 
     const now = new Date();
 
@@ -1776,7 +1854,21 @@ function deleteDriver(driverId) {
         showNotification('View only mode - cannot delete drivers', 'error');
         return;
     }
-    if (!confirm(t('confirmDelete'))) return;
+    
+    const driver = drivers.find(d => d.id === driverId);
+    if (!driver) return;
+    
+    // Show custom confirmation dialog
+    showConfirmModal(
+        t('confirmDeleteDriver') || 'Delete Driver',
+        `Are you sure you want to delete driver "${driver.name}"? This action cannot be undone.`,
+        () => deleteDriverConfirmed(driverId),
+        'delete'
+    );
+}
+
+// Delete Driver Confirmed Function
+function deleteDriverConfirmed(driverId) {
 
     // Release assigned bike
     const bike = bikes.find(b => b.driverId === driverId);
@@ -2230,6 +2322,17 @@ function handleLogin(e) {
 }
 
 function logout() {
+    // Show custom confirmation dialog
+    showConfirmModal(
+        t('confirmLogout') || 'Logout Confirmation',
+        'Are you sure you want to logout? Any unsaved changes will be lost.',
+        () => logoutConfirmed(),
+        'logout'
+    );
+}
+
+// Logout Confirmed Function
+function logoutConfirmed() {
     currentUser = null;
     localStorage.removeItem('garageAppCurrentUser');
     location.reload();
@@ -2536,21 +2639,34 @@ function deleteBike(id) {
         showNotification('View only mode - cannot delete bikes', 'error');
         return;
     }
-    if (confirm(t('confirmDeleteBike'))) {
-        const bike = bikes.find(b => b.id === id);
-        if (bike && bike.driverId) {
-            const driver = drivers.find(d => d.id === bike.driverId);
-            if (driver) driver.bikeNumber = "";
-            saveDrivers();
-            renderDrivers();
-        }
+    
+    const bike = bikes.find(b => b.id === id);
+    if (!bike) return;
+    
+    // Show custom confirmation dialog
+    showConfirmModal(
+        t('confirmDeleteBike') || 'Delete Bike',
+        `Are you sure you want to delete bike "${bike.number}"? This action cannot be undone.`,
+        () => deleteBikeConfirmed(id),
+        'delete'
+    );
+}
 
-        bikes = bikes.filter(b => b.id !== id);
-        saveBikes();
-        renderBikes();
-        updateStatistics(); // Update dashboard
-        showNotification(t('bikeDeleted'));
+// Delete Bike Confirmed Function
+function deleteBikeConfirmed(id) {
+    const bike = bikes.find(b => b.id === id);
+    if (bike && bike.driverId) {
+        const driver = drivers.find(d => d.id === bike.driverId);
+        if (driver) driver.bikeNumber = "";
+        saveDrivers();
+        renderDrivers();
     }
+
+    bikes = bikes.filter(b => b.id !== id);
+    saveBikes();
+    renderBikes();
+    updateStatistics(); // Update dashboard
+    showNotification(t('bikeDeleted'));
 }
 
 function filterBikesByStat(filter) {
@@ -3221,7 +3337,17 @@ function deleteUser(userId) {
         return;
     }
 
-    if (!confirm(`Are you sure you want to delete user "${user.username}"?`)) return;
+    // Show custom confirmation dialog
+    showConfirmModal(
+        t('confirmDeleteUser') || 'Delete User',
+        `Are you sure you want to delete user "${user.username}"? This action cannot be undone.`,
+        () => deleteUserConfirmed(userId),
+        'delete'
+    );
+}
+
+// Delete User Confirmed Function
+function deleteUserConfirmed(userId) {
 
     users = users.filter(u => u.id !== userId);
     saveUsers();
