@@ -1,9 +1,9 @@
 // Garage App - Main Application JavaScript
 
-// Data Storage
-let drivers = JSON.parse(localStorage.getItem('garageAppDrivers')) || [];
-let bikes = JSON.parse(localStorage.getItem('garageAppBikes')) || [];
-let users = JSON.parse(localStorage.getItem('garageAppUsers')) || [];
+// Data Storage - Firebase
+let drivers = [];
+let bikes = [];
+let users = [];
 let currentUser = JSON.parse(localStorage.getItem('garageAppCurrentUser')) || null;
 let currentDriverId = null;
 let currentBikeId = null;
@@ -11,38 +11,134 @@ let currentBikeFilter = 'all';
 let currentDriverFilter = 'all';
 let currentUserFilter = '';
 
-// Role definitions
-const ROLE_ADMIN = 'admin';
-const ROLE_USER = 'user';
+// Firebase Database Reference
+let db = null;
+let dbRefs = {};
+let isLoadingData = true;
 
-// Initialize default admin user if no users exist
-function initializeDefaultUser() {
-    // Check if anon user exists
-    const anonUser = users.find(u => u.username === 'anon');
+// Initialize Firebase Database connection
+function initFirebaseDB() {
+    if (window.firebaseDB) {
+        db = window.firebaseDB;
+        dbRefs.drivers = window.firebaseRef(db, 'drivers');
+        dbRefs.bikes = window.firebaseRef(db, 'bikes');
+        dbRefs.users = window.firebaseRef(db, 'users');
+        dbRefs.settings = window.firebaseRef(db, 'settings');
+        return true;
+    }
+    return false;
+}
 
-    if (anonUser) {
-        // Ensure anon user has admin role
-        if (anonUser.role !== ROLE_ADMIN) {
-            anonUser.role = ROLE_ADMIN;
-            saveUsers();
+// Load all data from Firebase
+async function loadAllDataFromFirebase() {
+    if (!db) {
+        console.log('Firebase not initialized, retrying...');
+        setTimeout(loadAllDataFromFirebase, 500);
+        return;
+    }
+
+    try {
+        // Load drivers
+        const driversSnapshot = await window.firebaseGet(dbRefs.drivers);
+        if (driversSnapshot.exists()) {
+            drivers = Object.values(driversSnapshot.val()) || [];
+        } else {
+            drivers = [];
         }
-    } else if (users.length === 0) {
-        // Create default admin if no users exist
-        const defaultAdmin = {
-            id: generateId(),
-            username: 'anon',
-            password: 'anon',
-            role: ROLE_ADMIN,
-            createdAt: new Date().toISOString()
-        };
-        users.push(defaultAdmin);
-        saveUsers();
+
+        // Load bikes
+        const bikesSnapshot = await window.firebaseGet(dbRefs.bikes);
+        if (bikesSnapshot.exists()) {
+            bikes = Object.values(bikesSnapshot.val()) || [];
+        } else {
+            bikes = [];
+        }
+
+        // Load users
+        const usersSnapshot = await window.firebaseGet(dbRefs.users);
+        if (usersSnapshot.exists()) {
+            users = Object.values(usersSnapshot.val()) || [];
+        } else {
+            users = [];
+        }
+
+        // Load settings
+        const settingsSnapshot = await window.firebaseGet(dbRefs.settings);
+        if (settingsSnapshot.exists()) {
+            const settings = settingsSnapshot.val();
+            if (settings.garageAddress) {
+                localStorage.setItem('garageAppAddress', settings.garageAddress);
+            }
+        }
+
+        // Setup real-time listeners
+        setupFirebaseListeners();
+
+        // Initialize app after data loaded
+        initializeAppAfterDataLoad();
+
+    } catch (error) {
+        console.error('Error loading data from Firebase:', error);
+        showNotification('Error loading data from cloud', 'error');
     }
 }
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', () => {
-    initializeDefaultUser();
+// Setup real-time listeners for data changes
+function setupFirebaseListeners() {
+    // Listen for drivers changes
+    window.firebaseOnValue(dbRefs.drivers, (snapshot) => {
+        if (snapshot.exists()) {
+            drivers = Object.values(snapshot.val()) || [];
+            renderDrivers();
+            updateStatistics();
+            if (currentDriverId) {
+                const driver = drivers.find(d => d.id === currentDriverId);
+                if (driver) renderMovementHistory(driver);
+            }
+        }
+    });
+
+    // Listen for bikes changes
+    window.firebaseOnValue(dbRefs.bikes, (snapshot) => {
+        if (snapshot.exists()) {
+            bikes = Object.values(snapshot.val()) || [];
+            renderBikes();
+            updateStatistics();
+        }
+    });
+
+    // Listen for users changes
+    window.firebaseOnValue(dbRefs.users, (snapshot) => {
+        if (snapshot.exists()) {
+            users = Object.values(snapshot.val()) || [];
+            renderUsers();
+        }
+    });
+
+    // Listen for settings changes
+    window.firebaseOnValue(dbRefs.settings, (snapshot) => {
+        if (snapshot.exists()) {
+            const settings = snapshot.val();
+            if (settings.garageAddress) {
+                localStorage.setItem('garageAppAddress', settings.garageAddress);
+                updateGarageAddress();
+            }
+        }
+    });
+}
+
+// Initialize app after data is loaded
+async function initializeAppAfterDataLoad() {
+    isLoadingData = false;
+
+    // Remove loading overlay if exists
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+        setTimeout(() => loadingOverlay.remove(), 300);
+    }
+
+    await initializeDefaultUser();
     initAuth();
     initLanguage();
     renderDrivers();
@@ -51,11 +147,37 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     updateSidebarTime();
     updateSystemInfo();
+    updateGarageAddress();
 
     // Restore saved view or default to dashboard
     const savedView = localStorage.getItem('garageAppCurrentView') || 'dashboard';
     showView(savedView);
 
+    // Setup form listeners
+    setupFormListeners();
+
+    // Check for sample data after a short delay
+    setTimeout(checkAndLoadSampleData, 1000);
+
+    showNotification('Data loaded from cloud', 'success');
+}
+
+// Show loading indicator
+function showLoadingIndicator() {
+    const overlay = document.createElement('div');
+    overlay.id = 'loadingOverlay';
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-cloud-download-alt"></i>
+            <span>Loading data from cloud...</span>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// Setup form event listeners
+function setupFormListeners() {
     // Bike search listener
     const bikeSearchInput = document.getElementById('bikeSearchInput');
     if (bikeSearchInput) {
@@ -99,6 +221,67 @@ document.addEventListener('DOMContentLoaded', () => {
         userSearchInput.addEventListener('input', (e) => {
             renderUsers(e.target.value);
         });
+    }
+}
+
+// Role definitions
+const ROLE_ADMIN = 'admin';
+const ROLE_USER = 'user';
+
+// Initialize default admin user if no users exist
+async function initializeDefaultUser() {
+    // Check if anon user exists
+    const anonUser = users.find(u => u.username === 'anon');
+
+    if (anonUser) {
+        // Ensure anon user has admin role
+        if (anonUser.role !== ROLE_ADMIN) {
+            anonUser.role = ROLE_ADMIN;
+            await saveUsers();
+        }
+    } else if (users.length === 0) {
+        // Create default admin if no users exist
+        const defaultAdmin = {
+            id: generateId(),
+            username: 'anon',
+            password: 'anon',
+            role: ROLE_ADMIN,
+            createdAt: new Date().toISOString()
+        };
+        users.push(defaultAdmin);
+        await saveUsers();
+    }
+}
+
+// Initialize App
+document.addEventListener('DOMContentLoaded', () => {
+    // Show loading indicator
+    showLoadingIndicator();
+
+    // Initialize Firebase Database
+    if (initFirebaseDB()) {
+        loadAllDataFromFirebase();
+    } else {
+        // Retry after a short delay if Firebase isn't ready yet
+        setTimeout(() => {
+            if (initFirebaseDB()) {
+                loadAllDataFromFirebase();
+            } else {
+                console.error('Failed to initialize Firebase');
+                showNotification('Failed to connect to cloud database', 'error');
+                // Remove loading overlay
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.innerHTML = `
+                        <div class="loading-spinner error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Failed to connect to cloud database</span>
+                            <button onclick="location.reload()" class="btn-retry">Retry</button>
+                        </div>
+                    `;
+                }
+            }
+        }, 1500);
     }
 });
 
@@ -212,9 +395,20 @@ function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// Save drivers to localStorage
-function saveDrivers() {
-    localStorage.setItem('garageAppDrivers', JSON.stringify(drivers));
+// Save drivers to Firebase
+async function saveDrivers() {
+    if (!db) return;
+    try {
+        // Convert array to object with IDs as keys for Firebase
+        const driversObj = {};
+        drivers.forEach(driver => {
+            driversObj[driver.id] = driver;
+        });
+        await window.firebaseSet(dbRefs.drivers, driversObj);
+    } catch (error) {
+        console.error('Error saving drivers:', error);
+        showNotification('Error saving drivers to cloud', 'error');
+    }
 }
 
 // Show Add Driver Modal
@@ -1613,7 +1807,7 @@ function showNotification(message, type = 'success') {
 }
 
 // Sample Data for Demo
-function loadSampleData() {
+async function loadSampleData() {
     if (drivers.length === 0) {
         const sampleDrivers = [
             {
@@ -1727,17 +1921,22 @@ function loadSampleData() {
         ];
 
         drivers = sampleDrivers;
-        saveDrivers();
+        await saveDrivers();
         renderDrivers();
         updateStatistics();
     }
 }
 
-// Load sample data on first visit
-if (localStorage.getItem('garageAppVisited') === null) {
-    loadSampleData();
-    localStorage.setItem('garageAppVisited', 'true');
+// Load sample data on first visit (after Firebase is initialized)
+async function checkAndLoadSampleData() {
+    const hasVisited = localStorage.getItem('garageAppVisited');
+    if (!hasVisited && drivers.length === 0 && bikes.length === 0) {
+        await loadSampleData();
+        localStorage.setItem('garageAppVisited', 'true');
+    }
 }
+
+// Note: Sample data loading is now triggered from initializeAppAfterDataLoad
 
 // ===== Reports System Logic =====
 
@@ -1947,13 +2146,44 @@ function showView(viewName) {
     }
 }
 
-// Bike CRUD Operations
-function saveBikes() {
-    localStorage.setItem('garageAppBikes', JSON.stringify(bikes));
+// Save bikes to Firebase
+async function saveBikes() {
+    if (!db) return;
+    try {
+        const bikesObj = {};
+        bikes.forEach(bike => {
+            bikesObj[bike.id] = bike;
+        });
+        await window.firebaseSet(dbRefs.bikes, bikesObj);
+    } catch (error) {
+        console.error('Error saving bikes:', error);
+        showNotification('Error saving bikes to cloud', 'error');
+    }
 }
 
-function saveUsers() {
-    localStorage.setItem('garageAppUsers', JSON.stringify(users));
+// Save users to Firebase
+async function saveUsers() {
+    if (!db) return;
+    try {
+        const usersObj = {};
+        users.forEach(user => {
+            usersObj[user.id] = user;
+        });
+        await window.firebaseSet(dbRefs.users, usersObj);
+    } catch (error) {
+        console.error('Error saving users:', error);
+        showNotification('Error saving users to cloud', 'error');
+    }
+}
+
+// Save settings to Firebase
+async function saveSettingsToFirebase(settings) {
+    if (!db) return;
+    try {
+        await window.firebaseSet(dbRefs.settings, settings);
+    } catch (error) {
+        console.error('Error saving settings:', error);
+    }
 }
 
 // ===== Authentication System =====
@@ -3103,7 +3333,7 @@ function exportData() {
     showNotification('Data exported successfully');
 }
 
-function importData(input) {
+async function importData(input) {
     if (!isAdmin()) {
         showNotification('Admin privileges required', 'error');
         return;
@@ -3112,7 +3342,7 @@ function importData(input) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const data = JSON.parse(e.target.result);
 
@@ -3121,19 +3351,21 @@ function importData(input) {
                 return;
             }
 
-            // Validate data structure
+            // Validate data structure and update arrays
             if (data.users && Array.isArray(data.users)) {
                 users = data.users;
-                saveUsers();
             }
             if (data.drivers && Array.isArray(data.drivers)) {
                 drivers = data.drivers;
-                saveDrivers();
             }
             if (data.bikes && Array.isArray(data.bikes)) {
                 bikes = data.bikes;
-                saveBikes();
             }
+
+            // Save to Firebase
+            await saveUsers();
+            await saveDrivers();
+            await saveBikes();
 
             // Re-initialize default user if no users exist
             initializeDefaultUser();
@@ -3144,7 +3376,7 @@ function importData(input) {
             renderUsers();
             updateStatistics();
 
-            showNotification('Data imported successfully');
+            showNotification('Data imported successfully to cloud');
         } catch (error) {
             showNotification('Invalid file format', 'error');
             console.error('Import error:', error);
@@ -3196,8 +3428,19 @@ function handleConfirmClearData(e) {
 }
 
 // Perform the actual data clearing
-function performDataClearing() {
-    // Clear all data
+async function performDataClearing() {
+    // Clear all data from Firebase
+    if (db) {
+        try {
+            await window.firebaseRemove(dbRefs.drivers);
+            await window.firebaseRemove(dbRefs.bikes);
+            await window.firebaseRemove(dbRefs.users);
+        } catch (error) {
+            console.error('Error clearing Firebase data:', error);
+        }
+    }
+
+    // Also clear localStorage backup
     localStorage.removeItem('garageAppDrivers');
     localStorage.removeItem('garageAppBikes');
     localStorage.removeItem('garageAppUsers');
@@ -3236,7 +3479,7 @@ function closeEditAddressModal() {
     document.getElementById('editAddressForm').reset();
 }
 
-function handleEditAddress(e) {
+async function handleEditAddress(e) {
     e.preventDefault();
     if (!isAdmin()) {
         showNotification('Admin privileges required', 'error');
@@ -3249,7 +3492,12 @@ function handleEditAddress(e) {
         return;
     }
 
+    // Save to localStorage for immediate use
     localStorage.setItem('garageAppAddress', newAddress);
+
+    // Save to Firebase
+    await saveSettingsToFirebase({ garageAddress: newAddress });
+
     updateGarageAddress();
     closeEditAddressModal();
     showNotification('Garage address updated successfully');

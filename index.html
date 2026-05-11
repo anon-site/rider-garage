@@ -1393,6 +1393,37 @@
 
     <script src="translations.js"></script>
     <script src="app.js"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase functions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue, child, update, remove } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAKtt2BKHDb1ioncMxHn_Cw1n3_BVUyCp4",
+            authDomain: "garage-tft.firebaseapp.com",
+            databaseURL: "https://garage-tft-default-rtdb.firebaseio.com",
+            projectId: "garage-tft",
+            storageBucket: "garage-tft.firebasestorage.app",
+            messagingSenderId: "852645293678",
+            appId: "1:852645293678:web:f8e21992da45912531807f"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Make Firebase functions available globally for the app
+        window.firebaseDB = db;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+        window.firebaseChild = child;
+        window.firebaseUpdate = update;
+        window.firebaseRemove = remove;
+    </script>
 </body>
 
 </html>
