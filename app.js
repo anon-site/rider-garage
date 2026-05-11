@@ -3,19 +3,54 @@
 // Data Storage
 let drivers = JSON.parse(localStorage.getItem('garageAppDrivers')) || [];
 let bikes = JSON.parse(localStorage.getItem('garageAppBikes')) || [];
+let users = JSON.parse(localStorage.getItem('garageAppUsers')) || [];
+let currentUser = JSON.parse(localStorage.getItem('garageAppCurrentUser')) || null;
 let currentDriverId = null;
 let currentBikeId = null;
 let currentBikeFilter = 'all';
 let currentDriverFilter = 'all';
+let currentUserFilter = '';
+
+// Role definitions
+const ROLE_ADMIN = 'admin';
+const ROLE_USER = 'user';
+
+// Initialize default admin user if no users exist
+function initializeDefaultUser() {
+    // Check if anon user exists
+    const anonUser = users.find(u => u.username === 'anon');
+
+    if (anonUser) {
+        // Ensure anon user has admin role
+        if (anonUser.role !== ROLE_ADMIN) {
+            anonUser.role = ROLE_ADMIN;
+            saveUsers();
+        }
+    } else if (users.length === 0) {
+        // Create default admin if no users exist
+        const defaultAdmin = {
+            id: generateId(),
+            username: 'anon',
+            password: 'anon',
+            role: ROLE_ADMIN,
+            createdAt: new Date().toISOString()
+        };
+        users.push(defaultAdmin);
+        saveUsers();
+    }
+}
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
+    initializeDefaultUser();
+    initAuth();
     initLanguage();
     renderDrivers();
     renderBikes();
     updateStatistics();
     setupEventListeners();
     updateSidebarTime();
+    updateSystemInfo();
 
     // Restore saved view or default to dashboard
     const savedView = localStorage.getItem('garageAppCurrentView') || 'dashboard';
@@ -38,6 +73,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const editBikeForm = document.getElementById('editBikeForm');
     if (editBikeForm) {
         editBikeForm.addEventListener('submit', handleEditBike);
+    }
+
+    // Login form
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+
+    // Add user form
+    const addUserForm = document.getElementById('addUserForm');
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', handleAddUser);
+    }
+
+    // Edit user form
+    const editUserForm = document.getElementById('editUserForm');
+    if (editUserForm) {
+        editUserForm.addEventListener('submit', handleEditUser);
+    }
+
+    // User search
+    const userSearchInput = document.getElementById('userSearchInput');
+    if (userSearchInput) {
+        userSearchInput.addEventListener('input', (e) => {
+            renderUsers(e.target.value);
+        });
     }
 });
 
@@ -86,6 +147,12 @@ function setupEventListeners() {
         updateRatingDisplay();
     }
 
+    // Confirm clear form
+    const confirmClearForm = document.getElementById('confirmClearForm');
+    if (confirmClearForm) {
+        confirmClearForm.addEventListener('submit', handleConfirmClearData);
+    }
+
     // Modals only close on close button click (not backdrop click)
     // Removed backdrop click closing for better UX
 
@@ -130,6 +197,16 @@ function updateDateTime() {
     if (dateElement) dateElement.textContent = dateString;
 }
 
+// Update System Information
+function updateSystemInfo() {
+    const lastUpdatedElement = document.getElementById('lastUpdated');
+    if (lastUpdatedElement) {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        lastUpdatedElement.textContent = now.toLocaleDateString('en-US', options);
+    }
+}
+
 // Generate unique ID
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -142,6 +219,10 @@ function saveDrivers() {
 
 // Show Add Driver Modal
 function showAddDriverModal() {
+    if (!isAdmin()) {
+        showNotification('View only mode - cannot add drivers', 'error');
+        return;
+    }
     document.getElementById('addDriverModal').classList.add('active');
     document.getElementById('driverName').focus();
     populateAvailableBikesDropdown();
@@ -420,6 +501,12 @@ function showDriverDashboard(driverId) {
     currentDriverId = driverId;
     const driver = drivers.find(d => d.id === driverId);
 
+    // Hide edit button for viewers
+    const editBtn = document.querySelector('.profile-edit-btn');
+    if (editBtn) {
+        editBtn.style.display = isAdmin() ? 'flex' : 'none';
+    }
+
     if (!driver) return;
 
     // Reset current movement when switching drivers
@@ -495,6 +582,10 @@ function updateStatusToggle(status) {
 
 // Toggle Driver Status
 function toggleDriverStatus() {
+    if (!isAdmin()) {
+        showNotification('View only mode - cannot change status', 'error');
+        return;
+    }
     const driver = drivers.find(d => d.id === currentDriverId);
     if (!driver) return;
 
@@ -1369,6 +1460,10 @@ function animateNumber(elementId, targetValue) {
 
 // Delete Driver
 function deleteDriver(driverId) {
+    if (!isAdmin()) {
+        showNotification('View only mode - cannot delete drivers', 'error');
+        return;
+    }
     if (!confirm(t('confirmDelete'))) return;
 
     // Release assigned bike
@@ -1847,6 +1942,8 @@ function showView(viewName) {
 
     if (viewName === 'dashboard') {
         renderHomeDashboard();
+    } else if (viewName === 'users') {
+        renderUsers();
     }
 }
 
@@ -1855,7 +1952,110 @@ function saveBikes() {
     localStorage.setItem('garageAppBikes', JSON.stringify(bikes));
 }
 
+function saveUsers() {
+    localStorage.setItem('garageAppUsers', JSON.stringify(users));
+}
+
+// ===== Authentication System =====
+
+function initAuth() {
+    if (!currentUser) {
+        showLoginModal();
+    } else {
+        hideLoginModal();
+        updateUserDisplay();
+        applyRoleRestrictions();
+        renderUsers();
+    }
+}
+
+function showLoginModal() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideLoginModal() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    const user = users.find(u => u.username === username && u.password === password);
+
+    if (user) {
+        currentUser = user;
+        localStorage.setItem('garageAppCurrentUser', JSON.stringify(user));
+        hideLoginModal();
+        updateUserDisplay();
+        applyRoleRestrictions();
+        showNotification(`Welcome, ${user.username}!`, 'success');
+        renderUsers();
+    } else {
+        showNotification('Invalid username or password', 'error');
+    }
+}
+
+function logout() {
+    currentUser = null;
+    localStorage.removeItem('garageAppCurrentUser');
+    location.reload();
+}
+
+function updateUserDisplay() {
+    if (!currentUser) return;
+
+    const userNameEl = document.getElementById('headerUserName');
+    const userRoleEl = document.getElementById('headerUserRole');
+
+    if (userNameEl) {
+        userNameEl.textContent = currentUser.username;
+    }
+
+    if (userRoleEl) {
+        userRoleEl.textContent = currentUser.role === ROLE_ADMIN ? 'Admin' : 'User';
+        userRoleEl.className = 'user-role ' + (currentUser.role === ROLE_ADMIN ? 'admin' : 'user');
+    }
+}
+
+function applyRoleRestrictions() {
+    if (!currentUser) return;
+
+    if (currentUser.role === ROLE_ADMIN) {
+        document.body.classList.add('is-admin');
+        document.body.classList.remove('is-viewer');
+    } else {
+        document.body.classList.add('is-viewer');
+        document.body.classList.remove('is-admin');
+    }
+}
+
+function isAdmin() {
+    return currentUser && currentUser.role === ROLE_ADMIN;
+}
+
+function requireAdmin() {
+    if (!isAdmin()) {
+        showNotification('Admin privileges required', 'error');
+        return false;
+    }
+    return true;
+}
+
 function showAddBikeModal() {
+    if (!isAdmin()) {
+        showNotification('View only mode - cannot add bikes', 'error');
+        return;
+    }
     const modal = document.getElementById('addBikeModal');
     modal.classList.add('active');
 
@@ -2108,6 +2308,10 @@ function handleEditBike(e) {
 }
 
 function deleteBike(id) {
+    if (!isAdmin()) {
+        showNotification('View only mode - cannot delete bikes', 'error');
+        return;
+    }
     if (confirm(t('confirmDeleteBike'))) {
         const bike = bikes.find(b => b.id === id);
         if (bike && bike.driverId) {
@@ -2599,7 +2803,8 @@ function updatePageIndicator(viewName) {
         'drivers': { icon: 'fa-users', key: 'drivers', text: 'Drivers' },
         'bikes': { icon: 'fa-motorcycle', key: 'bikes', text: 'Bikes' },
         'dashboard': { icon: 'fa-chart-pie', key: 'dashboard', text: 'Dashboard' },
-        'settings': { icon: 'fa-cog', key: 'settings', text: 'Settings' }
+        'settings': { icon: 'fa-cog', key: 'settings', text: 'Settings' },
+        'users': { icon: 'fa-user-shield', key: 'users', text: 'User Management' }
     };
 
     const page = pageData[viewName];
@@ -2609,3 +2814,464 @@ function updatePageIndicator(viewName) {
         indicator.innerHTML = `<i class="fas ${page.icon}"></i><span>${text}</span>`;
     }
 }
+
+// ===== User Management Functions =====
+
+function renderUsers(searchTerm = '') {
+    const grid = document.getElementById('usersGrid');
+    if (!grid) return;
+
+    const filteredUsers = users.filter(user => {
+        if (!searchTerm) return true;
+        return user.username.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+
+    if (filteredUsers.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <i class="fas fa-users-slash"></i>
+                <h3>No Users</h3>
+                <p>Add a new user to get started</p>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = filteredUsers.map(user => {
+        const isCurrentUser = currentUser && currentUser.id === user.id;
+        const isDefaultAdmin = user.username === 'anon' && user.password === 'anon';
+
+        return `
+            <div class="user-card">
+                <div class="user-card-header">
+                    <div class="user-card-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-card-info">
+                        <h4>${escapeHtml(user.username)} ${isCurrentUser ? '<small>(You)</small>' : ''} ${isDefaultAdmin ? '<small>(Default)</small>' : ''}</h4>
+                        <span class="user-card-role ${user.role}">
+                            <i class="fas fa-${user.role === ROLE_ADMIN ? 'user-shield' : 'user'}"></i>
+                            ${user.role === ROLE_ADMIN ? 'Admin' : 'User'}
+                        </span>
+                    </div>
+                </div>
+                <div class="user-card-footer">
+                    <button class="btn-edit" onclick="showEditUserModal('${user.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    ${!isDefaultAdmin ? `
+                    <button class="btn-delete" onclick="deleteUser('${user.id}')">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                    ` : '<button class="btn-delete" disabled style="opacity: 0.5; cursor: not-allowed;"><i class="fas fa-lock"></i> Protected</button>'}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function showAddUserModal() {
+    if (!requireAdmin()) return;
+    document.getElementById('addUserModal').classList.add('active');
+    document.getElementById('newUsername').focus();
+}
+
+function closeAddUserModal() {
+    document.getElementById('addUserModal').classList.remove('active');
+    document.getElementById('addUserForm').reset();
+    document.getElementById('newUserRole').value = ROLE_ADMIN;
+    document.getElementById('selectedUserRole').textContent = 'Admin';
+}
+
+function handleAddUser(e) {
+    e.preventDefault();
+    if (!requireAdmin()) return;
+
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newUserPassword').value;
+    const role = document.getElementById('newUserRole').value;
+
+    if (!username || !password) {
+        showNotification('Username and password are required', 'error');
+        return;
+    }
+
+    if (users.some(u => u.username === username)) {
+        showNotification('Username already exists', 'error');
+        return;
+    }
+
+    const newUser = {
+        id: generateId(),
+        username: username,
+        password: password,
+        role: role,
+        createdAt: new Date().toISOString()
+    };
+
+    users.push(newUser);
+    saveUsers();
+    renderUsers();
+    closeAddUserModal();
+    showNotification(`User "${username}" created successfully`);
+}
+
+function showEditUserModal(userId) {
+    if (!requireAdmin()) return;
+
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editUsername').value = user.username;
+    document.getElementById('editUserPassword').value = '';
+    document.getElementById('editUserRole').value = user.role;
+    document.getElementById('selectedEditUserRole').textContent = user.role === ROLE_ADMIN ? 'Admin' : 'User';
+
+    document.getElementById('editUserModal').classList.add('active');
+}
+
+function closeEditUserModal() {
+    document.getElementById('editUserModal').classList.remove('active');
+    document.getElementById('editUserForm').reset();
+}
+
+function handleEditUser(e) {
+    e.preventDefault();
+    if (!requireAdmin()) return;
+
+    const userId = document.getElementById('editUserId').value;
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const newUsername = document.getElementById('editUsername').value.trim();
+    const newPassword = document.getElementById('editUserPassword').value;
+    const newRole = document.getElementById('editUserRole').value;
+
+    if (!newUsername) {
+        showNotification('Username is required', 'error');
+        return;
+    }
+
+    if (newUsername !== user.username && users.some(u => u.username === newUsername)) {
+        showNotification('Username already exists', 'error');
+        return;
+    }
+
+    user.username = newUsername;
+    user.role = newRole;
+    if (newPassword) {
+        user.password = newPassword;
+    }
+
+    saveUsers();
+
+    // Update current user display if editing self
+    if (currentUser && currentUser.id === userId) {
+        currentUser = user;
+        localStorage.setItem('garageAppCurrentUser', JSON.stringify(user));
+        updateUserDisplay();
+        applyRoleRestrictions();
+    }
+
+    renderUsers();
+    closeEditUserModal();
+    showNotification(`User "${newUsername}" updated successfully`);
+}
+
+function deleteUser(userId) {
+    if (!requireAdmin()) return;
+
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    // Prevent deleting default admin
+    if (user.username === 'anon' && user.password === 'anon') {
+        showNotification('Cannot delete default admin user', 'error');
+        return;
+    }
+
+    // Prevent self-deletion
+    if (currentUser && currentUser.id === userId) {
+        showNotification('Cannot delete yourself', 'error');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to delete user "${user.username}"?`)) return;
+
+    users = users.filter(u => u.id !== userId);
+    saveUsers();
+    renderUsers();
+    showNotification(`User "${user.username}" deleted successfully`);
+}
+
+function toggleUserRoleDropdown() {
+    const menu = document.getElementById('userRoleMenu');
+    menu.classList.toggle('active');
+}
+
+function selectUserRole(value, label) {
+    document.getElementById('newUserRole').value = value;
+    document.getElementById('selectedUserRole').textContent = label;
+    document.getElementById('userRoleMenu').classList.remove('active');
+
+    const infoText = document.getElementById('roleInfoText');
+    if (value === ROLE_ADMIN) {
+        infoText.textContent = 'Admin users can add, edit, and delete all records including managing other users.';
+    } else {
+        infoText.textContent = 'User accounts can only view data and cannot make any changes.';
+    }
+}
+
+function toggleEditUserRoleDropdown() {
+    const menu = document.getElementById('editUserRoleMenu');
+    menu.classList.toggle('active');
+}
+
+function selectEditUserRole(value, label) {
+    document.getElementById('editUserRole').value = value;
+    document.getElementById('selectedEditUserRole').textContent = label;
+    document.getElementById('editUserRoleMenu').classList.remove('active');
+}
+
+function toggleEditUserPasswordVisibility() {
+    const passwordInput = document.getElementById('editUserPassword');
+    const icon = document.getElementById('editUserPasswordIcon');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+function toggleLoginPasswordVisibility() {
+    const passwordInput = document.getElementById('loginPassword');
+    const icon = document.getElementById('loginPasswordIcon');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+function toggleNewUserPasswordVisibility() {
+    const passwordInput = document.getElementById('newUserPassword');
+    const icon = document.getElementById('newUserPasswordIcon');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+// ===== Data Import/Export Functions =====
+
+function exportData() {
+    if (!isAdmin()) {
+        showNotification('Admin privileges required', 'error');
+        return;
+    }
+    const data = {
+        exportDate: new Date().toISOString(),
+        version: '1.0',
+        users: users,
+        drivers: drivers,
+        bikes: bikes
+    };
+
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `garage-tft-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showNotification('Data exported successfully');
+}
+
+function importData(input) {
+    if (!isAdmin()) {
+        showNotification('Admin privileges required', 'error');
+        return;
+    }
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+
+            if (!confirm('This will replace all current data. Are you sure you want to continue?')) {
+                input.value = '';
+                return;
+            }
+
+            // Validate data structure
+            if (data.users && Array.isArray(data.users)) {
+                users = data.users;
+                saveUsers();
+            }
+            if (data.drivers && Array.isArray(data.drivers)) {
+                drivers = data.drivers;
+                saveDrivers();
+            }
+            if (data.bikes && Array.isArray(data.bikes)) {
+                bikes = data.bikes;
+                saveBikes();
+            }
+
+            // Re-initialize default user if no users exist
+            initializeDefaultUser();
+
+            // Refresh displays
+            renderDrivers();
+            renderBikes();
+            renderUsers();
+            updateStatistics();
+
+            showNotification('Data imported successfully');
+        } catch (error) {
+            showNotification('Invalid file format', 'error');
+            console.error('Import error:', error);
+        }
+        input.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function clearAllData() {
+    if (!isAdmin()) {
+        showNotification('Admin privileges required', 'error');
+        return;
+    }
+    
+    // Show password confirmation modal instead of simple confirm
+    showClearDataModal();
+}
+
+// Show Clear Data Modal
+function showClearDataModal() {
+    document.getElementById('clearDataModal').classList.add('active');
+    document.getElementById('confirmPassword').focus();
+}
+
+// Close Clear Data Modal
+function closeClearDataModal() {
+    document.getElementById('clearDataModal').classList.remove('active');
+    document.getElementById('confirmClearForm').reset();
+}
+
+// Handle Confirm Clear Data Form
+function handleConfirmClearData(e) {
+    e.preventDefault();
+    
+    const password = document.getElementById('confirmPassword').value;
+    
+    // Validate password
+    if (password !== 'anon') {
+        showNotification('Incorrect password. Access denied.', 'error');
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('confirmPassword').focus();
+        return;
+    }
+    
+    // Password is correct, proceed with data clearing
+    performDataClearing();
+    closeClearDataModal();
+}
+
+// Perform the actual data clearing
+function performDataClearing() {
+    // Clear all data
+    localStorage.removeItem('garageAppDrivers');
+    localStorage.removeItem('garageAppBikes');
+    localStorage.removeItem('garageAppUsers');
+
+    // Reset arrays
+    drivers = [];
+    bikes = [];
+    users = [];
+
+    // Re-initialize default user
+    initializeDefaultUser();
+
+    // Refresh displays
+    renderDrivers();
+    renderBikes();
+    renderUsers();
+    updateStatistics();
+
+    showNotification('All data has been cleared');
+}
+
+// Garage Address Functions
+function showEditAddressModal() {
+    if (!isAdmin()) {
+        showNotification('Admin privileges required', 'error');
+        return;
+    }
+
+    const currentAddress = localStorage.getItem('garageAppAddress') || 'Aristomenous 69';
+    document.getElementById('garageAddressInput').value = currentAddress;
+    document.getElementById('editAddressModal').classList.add('active');
+}
+
+function closeEditAddressModal() {
+    document.getElementById('editAddressModal').classList.remove('active');
+    document.getElementById('editAddressForm').reset();
+}
+
+function handleEditAddress(e) {
+    e.preventDefault();
+    if (!isAdmin()) {
+        showNotification('Admin privileges required', 'error');
+        return;
+    }
+
+    const newAddress = document.getElementById('garageAddressInput').value.trim();
+    if (!newAddress) {
+        showNotification('Address is required', 'error');
+        return;
+    }
+
+    localStorage.setItem('garageAppAddress', newAddress);
+    updateGarageAddress();
+    closeEditAddressModal();
+    showNotification('Garage address updated successfully');
+}
+
+function updateGarageAddress() {
+    const address = localStorage.getItem('garageAppAddress') || 'Aristomenous 69';
+    const addressElement = document.querySelector('.garage-address span');
+    if (addressElement) {
+        addressElement.textContent = address;
+    }
+}
+
+// Initialize garage address on page load
+document.addEventListener('DOMContentLoaded', () => {
+    updateGarageAddress();
+});
+
+// Add event listener for edit address form
+document.addEventListener('DOMContentLoaded', () => {
+    const editAddressForm = document.getElementById('editAddressForm');
+    if (editAddressForm) {
+        editAddressForm.addEventListener('submit', handleEditAddress);
+    }
+});
