@@ -1917,144 +1917,32 @@ function recordExit() {
 
 
 // Record Exit Confirmed Function
-
 function recordExitConfirmed(driver) {
 
-
-
-    const now = new Date();
-
-
-
-    // Check if driver is already inside (status: inside) - create pending exit
-
+    // Check if driver is already inside (status: inside) - show exit details form
     if (driver.status === 'inside') {
-
-        // Create a pending movement with exit time only
-
+        // Create a temporary movement object for form display only
         currentMovement = {
-
             id: generateId(),
-
-            date: now.toISOString().split('T')[0],
-
-            exitTime: now.toISOString(),
-
+            date: new Date().toISOString().split('T')[0],
+            exitTime: new Date().toISOString(),
             entryTime: null,
-
             orders: 0,
-
             rating: driver.rating,
-
-            timestamp: now.toISOString()
-
+            timestamp: new Date().toISOString()
         };
 
-
-
-        // Add the pending movement to driver's movements
-
-        driver.movements.unshift(currentMovement);
-
-
-
-        // Update driver status
-
-        driver.status = 'outside';
-
-
-
-        // Update UI
-
-        updateLastRecordedTime(now);
-
+        // Update UI to show exit details form
+        updateLastRecordedTime(new Date());
         updateButtonStates('exit');
-
-        hideEntryDetails();
-
         showExitDetails();
 
+        // Don't save any data yet - wait for saveExitDetails()
+        showNotification("Please fill exit details and click Save", 'info');
 
-
-        saveDrivers();
-
-        renderDrivers();
-
-        updateStatistics();
-
-        updateStatusToggle(driver.status);
-
-        renderMovementHistory(driver);
-
-
-
-        showNotification(t('exitRecorded'));
-
-        return;
-
+    } else {
+        showNotification("Driver is already outside", "warning");
     }
-
-
-
-    // For drivers outside, check if there's an entry without exit
-
-    if (!currentMovement || !currentMovement.entryTime) {
-
-        showNotification(t('entryRequiredFirst'), 'error');
-
-        return;
-
-    }
-
-
-
-    // Update current movement with exit time
-
-    currentMovement.exitTime = now.toISOString();
-
-
-
-    // Add the completed movement to driver's movements
-
-    driver.movements.unshift(currentMovement);
-
-
-
-    // Update driver status
-
-    driver.status = 'outside';
-
-
-
-    // Update UI
-
-    updateLastRecordedTime(now);
-
-    updateButtonStates('exit');
-
-    hideEntryDetails();
-
-
-
-    // Reset current movement
-
-    currentMovement = null;
-
-
-
-    saveDrivers();
-
-    renderDrivers();
-
-    updateStatistics();
-
-    updateStatusToggle(driver.status);
-
-    renderMovementHistory(driver);
-
-
-
-    showNotification(t('exitRecorded'));
 
 }
 
@@ -2104,10 +1992,6 @@ function recordEntryConfirmed(driver) {
 
 
 
-    const now = new Date();
-
-
-
     // Check if there's a pending exit movement (exit without entry)
 
     const pendingExitMovement = driver.movements.find(m => m.exitTime && !m.entryTime);
@@ -2116,23 +2000,15 @@ function recordEntryConfirmed(driver) {
 
     if (pendingExitMovement) {
 
-        // Complete the pending movement with entry time
-
-        pendingExitMovement.entryTime = now.toISOString();
+        // Set current movement to the pending exit movement for completion
 
         currentMovement = pendingExitMovement;
 
 
 
-        // Update driver status
+        // Update UI to show entry details form
 
-        driver.status = 'inside';
-
-
-
-        // Update UI
-
-        updateLastRecordedTime(now);
+        updateLastRecordedTime(new Date());
 
         updateButtonStates('entry');
 
@@ -2140,91 +2016,59 @@ function recordEntryConfirmed(driver) {
 
 
 
-        saveDrivers();
+        // Don't save any data yet - wait for saveEntryDetails()
 
-        renderDrivers();
-
-        updateStatistics();
-
-        updateStatusToggle(driver.status);
-
-        renderMovementHistory(driver);
+        showNotification("Please fill entry details and click Save", 'info');
 
 
 
-        showNotification(t('entryRecorded'));
+    } else if (driver.status === 'outside') {
 
-        return;
-
-    }
-
-
-
-    // Create new movement if no pending exit
-
-    if (!currentMovement) {
+        // Create a temporary movement object for form display only
 
         currentMovement = {
 
             id: generateId(),
 
-            date: now.toISOString().split('T')[0],
+            date: new Date().toISOString().split('T')[0],
 
             exitTime: null,
 
-            entryTime: now.toISOString(),
+            entryTime: new Date().toISOString(),
 
             orders: 0,
 
             rating: driver.rating,
 
-            timestamp: now.toISOString()
+            timestamp: new Date().toISOString()
 
         };
 
 
 
-        // Add to movements
+        // Update UI to show entry details form
 
-        driver.movements.unshift(currentMovement);
+        updateLastRecordedTime(new Date());
+
+        updateButtonStates('entry');
+
+        showEntryDetails();
+
+
+
+        // Don't save any data yet - wait for saveEntryDetails()
+
+        showNotification("Please fill entry details and click Save", 'info');
+
+
 
     } else {
 
-        currentMovement.entryTime = now.toISOString();
+        showNotification("Driver is already inside", "warning");
 
     }
 
 
-
-    // Update driver status
-
-    driver.status = 'inside';
-
-
-
-    // Update UI
-
-    updateLastRecordedTime(now);
-
-    updateButtonStates('entry');
-
-    showEntryDetails();
-
-
-
-    saveDrivers();
-
-    renderDrivers();
-
-    updateStatistics();
-
-    updateStatusToggle(driver.status);
-
-    renderMovementHistory(driver);
-
-
-
-    showNotification(t('entryRecorded'));
 
 }
 
@@ -2250,7 +2094,7 @@ function saveEntryDetails() {
 
 
 
-    // Update movement with details
+    // Update movement with entry details
 
     currentMovement.entryTime = entryTime;
 
@@ -2260,7 +2104,19 @@ function saveEntryDetails() {
 
 
 
-    // Update driver's total orders and rating
+    // Add the movement to driver's movements array (if not already there)
+
+    if (!driver.movements.includes(currentMovement)) {
+
+        driver.movements.unshift(currentMovement);
+
+    }
+
+
+
+    // Update driver status, total orders, and rating
+
+    driver.status = 'inside';
 
     driver.totalOrders += ordersCount;
 
@@ -2282,6 +2138,8 @@ function saveEntryDetails() {
 
 
 
+    // Save data and update displays
+
     saveDrivers();
 
     renderDrivers();
@@ -2294,7 +2152,7 @@ function saveEntryDetails() {
 
 
 
-    showNotification(t('movementRecorded'));
+    showNotification(t('entryRecorded'), 'success');
 
 }
 
@@ -2478,15 +2336,25 @@ function saveExitDetails() {
 
 
 
-    // Update movement with exit rating (store as exitRating)
+    // Update movement with exit details
 
     currentMovement.exitTime = exitTime;
 
     currentMovement.exitRating = exitRating;
 
+    currentMovement.rating = exitRating;
 
 
-    // Update driver rating to exit rating
+
+    // Add the movement to driver's movements array
+
+    driver.movements.unshift(currentMovement);
+
+
+
+    // Update driver status and rating
+
+    driver.status = 'outside';
 
     driver.rating = exitRating;
 
@@ -2506,6 +2374,8 @@ function saveExitDetails() {
 
 
 
+    // Save data and update displays
+
     saveDrivers();
 
     renderDrivers();
@@ -2518,7 +2388,7 @@ function saveExitDetails() {
 
 
 
-    showNotification(t('exitRecorded'));
+    showNotification(t('exitRecorded'), 'success');
 
 }
 
