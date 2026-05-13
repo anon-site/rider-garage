@@ -99,6 +99,7 @@ function initFirebaseDB() {
 
 
         dbRefs.settings = window.firebaseRef(db, 'settings');
+    dbRefs.logs = window.firebaseRef(db, 'logs');
 
 
 
@@ -259,6 +260,13 @@ async function loadAllDataFromFirebase() {
 
 
         const settingsSnapshot = await window.firebaseGet(dbRefs.settings);
+        const logsSnapshot = await window.firebaseGet(dbRefs.logs);
+        
+        if (logsSnapshot.exists()) {
+            activityLogs = Object.values(logsSnapshot.val() || {});
+            activityLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            await cleanupOldLogs();
+        }
 
 
 
@@ -475,6 +483,17 @@ function setupFirebaseListeners() {
     // Listen for settings changes
 
 
+
+        window.firebaseOnValue(dbRefs.logs, (snapshot) => {
+        if (snapshot.exists()) {
+            activityLogs = Object.values(snapshot.val() || {});
+            activityLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            if (document.getElementById('dashboardView').style.display === 'none') { renderActivityLogs(); }
+        } else {
+            activityLogs = [];
+            renderActivityLogs();
+        }
+    });
 
     window.firebaseOnValue(dbRefs.settings, (snapshot) => {
 
@@ -9419,7 +9438,8 @@ function logoutConfirmed() {
 
 
 
-    currentUser = null;
+        if(currentUser) logActivity('Logout', `User ${currentUser.username} logged out of the system.`);
+currentUser = null;
 
 
 
@@ -14291,7 +14311,8 @@ async function performDataClearing() {
 
 
 
-            await window.firebaseRemove(dbRefs.drivers);
+                        logActivity('Delete All Data', `Admin cleared all system data.`);
+await window.firebaseRemove(dbRefs.drivers);
 
 
 
@@ -14300,6 +14321,7 @@ async function performDataClearing() {
 
 
             await window.firebaseRemove(dbRefs.users);
+        await window.firebaseRemove(dbRefs.logs);
 
 
 
@@ -14548,6 +14570,7 @@ async function handleEditAddress(e) {
 
 
     await saveSettingsToFirebase({ garageAddress: newAddress });
+        logActivity('Edit Settings', `Updated garage address to: ${newAddress}`);
 
 
 
@@ -14655,3 +14678,222 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+
+
+// --- Activity Logging System ---
+async function logActivity(action, details) {
+    if (!currentUser) return; // Don't log if not logged in
+
+    const logEntry = {
+        id: generateId(),
+        timestamp: new Date().toISOString(),
+        username: currentUser.username || 'System',
+        role: currentUser.role || 'system',
+        action: action,
+        details: details
+    };
+
+    activityLogs.unshift(logEntry); // Add to beginning
+    cleanupOldLogs();
+    
+    // Save to Firebase
+    try {
+        const logsObj = {};
+        activityLogs.forEach(log => {
+            logsObj[log.id] = log;
+        });
+        await window.firebaseSet(dbRefs.logs, logsObj);
+        renderActivityLogs();
+    } catch (error) {
+        console.error('Error saving activity log:', error);
+    }
+}
+
+
+async function cleanupOldLogs() {
+    if (!activityLogs || activityLogs.length === 0) return;
+    
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    
+    const initialLength = activityLogs.length;
+    
+    activityLogs = activityLogs.filter(log => {
+        const logDate = new Date(log.timestamp);
+        return logDate >= threeMonthsAgo;
+    });
+    
+    if (activityLogs.length !== initialLength) {
+        try {
+            const logsObj = {};
+            activityLogs.forEach(log => {
+                logsObj[log.id] = log;
+            });
+            await window.firebaseSet(dbRefs.logs, logsObj);
+            console.log(`Cleaned up ${initialLength - activityLogs.length} old activity logs.`);
+            renderActivityLogs();
+        } catch (error) {
+            console.error('Error cleaning up logs:', error);
+        }
+    }
+}
+
+function renderActivityLogs() {
+    const tbody = document.getElementById('activityLogTableBody');
+    const noLogsMsg = document.getElementById('noLogsMessage');
+    const searchInput = document.getElementById('logSearchInput');
+    const dateFilter = document.getElementById('logDateFilter');
+    
+    if (!tbody) return; // Element not ready
+
+    const searchTerm = (searchInput ? searchInput.value.toLowerCase() : '');
+    const filterDate = (dateFilter ? dateFilter.value : '');
+
+    let filteredLogs = activityLogs.filter(log => {
+        const matchesSearch = log.action.toLowerCase().includes(searchTerm) || 
+                              log.details.toLowerCase().includes(searchTerm) ||
+                              log.username.toLowerCase().includes(searchTerm);
+        
+        let matchesDate = true;
+        if (filterDate) {
+            const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+            matchesDate = (logDate === filterDate);
+        }
+
+        return matchesSearch && matchesDate;
+    });
+
+    if (filteredLogs.length === 0) {
+        tbody.innerHTML = '';
+        if (noLogsMsg) noLogsMsg.style.display = 'block';
+    } else {
+        if (noLogsMsg) noLogsMsg.style.display = 'none';
+        tbody.innerHTML = filteredLogs.map(log => {
+            const dateObj = new Date(log.timestamp);
+            const formattedDate = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let actionColor = 'var(--text-primary)';
+            if (log.action.includes('Delete') || log.action.includes('Clear') || log.action.includes('Remove')) actionColor = 'var(--danger-color)';
+            else if (log.action.includes('Add') || log.action.includes('Create') || log.action.includes('Import')) actionColor = 'var(--success-color)';
+            else if (log.action.includes('Edit') || log.action.includes('Update')) actionColor = 'var(--warning-color)';
+            else if (log.action.includes('Login') || log.action.includes('Logout')) actionColor = 'var(--accent-color)';
+
+
+            let actionBg = 'rgba(255,255,255,0.05)';
+            let actionIcon = 'fa-info-circle';
+            
+            if (log.action.includes('Delete') || log.action.includes('Clear') || log.action.includes('Remove')) {
+                actionColor = '#ef4444'; // Red
+                actionBg = 'rgba(239, 68, 68, 0.1)';
+                actionIcon = 'fa-trash-alt';
+            }
+            else if (log.action.includes('Add') || log.action.includes('Create') || log.action.includes('Import')) {
+                actionColor = '#10b981'; // Green
+                actionBg = 'rgba(16, 185, 129, 0.1)';
+                actionIcon = 'fa-plus-circle';
+            }
+            else if (log.action.includes('Edit') || log.action.includes('Update')) {
+                actionColor = '#f59e0b'; // Yellow
+                actionBg = 'rgba(245, 158, 11, 0.1)';
+                actionIcon = 'fa-edit';
+            }
+            else if (log.action.includes('Login') || log.action.includes('Logout')) {
+                actionColor = '#3b82f6'; // Blue
+                actionBg = 'rgba(59, 130, 246, 0.1)';
+                actionIcon = log.action.includes('Login') ? 'fa-sign-in-alt' : 'fa-sign-out-alt';
+            }
+
+            return `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.03)'; this.style.transform='scale(1.002)';" onmouseout="this.style.background='transparent'; this.style.transform='scale(1)';">
+                    <td style="padding: 18px 20px; white-space: nowrap;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <span style="color: var(--text-primary); font-weight: 500; font-size: 0.95rem;">${dateObj.toLocaleDateString()}</span>
+                            <span style="color: var(--text-secondary); font-size: 0.8rem;"><i class="far fa-clock" style="margin-right: 4px;"></i>${dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                    </td>
+                    <td style="padding: 18px 20px;">
+                        <span style="display: inline-flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">
+                            <i class="fas ${log.role === 'admin' ? 'fa-user-shield' : 'fa-user'}" style="color: ${log.role === 'admin' ? '#c084fc' : '#9ca3af'}; font-size: 0.9rem;"></i>
+                            ${log.username}
+                        </span>
+                    </td>
+                    <td style="padding: 18px 20px;">
+                        <span style="display: inline-flex; align-items: center; gap: 8px; background: ${actionBg}; color: ${actionColor}; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.3px;">
+                            <i class="fas ${actionIcon}" style="font-size: 0.9rem;"></i>
+                            ${log.action}
+                        </span>
+                    </td>
+                    <td style="padding: 18px 20px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; max-width: 300px;">
+                        ${log.details}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+}
+
+function filterActivityLogs() {
+    renderActivityLogs();
+}
+
+function clearActivityLogsFilter() {
+    const searchInput = document.getElementById('logSearchInput');
+    const dateFilter = document.getElementById('logDateFilter');
+    if (searchInput) searchInput.value = '';
+    if (dateFilter) dateFilter.value = '';
+    renderActivityLogs();
+}
+
+// Call renderActivityLogs when showing users view
+const originalShowView = window.showView;
+if (!window._activityLogsPatched) {
+    window._activityLogsPatched = true;
+    window.showView = function(viewId) {
+        if (originalShowView) originalShowView(viewId);
+        
+        // Also run standard behavior since showView might be local
+        document.querySelectorAll('.app-view').forEach(view => {
+            if (view) view.style.display = 'none';
+        });
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            if (link) link.classList.remove('active');
+        });
+        
+        const view = document.getElementById(viewId + 'View');
+        if (view) {
+            view.style.display = 'block';
+            
+            // Add animation class
+            view.classList.remove('fade-in');
+            void view.offsetWidth; // Trigger reflow
+            view.classList.add('fade-in');
+        }
+        
+        const link = document.querySelector(`.sidebar-link[href="#${viewId}"]`);
+        if (link) {
+            link.classList.add('active');
+            
+            const textEl = link.querySelector('span[data-key]') || link.querySelector('span');
+            if (textEl && document.getElementById('pageIndicator')) {
+                const indicatorText = document.getElementById('pageIndicator').querySelector('span');
+                const indicatorIcon = document.getElementById('pageIndicator').querySelector('i');
+                const linkIcon = link.querySelector('i');
+                
+                if (indicatorText && indicatorIcon && linkIcon) {
+                    indicatorText.textContent = textEl.textContent;
+                    if (textEl.hasAttribute('data-key')) {
+                        indicatorText.setAttribute('data-key', textEl.getAttribute('data-key'));
+                    } else {
+                        indicatorText.removeAttribute('data-key');
+                    }
+                    indicatorIcon.className = linkIcon.className;
+                }
+            }
+        }
+        
+        if (viewId === 'users') {
+            renderActivityLogs();
+        }
+    };
+}
