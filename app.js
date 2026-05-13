@@ -13387,25 +13387,21 @@ function deleteUser(userId) {
 
 
 
-    // Prevent deleting default admin
+    // Prevent deleting admin users
 
 
 
-    if (user.username === 'anon' && user.password === 'anon') {
+    if (user.role === 'admin') {
 
 
 
-        showNotification('Cannot delete default admin user', 'error');
+        showNotification('Cannot delete admin users', 'error');
 
 
 
         return;
 
-
-
     }
-
-
 
 
 
