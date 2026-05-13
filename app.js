@@ -5231,6 +5231,14 @@ function renderMovementHistory(driver) {
 
 
         const ordersCount = movement.orders || 0;
+        let ordersColorClass = '';
+        if (ordersCount < 25) {
+            ordersColorClass = 'orders-red';
+        } else if (ordersCount >= 25 && ordersCount < 28) {
+            ordersColorClass = 'orders-orange';
+        } else if (ordersCount >= 28 && ordersCount < 35) {
+            ordersColorClass = 'orders-green';
+        }
 
 
 
@@ -5238,7 +5246,7 @@ function renderMovementHistory(driver) {
 
 
 
-            `<span class="orders-count">${ordersCount}</span>` :
+            `<span class="orders-count ${ordersColorClass}">${ordersCount}</span>` :
 
 
 
@@ -6077,8 +6085,17 @@ function renderFilteredMovements(movements) {
         }
 
         const ordersCount = movement.orders || 0;
+        let ordersColorClass = '';
+        if (ordersCount < 25) {
+            ordersColorClass = 'orders-red';
+        } else if (ordersCount >= 25 && ordersCount < 28) {
+            ordersColorClass = 'orders-orange';
+        } else if (ordersCount >= 28 && ordersCount < 35) {
+            ordersColorClass = 'orders-green';
+        }
+        
         const ordersDisplay = ordersCount > 0 ?
-            `<span class="orders-count">${ordersCount}</span>` :
+            `<span class="orders-count ${ordersColorClass}">${ordersCount}</span>` :
             '<span class="orders-count zero">-</span>';
 
         let ratingDisplay = '';
@@ -6259,15 +6276,22 @@ function initMovementHistoryCalendar() {
     const dateInput = document.getElementById('historyDateFilter');
     if (!dateInput) return;
 
-    // Get dates with movement data
+    // Get dates with movement data and order counts
     const driver = drivers.find(d => d.id === currentDriverId);
-    const datesWithData = new Set();
+    const datesWithData = new Map();
 
     if (driver && driver.movements) {
         driver.movements.forEach(movement => {
             if (movement.date) {
                 const dateObj = new Date(movement.date);
-                datesWithData.add(dateObj.toDateString());
+                const dateStr = dateObj.toDateString();
+                const ordersCount = movement.orders || 0;
+                
+                if (datesWithData.has(dateStr)) {
+                    datesWithData.set(dateStr, datesWithData.get(dateStr) + ordersCount);
+                } else {
+                    datesWithData.set(dateStr, ordersCount);
+                }
             }
         });
     }
@@ -6281,7 +6305,17 @@ function initMovementHistoryCalendar() {
         onDayCreate: function(dObj, dStr, fp, dayElem) {
             const dateStr = dayElem.dateObj.toDateString();
             if (datesWithData.has(dateStr)) {
+                const ordersCount = datesWithData.get(dateStr);
                 dayElem.classList.add('has-data');
+                
+                // Add color class based on orders count
+                if (ordersCount < 25) {
+                    dayElem.classList.add('orders-red');
+                } else if (ordersCount >= 25 && ordersCount < 28) {
+                    dayElem.classList.add('orders-orange');
+                } else if (ordersCount >= 28 && ordersCount < 35) {
+                    dayElem.classList.add('orders-green');
+                }
             }
         }
     });

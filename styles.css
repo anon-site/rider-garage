@@ -15112,6 +15112,80 @@ body[dir="ltr"] .language-selector {
 
 
 
+/* Orders color classes for calendar */
+
+.flatpickr-calendar .flatpickr-day.orders-red {
+
+    background-color: #ef4444 !important;
+
+    color: white !important;
+
+    font-weight: 600;
+
+    border-radius: var(--radius-sm);
+
+}
+
+
+
+.flatpickr-calendar .flatpickr-day.orders-red:hover {
+
+    background-color: #dc2626 !important;
+
+    color: white !important;
+
+}
+
+
+
+.flatpickr-calendar .flatpickr-day.orders-orange {
+
+    background-color: #f97316 !important;
+
+    color: white !important;
+
+    font-weight: 600;
+
+    border-radius: var(--radius-sm);
+
+}
+
+
+
+.flatpickr-calendar .flatpickr-day.orders-orange:hover {
+
+    background-color: #ea580c !important;
+
+    color: white !important;
+
+}
+
+
+
+.flatpickr-calendar .flatpickr-day.orders-green {
+
+    background-color: #10b981 !important;
+
+    color: white !important;
+
+    font-weight: 600;
+
+    border-radius: var(--radius-sm);
+
+}
+
+
+
+.flatpickr-calendar .flatpickr-day.orders-green:hover {
+
+    background-color: #059669 !important;
+
+    color: white !important;
+
+}
+
+
+
 .flatpickr-calendar .flatpickr-day.has-data:hover {
 
     background-color: #059669 !important;
@@ -18989,6 +19063,38 @@ body[dir="ltr"] .language-selector {
     color: var(--gray-400);
 
 
+
+}
+
+
+
+/* Orders color classes for table display */
+
+.orders-count.orders-red {
+
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+
+    color: #dc2626;
+
+}
+
+
+
+.orders-count.orders-orange {
+
+    background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+
+    color: #ea580c;
+
+}
+
+
+
+.orders-count.orders-green {
+
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+
+    color: #059669;
 
 }
 
