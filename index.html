@@ -318,31 +318,27 @@
 
 
 
-                <!-- Center section: Page indicator -->
-
-
-
-                <div class="page-indicator" id="pageIndicator">
-
-
-
-                    <i class="fas fa-chart-pie"></i>
-
-
-
-                    <span data-key="dashboard">Dashboard</span>
-
-
-
-                </div>
-
-
-
-                <!-- Right section: Datetime + User -->
+                <!-- Right section: Datetime + User + Page indicator -->
 
 
 
                 <div class="header-right">
+
+
+
+                    <div class="page-indicator" id="pageIndicator">
+
+
+
+                        <i class="fas fa-chart-pie"></i>
+
+
+
+                        <span data-key="dashboard">Dashboard</span>
+
+
+
+                    </div>
 
 
 
@@ -2078,6 +2074,9 @@
                             </div>
                             <button class="btn-secondary-modern" onclick="clearActivityLogsFilter()" style="padding: 12px 20px; border-radius: 10px; font-weight: 500; letter-spacing: 0.5px; transition: all 0.3s ease;">
                                 <i class="fas fa-filter-slash"></i> Reset
+                            </button>
+                            <button class="btn-danger-modern" onclick="deleteAllActivityLogs()" style="padding: 12px 20px; border-radius: 10px; font-weight: 500; letter-spacing: 0.5px; transition: all 0.3s ease; background: linear-gradient(135deg, #ef4444, #dc2626); border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer; color: white;" onmouseover="this.style.background='linear-gradient(135deg, #dc2626, #b91c1c)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)';" onmouseout="this.style.background='linear-gradient(135deg, #ef4444, #dc2626)'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                <i class="fas fa-trash-alt"></i> Delete All Logs
                             </button>
                         </div>
                     </div>
@@ -4741,15 +4740,31 @@
 
 
 
-                                    <li class="dropdown-item" onclick="selectUserRole('user', 'User')">
+                                    <li class="dropdown-item" onclick="selectUserRole('garage_manager', 'Garage Manager')">
 
 
 
-                                        <i class="fas fa-user"></i>
+                                        <i class="fas fa-clipboard-check"></i>
 
 
 
-                                        <span>User - View Only</span>
+                                        <span>Garage Manager - Driver Movements Only</span>
+
+
+
+                                    </li>
+
+
+
+                                    <li class="dropdown-item" onclick="selectUserRole('viewer', 'Viewer')">
+
+
+
+                                        <i class="fas fa-eye"></i>
+
+
+
+                                        <span>Viewer - View Only</span>
 
 
 
@@ -5057,7 +5072,23 @@
 
 
 
-                                    <li class="dropdown-item" onclick="selectEditUserRole('user', 'User')">
+                                    <li class="dropdown-item" onclick="selectEditUserRole('garage_manager', 'Garage Manager')">
+
+
+
+                                        <i class="fas fa-clipboard-check"></i>
+
+
+
+                                        <span>Garage Manager - Driver Movements Only</span>
+
+
+
+                                    </li>
+
+
+
+                                    <li class="dropdown-item" onclick="selectEditUserRole('viewer', 'Viewer')">
 
 
 
@@ -5920,6 +5951,47 @@
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+
+    <!-- Password Modal for Delete Logs -->
+    <div class="modal" id="deleteLogsPasswordModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <div class="header-title">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security Verification</span>
+                </div>
+                <button class="close-btn-circle" onclick="closeDeleteLogsPasswordModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="fas fa-lock" style="font-size: 2rem; color: #ef4444;"></i>
+                    </div>
+                    <h3 style="color: var(--text-primary); margin-bottom: 10px; font-size: 1.3rem;">Delete All Activity Logs</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                        This action will permanently delete all activity logs. This cannot be undone.
+                    </p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px; font-weight: 500;">Enter Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="deleteLogsPassword" placeholder="Enter password..." style="width: 100%; padding: 14px 45px 14px 15px; border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; background: rgba(0,0,0,0.2); color: var(--text-primary); font-size: 1rem; transition: all 0.3s ease;" onkeypress="if(event.key === 'Enter') confirmDeleteLogs()">
+                        <i class="fas fa-key" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--accent-color);"></i>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-secondary-modern" onclick="closeDeleteLogsPasswordModal()" style="flex: 1; padding: 14px 20px; border-radius: 10px; font-weight: 500; letter-spacing: 0.5px;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button class="btn-primary-modern" onclick="confirmDeleteLogs()" style="flex: 1; padding: 14px 20px; border-radius: 10px; font-weight: 500; letter-spacing: 0.5px; background: linear-gradient(135deg, #ef4444, #dc2626); border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <i class="fas fa-trash-alt"></i> Delete All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 

@@ -930,12 +930,9 @@ function setupFormListeners() {
 // Role definitions
 
 
-
 const ROLE_ADMIN = 'admin';
-
-
-
-const ROLE_USER = 'user';
+const ROLE_GARAGE_MANAGER = 'garage_manager';
+const ROLE_VIEWER = 'viewer';
 
 
 
@@ -3409,7 +3406,7 @@ function toggleDriverStatus() {
 
 
 
-    if (!isAdmin()) {
+    if (!canManageDrivers()) {
 
 
 
@@ -4347,7 +4344,7 @@ function saveEntryDetails() {
 
     showNotification(t('entryRecorded'), 'success');
 
-
+    logActivity('Record Entry', `Recorded entry for driver: ${driver.name} (ID: ${driver.driverId}), orders: ${ordersCount}`);
 
 }
 
@@ -4819,7 +4816,7 @@ function saveExitDetails() {
 
     showNotification(t('exitRecorded'), 'success');
 
-
+    logActivity('Record Exit', `Recorded exit for driver: ${driver.name} (ID: ${driver.driverId})`);
 
 }
 
@@ -6815,6 +6812,12 @@ function handleEditMovement(e) {
 
 
     showNotification(t('movementUpdated'));
+
+
+
+    logActivity('Edit Movement', `Edited movement for driver: ${driver.name} (ID: ${driver.driverId}), orders changed from ${oldOrders} to ${newOrders}`);
+
+
 
 
 
@@ -9503,11 +9506,22 @@ function updateUserDisplay() {
 
 
 
-        userRoleEl.textContent = currentUser.role === ROLE_ADMIN ? 'Admin' : 'User';
-
-
-
-        userRoleEl.className = 'user-role ' + (currentUser.role === ROLE_ADMIN ? 'admin' : 'user');
+        let roleText = 'User';
+        let roleClass = 'user';
+        
+        if (currentUser.role === ROLE_ADMIN) {
+            roleText = 'Admin';
+            roleClass = 'admin';
+        } else if (currentUser.role === ROLE_GARAGE_MANAGER) {
+            roleText = 'Garage Manager';
+            roleClass = 'garage-manager';
+        } else if (currentUser.role === ROLE_VIEWER) {
+            roleText = 'Viewer';
+            roleClass = 'viewer';
+        }
+        
+        userRoleEl.textContent = roleText;
+        userRoleEl.className = 'user-role ' + roleClass;
 
 
 
@@ -9531,37 +9545,19 @@ function applyRoleRestrictions() {
 
 
 
+    // Remove all role classes first
+    document.body.classList.remove('is-admin', 'is-garage-manager', 'is-viewer');
 
 
 
-
+    // Add appropriate class based on role
     if (currentUser.role === ROLE_ADMIN) {
-
-
-
         document.body.classList.add('is-admin');
-
-
-
-        document.body.classList.remove('is-viewer');
-
-
-
-    } else {
-
-
-
+    } else if (currentUser.role === ROLE_GARAGE_MANAGER) {
+        document.body.classList.add('is-garage-manager');
+    } else if (currentUser.role === ROLE_VIEWER) {
         document.body.classList.add('is-viewer');
-
-
-
-        document.body.classList.remove('is-admin');
-
-
-
     }
-
-
 
 }
 
@@ -9576,6 +9572,76 @@ function isAdmin() {
 
 
     return currentUser && currentUser.role === ROLE_ADMIN;
+
+
+
+}
+
+function isGarageManager() {
+
+
+
+    return currentUser && currentUser.role === ROLE_GARAGE_MANAGER;
+
+
+
+}
+
+function isViewer() {
+
+
+
+    return currentUser && currentUser.role === ROLE_VIEWER;
+
+
+
+}
+
+function canManageUsers() {
+
+
+
+    return isAdmin();
+
+
+
+}
+
+function canManageDrivers() {
+
+
+
+    return isAdmin() || isGarageManager();
+
+
+
+}
+
+function canManageBikes() {
+
+
+
+    return isAdmin();
+
+
+
+}
+
+function canRecordMovements() {
+
+
+
+    return isAdmin() || isGarageManager();
+
+
+
+}
+
+function canViewOnly() {
+
+
+
+    return isViewer();
 
 
 
@@ -9623,7 +9689,7 @@ function showAddBikeModal() {
 
 
 
-    if (!isAdmin()) {
+    if (!canManageBikes()) {
 
 
 
@@ -10491,6 +10557,8 @@ function handleAddBike(e) {
 
 
 
+    logActivity('Add Bike', `Added bike: ${bike.number} (Status: ${bike.status}, Battery: ${bike.batteryLife}%)`);
+
 }
 
 
@@ -10635,6 +10703,8 @@ function handleEditBike(e) {
 
 
 
+    logActivity('Edit Bike', `Updated bike: ${bike.number} (Status: ${bike.status}, Battery: ${bike.batteryLife}%)`);
+
 }
 
 
@@ -10774,6 +10844,8 @@ function deleteBikeConfirmed(id) {
     showNotification(t('bikeDeleted'));
 
 
+
+    logActivity('Delete Bike', `Deleted bike with ID: ${id}`);
 
 }
 
@@ -12867,11 +12939,11 @@ function renderUsers(searchTerm = '') {
 
 
 
-                            <i class="fas fa-${user.role === ROLE_ADMIN ? 'user-shield' : 'user'}"></i>
+                            <i class="fas fa-${getRoleIcon(user.role)}"></i>
 
 
 
-                            ${user.role === ROLE_ADMIN ? 'Admin' : 'User'}
+                            ${getRoleLabel(user.role)}
 
 
 
@@ -13121,7 +13193,7 @@ function handleAddUser(e) {
 
     showNotification(`User "${username}" created successfully`);
 
-
+    logActivity('Add User', `Added user: ${username} with role: ${role}`);
 
 }
 
@@ -13171,7 +13243,7 @@ function showEditUserModal(userId) {
 
 
 
-    document.getElementById('selectedEditUserRole').textContent = user.role === ROLE_ADMIN ? 'Admin' : 'User';
+    document.getElementById('selectedEditUserRole').textContent = getRoleLabel(user.role);
 
 
 
@@ -13373,7 +13445,7 @@ function handleEditUser(e) {
 
     showNotification(`User "${newUsername}" updated successfully`);
 
-
+    logActivity('Edit User', `Updated user: ${user.username} to ${newUsername}, role changed to ${newRole}`);
 
 }
 
@@ -13488,37 +13560,22 @@ function deleteUser(userId) {
 
 
 // Delete User Confirmed Function
-
-
-
 function deleteUserConfirmed(userId) {
 
-
-
-
-
-
+    const user = users.find(u => u.id === userId);
+    const username = user ? user.username : 'Unknown';
 
     users = users.filter(u => u.id !== userId);
 
-
-
     saveUsers();
-
-
 
     renderUsers();
 
+    showNotification(`User "${username}" deleted successfully`);
 
-
-    showNotification(`User "${user.username}" deleted successfully`);
-
-
+    logActivity('Delete User', `Deleted user: ${username}`);
 
 }
-
-
-
 
 
 
@@ -13542,6 +13599,20 @@ function toggleUserRoleDropdown() {
 
 
 
+
+function getRoleIcon(role) {
+    if (role === ROLE_ADMIN) return 'user-shield';
+    if (role === ROLE_GARAGE_MANAGER) return 'clipboard-check';
+    if (role === ROLE_VIEWER) return 'eye';
+    return 'user';
+}
+
+function getRoleLabel(role) {
+    if (role === ROLE_ADMIN) return 'Admin';
+    if (role === ROLE_GARAGE_MANAGER) return 'Garage Manager';
+    if (role === ROLE_VIEWER) return 'Viewer';
+    return 'User';
+}
 
 function selectUserRole(value, label) {
 
@@ -13572,6 +13643,22 @@ function selectUserRole(value, label) {
 
 
         infoText.textContent = 'Admin users can add, edit, and delete all records including managing other users.';
+
+
+
+    } else if (value === ROLE_GARAGE_MANAGER) {
+
+
+
+        infoText.textContent = 'Garage Manager users can record driver entry/exit movements only. Cannot manage users, bikes, or delete data.';
+
+
+
+    } else if (value === ROLE_VIEWER) {
+
+
+
+        infoText.textContent = 'Viewer accounts can only view data and cannot make any changes.';
 
 
 
@@ -14843,6 +14930,213 @@ function clearActivityLogsFilter() {
     if (searchInput) searchInput.value = '';
     if (dateFilter) dateFilter.value = '';
     renderActivityLogs();
+}
+
+function openDeleteLogsPasswordModal() {
+    document.getElementById('deleteLogsPasswordModal').classList.add('active');
+    document.getElementById('deleteLogsPassword').value = '';
+    document.getElementById('deleteLogsPassword').focus();
+}
+
+function closeDeleteLogsPasswordModal() {
+    document.getElementById('deleteLogsPasswordModal').classList.remove('active');
+}
+
+async function confirmDeleteLogs() {
+    const password = document.getElementById('deleteLogsPassword').value;
+
+    if (password !== 'anon') {
+        showNotification('Incorrect password. Access denied.', 'error');
+        document.getElementById('deleteLogsPassword').value = '';
+        document.getElementById('deleteLogsPassword').focus();
+        return;
+    }
+
+    // Close password modal
+    closeDeleteLogsPasswordModal();
+
+    // Show confirmation modal
+    const result = await showConfirmationDialog(
+        '🗑️ Delete All Activity Logs',
+        'Are you sure you want to delete all activity logs? This action cannot be undone.',
+        'Delete',
+        'Cancel',
+        'danger'
+    );
+
+    if (!result) {
+        return;
+    }
+
+    try {
+        // Clear local array
+        activityLogs = [];
+
+        // Clear from Firebase
+        await window.firebaseSet(dbRefs.logs, {});
+
+        // Update UI
+        renderActivityLogs();
+        showNotification('✅ All activity logs deleted successfully', 'success');
+    } catch (error) {
+        console.error('Error deleting activity logs:', error);
+        showNotification('Error deleting activity logs', 'error');
+    }
+}
+
+async function showConfirmationDialog(title, message, confirmText, cancelText, type = 'primary') {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        `;
+
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.className = 'confirmation-modal';
+        modal.style.cssText = `
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        `;
+
+        const iconColor = type === 'danger' ? '#ef4444' : '#6366f1';
+
+        modal.innerHTML = `
+            <div style="text-align: center;">
+                <div style="
+                    font-size: 48px;
+                    margin-bottom: 16px;
+                    color: ${iconColor};
+                ">${type === 'danger' ? '⚠️' : 'ℹ️'}</div>
+                <h2 style="
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #1f2937;
+                    margin: 0 0 12px 0;
+                ">${title}</h2>
+                <p style="
+                    font-size: 16px;
+                    color: #6b7280;
+                    margin: 0 0 24px 0;
+                    line-height: 1.5;
+                ">${message}</p>
+                <div style="
+                    display: flex;
+                    gap: 12px;
+                    justify-content: center;
+                ">
+                    <button id="cancelBtn" style="
+                        padding: 12px 24px;
+                        border: 2px solid #e5e7eb;
+                        background: white;
+                        color: #374151;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        font-size: 14px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    ">${cancelText}</button>
+                    <button id="confirmBtn" style="
+                        padding: 12px 24px;
+                        border: none;
+                        background: ${type === 'danger' ? '#ef4444' : '#6366f1'};
+                        color: white;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        font-size: 14px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    ">${confirmText}</button>
+                </div>
+            </div>
+        `;
+
+        // Add styles for animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideIn {
+                from { transform: translateY(-20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            .confirmation-modal button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+            .confirmation-modal button:active {
+                transform: translateY(0);
+            }
+        `;
+        document.head.appendChild(style);
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Add event listeners
+        const confirmBtn = modal.querySelector('#confirmBtn');
+        const cancelBtn = modal.querySelector('#cancelBtn');
+
+        confirmBtn.addEventListener('click', () => {
+            overlay.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                document.head.removeChild(style);
+                resolve(true);
+            }, 300);
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            overlay.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                document.head.removeChild(style);
+                resolve(false);
+            }, 300);
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                    document.head.removeChild(style);
+                    resolve(false);
+                }, 300);
+            }
+        });
+
+        // Add fadeOut animation
+        style.textContent += `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+    });
+}
+
+async function deleteAllActivityLogs() {
+    openDeleteLogsPasswordModal();
 }
 
 // Call renderActivityLogs when showing users view
