@@ -8977,6 +8977,18 @@ function showView(viewName) {
 
 
 
+    // Scroll to top when changing views
+
+
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+
+
+
+
+
+
     // Update page indicator
 
 
