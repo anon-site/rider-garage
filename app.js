@@ -11299,11 +11299,31 @@ function toggleDriverBikeDropdown() {
 
 
 
+    const dropdown = document.getElementById('driverBikeDropdown');
+
+
+
     menu.classList.toggle('active');
 
 
 
     if (menu.classList.contains('active')) {
+
+
+
+        const rect = dropdown.getBoundingClientRect();
+
+
+
+        menu.style.left = rect.left + 'px';
+
+
+
+        menu.style.top = (rect.bottom + 8) + 'px';
+
+
+
+        menu.style.width = rect.width + 'px';
 
 
 
@@ -11547,11 +11567,31 @@ function toggleEditDriverBikeDropdown() {
 
 
 
+    const dropdown = document.getElementById('editDriverBikeDropdown');
+
+
+
     menu.classList.toggle('active');
 
 
 
     if (menu.classList.contains('active')) {
+
+
+
+        const rect = dropdown.getBoundingClientRect();
+
+
+
+        menu.style.left = rect.left + 'px';
+
+
+
+        menu.style.top = (rect.bottom + 8) + 'px';
+
+
+
+        menu.style.width = rect.width + 'px';
 
 
 

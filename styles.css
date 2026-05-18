@@ -12297,19 +12297,15 @@ body[dir="ltr"] .language-selector {
 
 
 
-    position: absolute;
-
-
-
-    top: calc(100% + 8px);
-
-
-
-    left: 0;
+    position: fixed;
 
 
 
     width: 100%;
+
+
+
+    max-width: 280px;
 
 
 
@@ -12329,7 +12325,7 @@ body[dir="ltr"] .language-selector {
 
 
 
-    z-index: 1000;
+    z-index: 9999;
 
 
 
@@ -12342,6 +12338,10 @@ body[dir="ltr"] .language-selector {
 
 
     animation: slideDown 0.2s ease-out;
+
+
+
+    margin-top: 8px;
 
 
 
