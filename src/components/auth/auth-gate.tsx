@@ -7,10 +7,10 @@ import { LoginPage } from "./login-page";
 import { AppLoading } from "@/components/layout/app-loading";
 
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const { loading } = useUsers();
 
-  if (loading) return <AppLoading />;
+  if (loading || isLoading) return <AppLoading />;
   if (!isAuthenticated) return <LoginPage />;
   return <>{children}</>;
 }

@@ -16,6 +16,7 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError]   = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +26,7 @@ export function LoginPage() {
       setError(null);
       setLoading(true);
       await new Promise((r) => setTimeout(r, 700));
-      const err = login(username.trim(), password, users);
+      const err = login(username.trim(), password, users, rememberMe);
       if (err) setError(err);
       setLoading(false);
     },
@@ -203,7 +204,7 @@ export function LoginPage() {
           </div>
 
           {/* Password */}
-          <div style={{ position: "relative", width: 360, margin: "0 auto 14px" }}>
+          <div style={{ position: "relative", width: 360, margin: "0 auto 8px" }}>
             <span style={{
               position: "absolute", left: 0, top: 0, width: 10, height: 10,
               borderTop: "2px solid #00fffc", borderLeft: "2px solid #00fffc",
@@ -262,6 +263,34 @@ export function LoginPage() {
             >
               {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
+          </div>
+
+          {/* Remember me */}
+          <div style={{ width: 360, margin: "0 auto 8px" }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                cursor: "pointer",
+                fontSize: "0.75rem",
+                color: "#00a4a2",
+                letterSpacing: "0.1em",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{
+                  width: 16,
+                  height: 16,
+                  accentColor: "#00fffc",
+                  cursor: "pointer",
+                }}
+              />
+              <span>Remember me</span>
+            </label>
           </div>
 
           {/* Error */}

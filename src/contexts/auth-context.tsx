@@ -6,6 +6,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useEffect,
   type ReactNode,
 } from "react";
 import type { User, RoleId } from "@/types/user";
@@ -61,9 +62,10 @@ export type AuthContextValue = {
   user: User | null;
   permissions: Permissions;
   /** Returns null on success, error string on failure */
-  login: (username: string, password: string, allUsers: User[]) => string | null;
+  login: (username: string, password: string, allUsers: User[], rememberMe?: boolean) => string | null;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
 };
 
 const DEFAULT_PERMISSIONS: Permissions = {
@@ -79,6 +81,20 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 /* ── Provider ──────────────────────────────────────────────────────── */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem("rider-garage-user");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem("rider-garage-user");
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
   const permissions = useMemo<Permissions>(() => {
     if (!user) return DEFAULT_PERMISSIONS;
@@ -95,23 +111,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const login = useCallback(
-    (username: string, password: string, allUsers: User[]): string | null => {
+    (username: string, password: string, allUsers: User[], rememberMe = false): string | null => {
       const found = allUsers.find(
         (u) => u.username.toLowerCase() === username.trim().toLowerCase()
       );
       if (!found) return "No account found with this username.";
       if (password !== found.password) return "Incorrect password.";
       setUser(found);
+      if (rememberMe) {
+        localStorage.setItem("rider-garage-user", JSON.stringify(found));
+      }
       return null;
     },
     []
   );
 
-  const logout = useCallback(() => setUser(null), []);
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem("rider-garage-user");
+  }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, permissions, login, logout, isAuthenticated: !!user }),
-    [user, permissions, login, logout]
+    () => ({ user, permissions, login, logout, isAuthenticated: !!user, isLoading }),
+    [user, permissions, login, logout, isLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
