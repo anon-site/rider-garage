@@ -657,7 +657,7 @@ export function CpDashboard() {
                       </span>
                     )}
                     {r.notes && (
-                      <span className="text-xs italic text-slate-400">"{r.notes}"</span>
+                      <span className="text-xs italic text-slate-400">&ldquo;{r.notes}&rdquo;</span>
                     )}
                   </div>
                 </div>

@@ -144,7 +144,7 @@ export async function exportPDF(data: ExportData, period: string) {
     alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 14, right: 14 },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
   if (y > 170) { doc.addPage(); addHeader(doc, pageW, period); y = 30; }
 
   /* ── 2. Fleet Status ── */
@@ -165,7 +165,7 @@ export async function exportPDF(data: ExportData, period: string) {
     alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 14, right: 14 },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
   if (y > 170) { doc.addPage(); addHeader(doc, pageW, period); y = 30; }
 
   /* ── 3. Garage Summary ── */
