@@ -43,11 +43,9 @@ export function LoginPage() {
       <div
         className="pointer-events-none absolute"
         style={{
-          width: "clamp(280px, 40vw, 500px)",
-          height: "clamp(280px, 40vw, 500px)",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
+          width: 500, height: 500,
+          top: "50%", left: "50%",
+          marginTop: -250, marginLeft: -250,
           borderRadius: "50%",
           border: "10px solid #00a4a2",
           boxShadow: "0 0 0 2px #000, 0 0 0 6px #00fffc",
@@ -75,15 +73,14 @@ export function LoginPage() {
       <div
         className="pointer-events-none absolute w-full"
         style={{
-          top: "54%",
-          zIndex: 0,
+          top: "54%", zIndex: 0,
           color: "#000",
-          fontSize: "clamp(2rem, 8vw, 5.1rem)",
+          fontSize: "5.1rem",
           letterSpacing: "-0.2em",
           lineHeight: 0.7,
           textAlign: "center",
           textShadow: "0 0 6px #00fffc",
-          transform: "perspective(600px) rotateX(60deg) scale(clamp(0.8, 1.2vw, 1.4))",
+          transform: "perspective(600px) rotateX(60deg) scale(1.4)",
           animation: "rg-fade-in 4s ease-in forwards",
         }}
       >
@@ -148,7 +145,7 @@ export function LoginPage() {
             border: "1px solid #00a4a2",
             boxShadow: "0 0 0 1px #001f1f, 0 0 20px rgba(0,255,253,0.25), inset 0 1px 0 rgba(0,255,253,0.08)",
             width: "min(90vw, 420px)",
-            padding: "clamp(20px, 4vw, 32px) clamp(0px, 2vw, 0px) clamp(16px, 3vw, 28px)",
+            padding: "clamp(20px, 4vw, 32px) clamp(16px, 4vw, 24px)",
             transition: "box-shadow 0.6s",
             borderRadius: 16,
           }}
@@ -400,6 +397,8 @@ export function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           transition: "all 0.3s ease",
+          opacity: 0,
+          animation: "rg-dev-btn-entry 0.6s ease-out 3.2s forwards",
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.1)";
@@ -687,6 +686,11 @@ export function LoginPage() {
           50%  { opacity: 1; transform: scaleY(0.5); }
           100% { opacity: 1; transform: scaleY(1); }
         }
+        @keyframes rg-dev-btn-entry {
+          0%   { opacity: 0; transform: scale(0); }
+          50%  { opacity: 1; transform: scale(1.2); }
+          100% { opacity: 1; transform: scale(1); }
+        }
         .rg-input:focus {
           border-color: #00fffc !important;
           background: rgba(0,30,30,0.95) !important;
@@ -702,16 +706,6 @@ export function LoginPage() {
         @media (max-width: 380px) {
           .rg-form-box {
             padding: 16px 12px !important;
-          }
-        }
-        @media (max-height: 700px) {
-          .rg-form-box {
-            transform: scale(0.9);
-          }
-        }
-        @media (max-height: 600px) {
-          .rg-form-box {
-            transform: scale(0.85);
           }
         }
       `}</style>
