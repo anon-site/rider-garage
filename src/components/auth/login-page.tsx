@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, User, X, Mail, Phone, Globe } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUsers } from "@/contexts/control-panel-context";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError]   = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showDevModal, setShowDevModal] = useState(false);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -42,9 +43,11 @@ export function LoginPage() {
       <div
         className="pointer-events-none absolute"
         style={{
-          width: 500, height: 500,
-          top: "50%", left: "50%",
-          marginTop: -250, marginLeft: -250,
+          width: "clamp(280px, 40vw, 500px)",
+          height: "clamp(280px, 40vw, 500px)",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
           borderRadius: "50%",
           border: "10px solid #00a4a2",
           boxShadow: "0 0 0 2px #000, 0 0 0 6px #00fffc",
@@ -72,14 +75,15 @@ export function LoginPage() {
       <div
         className="pointer-events-none absolute w-full"
         style={{
-          top: "54%", zIndex: 0,
+          top: "54%",
+          zIndex: 0,
           color: "#000",
-          fontSize: "5.1rem",
+          fontSize: "clamp(2rem, 8vw, 5.1rem)",
           letterSpacing: "-0.2em",
           lineHeight: 0.7,
           textAlign: "center",
           textShadow: "0 0 6px #00fffc",
-          transform: "perspective(600px) rotateX(60deg) scale(1.4)",
+          transform: "perspective(600px) rotateX(60deg) scale(clamp(0.8, 1.2vw, 1.4))",
           animation: "rg-fade-in 4s ease-in forwards",
         }}
       >
@@ -116,7 +120,7 @@ export function LoginPage() {
           className="font-bold italic tracking-widest"
           style={{
             fontFamily: "'Ubuntu', sans-serif",
-            fontSize: "2.8rem",
+            fontSize: "clamp(1.8rem, 5vw, 2.8rem)",
             color: "#00a4a2",
             animation: "rg-text-glow 2s ease-out infinite alternate",
           }}
@@ -143,8 +147,8 @@ export function LoginPage() {
             background: "linear-gradient(175deg, #002e2d 0%, #0a0a0a 100%)",
             border: "1px solid #00a4a2",
             boxShadow: "0 0 0 1px #001f1f, 0 0 20px rgba(0,255,253,0.25), inset 0 1px 0 rgba(0,255,253,0.08)",
-            width: 420,
-            padding: "32px 0 28px",
+            width: "min(90vw, 420px)",
+            padding: "clamp(20px, 4vw, 32px) clamp(0px, 2vw, 0px) clamp(16px, 3vw, 28px)",
             transition: "box-shadow 0.6s",
             borderRadius: 16,
           }}
@@ -156,7 +160,7 @@ export function LoginPage() {
           }}
         >
           {/* Username */}
-          <div style={{ position: "relative", width: 360, margin: "0 auto 14px" }}>
+          <div style={{ position: "relative", width: "min(85vw, 360px)", margin: "0 auto clamp(10px, 2vw, 14px)" }}>
             <span style={{
               position: "absolute", left: 0, top: 0, width: 10, height: 10,
               borderTop: "2px solid #00fffc", borderLeft: "2px solid #00fffc",
@@ -204,7 +208,7 @@ export function LoginPage() {
           </div>
 
           {/* Password */}
-          <div style={{ position: "relative", width: 360, margin: "0 auto 8px" }}>
+          <div style={{ position: "relative", width: "min(85vw, 360px)", margin: "0 auto 8px" }}>
             <span style={{
               position: "absolute", left: 0, top: 0, width: 10, height: 10,
               borderTop: "2px solid #00fffc", borderLeft: "2px solid #00fffc",
@@ -266,7 +270,7 @@ export function LoginPage() {
           </div>
 
           {/* Remember me */}
-          <div style={{ width: 360, margin: "0 auto 8px" }}>
+          <div style={{ width: "min(85vw, 360px)", margin: "0 auto 8px" }}>
             <label
               style={{
                 display: "flex",
@@ -298,11 +302,11 @@ export function LoginPage() {
             <div
               className="flex items-center gap-2"
               style={{
-                width: 360, margin: "0 auto 8px",
+                width: "min(85vw, 360px)", margin: "0 auto 8px",
                 background: "rgba(255,50,50,0.1)",
                 border: "1px solid rgba(255,80,80,0.3)",
                 borderRadius: 5, padding: "6px 10px",
-                color: "#ff8080", fontSize: "0.75rem",
+                color: "#ff8080", fontSize: "clamp(0.7rem, 2vw, 0.75rem)",
               }}
             >
               <AlertCircle size={13} style={{ flexShrink: 0 }} />
@@ -311,7 +315,7 @@ export function LoginPage() {
           )}
 
           {/* Submit */}
-          <div style={{ position: "relative", width: 360, margin: "10px auto 0" }}>
+          <div style={{ position: "relative", width: "min(85vw, 360px)", margin: "10px auto 0" }}>
             {/* corner accents */}
             <span style={{ position:"absolute", left:0, top:0, width:12, height:12, borderTop:"2px solid #00fffc", borderLeft:"2px solid #00fffc", borderTopLeftRadius:10, zIndex:1 }} />
             <span style={{ position:"absolute", right:0, top:0, width:12, height:12, borderTop:"2px solid #00fffc", borderRight:"2px solid #00fffc", borderTopRightRadius:10, zIndex:1 }} />
@@ -377,6 +381,275 @@ export function LoginPage() {
         </form>
       </div>
 
+      {/* ── Floating Developer Info Button ── */}
+      <button
+        onClick={() => setShowDevModal(true)}
+        style={{
+          position: "fixed",
+          bottom: "clamp(12px, 3vw, 24px)",
+          right: "clamp(12px, 3vw, 24px)",
+          width: "clamp(44px, 8vw, 56px)",
+          height: "clamp(44px, 8vw, 56px)",
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #00a4a2 0%, #00fffc 100%)",
+          border: "2px solid #00fffc",
+          boxShadow: "0 0 20px rgba(0,255,253,0.4), 0 0 40px rgba(0,164,162,0.3)",
+          cursor: "pointer",
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "all 0.3s ease",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.1)";
+          (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 30px rgba(0,255,253,0.6), 0 0 60px rgba(0,164,162,0.4)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+          (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 20px rgba(0,255,253,0.4), 0 0 40px rgba(0,164,162,0.3)";
+        }}
+      >
+        <User size={20} style={{ color: "#000", width: "clamp(16px, 4vw, 24px)", height: "clamp(16px, 4vw, 24px)" }} />
+      </button>
+
+      {/* ── Developer Info Modal ── */}
+      {showDevModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.8)",
+            backdropFilter: "blur(8px)",
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            animation: "rg-fade-in 0.3s ease-out",
+          }}
+          onClick={() => setShowDevModal(false)}
+        >
+          <div
+            style={{
+              background: "linear-gradient(175deg, #002e2d 0%, #0a0a0a 100%)",
+              border: "1px solid #00a4a2",
+              borderRadius: "clamp(12px, 4vw, 20px)",
+              padding: "clamp(16px, 4vw, 28px) clamp(20px, 5vw, 32px)",
+              maxWidth: "min(90vw, 360px)",
+              width: "90%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 0 0 1px #001f1f, 0 0 60px rgba(0,255,253,0.3), inset 0 1px 0 rgba(0,255,253,0.1)",
+              position: "relative",
+              animation: "rg-modal-slide 0.4s ease-out",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowDevModal(false)}
+              style={{
+                position: "absolute",
+                top: "clamp(8px, 2vw, 16px)",
+                right: "clamp(8px, 2vw, 16px)",
+                width: "clamp(28px, 6vw, 36px)",
+                height: "clamp(28px, 6vw, 36px)",
+                borderRadius: "50%",
+                background: "rgba(0,164,162,0.2)",
+                border: "1px solid #00a4a2",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.3s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,164,162,0.4)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "#00fffc";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,164,162,0.2)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "#00a4a2";
+              }}
+            >
+              <X size={18} style={{ color: "#00fffc", width: "clamp(14px, 3.5vw, 18px)", height: "clamp(14px, 3.5vw, 18px)" }} />
+            </button>
+
+            {/* Header */}
+            <div style={{ textAlign: "center", marginBottom: "clamp(20px, 5vw, 32px)" }}>
+              <div
+                style={{
+                  width: "clamp(60px, 15vw, 80px)",
+                  height: "clamp(60px, 15vw, 80px)",
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #00a4a2 0%, #00fffc 100%)",
+                  margin: "0 auto clamp(12px, 3vw, 20px)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 0 30px rgba(0,255,253,0.4)",
+                }}
+              >
+                <User size={40} style={{ color: "#000", width: "clamp(28px, 7vw, 40px)", height: "clamp(28px, 7vw, 40px)" }} />
+              </div>
+              <h2
+                style={{
+                  color: "#00fffc",
+                  fontSize: "clamp(1.2rem, 4vw, 1.5rem)",
+                  fontWeight: 700,
+                  marginBottom: 8,
+                  textShadow: "0 0 20px rgba(0,255,253,0.5)",
+                }}
+              >
+                Developer
+              </h2>
+              <div
+                style={{
+                  width: "clamp(40px, 12vw, 60px)",
+                  height: 3,
+                  background: "linear-gradient(90deg, transparent, #00fffc, transparent)",
+                  margin: "0 auto",
+                }}
+              />
+            </div>
+
+            {/* Info Items */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(12px, 3vw, 20px)" }}>
+              {/* Name */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "clamp(10px, 3vw, 16px)",
+                  padding: "clamp(10px, 3vw, 16px)",
+                  background: "rgba(0,164,162,0.1)",
+                  borderRadius: "clamp(8px, 2vw, 12px)",
+                  border: "1px solid rgba(0,164,162,0.3)",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = "rgba(0,164,162,0.2)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,255,253,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = "rgba(0,164,162,0.1)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,164,162,0.3)";
+                }}
+              >
+                <User size={20} style={{ color: "#00fffc", flexShrink: 0, width: "clamp(16px, 4vw, 20px)", height: "clamp(16px, 4vw, 20px)" }} />
+                <div>
+                  <div style={{ fontSize: "clamp(0.6rem, 1.8vw, 0.7rem)", color: "#00a4a2", marginBottom: 4 }}>NAME</div>
+                  <div style={{ color: "#e0ffff", fontSize: "clamp(0.85rem, 2.8vw, 1rem)", fontWeight: 600 }}>Younis Al Obeed</div>
+                </div>
+              </div>
+
+              {/* Email */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "clamp(10px, 3vw, 16px)",
+                  padding: "clamp(10px, 3vw, 16px)",
+                  background: "rgba(0,164,162,0.1)",
+                  borderRadius: "clamp(8px, 2vw, 12px)",
+                  border: "1px solid rgba(0,164,162,0.3)",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = "rgba(0,164,162,0.2)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,255,253,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = "rgba(0,164,162,0.1)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,164,162,0.3)";
+                }}
+              >
+                <Mail size={20} style={{ color: "#00fffc", flexShrink: 0, width: "clamp(16px, 4vw, 20px)", height: "clamp(16px, 4vw, 20px)" }} />
+                <div>
+                  <div style={{ fontSize: "clamp(0.6rem, 1.8vw, 0.7rem)", color: "#00a4a2", marginBottom: 4 }}>EMAIL</div>
+                  <div style={{ color: "#e0ffff", fontSize: "clamp(0.85rem, 2.8vw, 1rem)", fontWeight: 600 }}>mpgyounis@gmail.com</div>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "clamp(10px, 3vw, 16px)",
+                  padding: "clamp(10px, 3vw, 16px)",
+                  background: "rgba(0,164,162,0.1)",
+                  borderRadius: "clamp(8px, 2vw, 12px)",
+                  border: "1px solid rgba(0,164,162,0.3)",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = "rgba(0,164,162,0.2)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,255,253,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = "rgba(0,164,162,0.1)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,164,162,0.3)";
+                }}
+              >
+                <Phone size={20} style={{ color: "#00fffc", flexShrink: 0, width: "clamp(16px, 4vw, 20px)", height: "clamp(16px, 4vw, 20px)" }} />
+                <div>
+                  <div style={{ fontSize: "clamp(0.6rem, 1.8vw, 0.7rem)", color: "#00a4a2", marginBottom: 4 }}>PHONE</div>
+                  <div style={{ color: "#e0ffff", fontSize: "clamp(0.85rem, 2.8vw, 1rem)", fontWeight: 600 }}>+306972462001</div>
+                </div>
+              </div>
+
+              {/* Website */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "clamp(10px, 3vw, 16px)",
+                  padding: "clamp(10px, 3vw, 16px)",
+                  background: "rgba(0,164,162,0.1)",
+                  borderRadius: "clamp(8px, 2vw, 12px)",
+                  border: "1px solid rgba(0,164,162,0.3)",
+                  transition: "all 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = "rgba(0,164,162,0.2)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,255,253,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = "rgba(0,164,162,0.1)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,164,162,0.3)";
+                }}
+              >
+                <Globe size={20} style={{ color: "#00fffc", flexShrink: 0, width: "clamp(16px, 4vw, 20px)", height: "clamp(16px, 4vw, 20px)" }} />
+                <div>
+                  <div style={{ fontSize: "clamp(0.6rem, 1.8vw, 0.7rem)", color: "#00a4a2", marginBottom: 4 }}>WEBSITE</div>
+                  <a
+                    href="https://anon-site.github.io/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: "#e0ffff",
+                      fontSize: "clamp(0.85rem, 2.8vw, 1rem)",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      transition: "color 0.3s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.color = "#00fffc";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.color = "#e0ffff";
+                    }}
+                  >
+                    anon-site.github.io
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Keyframe styles ── */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&family=Cabin&display=swap');
@@ -409,6 +682,11 @@ export function LoginPage() {
           from { transform: translateY(0px); }
           to   { transform: translateY(-14px); }
         }
+        @keyframes rg-modal-slide {
+          0%   { opacity: 0; transform: scaleY(0); }
+          50%  { opacity: 1; transform: scaleY(0.5); }
+          100% { opacity: 1; transform: scaleY(1); }
+        }
         .rg-input:focus {
           border-color: #00fffc !important;
           background: rgba(0,30,30,0.95) !important;
@@ -419,6 +697,22 @@ export function LoginPage() {
         @keyframes rg-input-glow {
           0%   { box-shadow: 0 0 0 1px rgba(0,255,252,0.15), 0 0 10px rgba(0,255,252,0.2); }
           100% { box-shadow: 0 0 0 1px rgba(0,255,252,0.35), 0 0 24px rgba(0,255,252,0.5), inset 0 0 10px rgba(0,255,252,0.08); }
+        }
+        /* Small screens adjustments */
+        @media (max-width: 380px) {
+          .rg-form-box {
+            padding: 16px 12px !important;
+          }
+        }
+        @media (max-height: 700px) {
+          .rg-form-box {
+            transform: scale(0.9);
+          }
+        }
+        @media (max-height: 600px) {
+          .rg-form-box {
+            transform: scale(0.85);
+          }
         }
       `}</style>
     </div>
