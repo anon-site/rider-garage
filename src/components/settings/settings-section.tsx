@@ -22,8 +22,8 @@ export function SettingsSection({ onImport }: SettingsSectionProps) {
   return (
     <div className="space-y-6">
       {/* Tab bar */}
-      <div className="glass-panel inline-flex rounded-2xl p-1.5 ring-1 ring-white/60">
-        <nav className="flex gap-1">
+      <div className="glass-panel inline-flex w-full sm:w-auto rounded-2xl p-1.5 ring-1 ring-white/60">
+        <nav className="flex w-full sm:w-auto gap-1">
           {TABS.map((t) => {
             const Icon = t.icon;
             return (
@@ -32,14 +32,14 @@ export function SettingsSection({ onImport }: SettingsSectionProps) {
                 type="button"
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all",
+                  "flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl px-3 sm:px-5 py-2.5 text-sm font-semibold transition-all",
                   tab === t.id
                     ? "bg-brand-600 text-white shadow-md shadow-brand-200/40"
                     : "text-slate-500 hover:bg-white/60 hover:text-surface-900"
                 )}
               >
                 <Icon className="h-4 w-4" strokeWidth={2} />
-                {t.label}
+                <span className="hidden sm:inline">{t.label}</span>
               </button>
             );
           })}

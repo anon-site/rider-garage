@@ -54,27 +54,27 @@ function KpiCard({ icon: Icon, label, value, sub, trend, tone = "brand" }: {
 }) {
   const t = toneMap[tone];
   return (
-    <div className="glass-panel relative overflow-hidden rounded-2xl p-5 ring-1 ring-white/60">
-      <div className={`pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br ${t.grad} blur-2xl`} />
-      <div className="relative flex items-start justify-between gap-3">
+    <div className="glass-panel relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-5 ring-1 ring-white/60">
+      <div className={`pointer-events-none absolute -right-4 sm:-right-6 -top-4 sm:-top-6 h-20 sm:h-24 w-20 sm:w-24 rounded-full bg-gradient-to-br ${t.grad} blur-2xl`} />
+      <div className="relative flex items-start justify-between gap-2 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
-          <p className="mt-1.5 text-3xl font-extrabold tracking-tight text-surface-900">{value}</p>
-          {sub && <p className="mt-1 truncate text-xs text-slate-500">{sub}</p>}
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider sm:tracking-widest text-slate-400 truncate">{label}</p>
+          <p className="mt-1 sm:mt-1.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-surface-900">{value}</p>
+          {sub && <p className="mt-0.5 sm:mt-1 truncate text-[11px] sm:text-xs text-slate-500">{sub}</p>}
           {trend && (
             <span className={cn(
-              "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1",
+              "mt-1.5 sm:mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold ring-1",
               trend.val > 0 ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
               : trend.val < 0 ? "bg-rose-50 text-rose-700 ring-rose-200"
               : "bg-slate-50 text-slate-500 ring-slate-200"
             )}>
               {trend.val > 0 ? <ArrowUpRight className="h-3 w-3" /> : trend.val < 0 ? <ArrowDownRight className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-              {trend.label}
+              <span className="truncate">{trend.label}</span>
             </span>
           )}
         </div>
-        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg ${t.icon}`}>
-          <Icon className="h-5 w-5" strokeWidth={1.8} />
+        <span className={`flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br shadow-lg ${t.icon}`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} />
         </span>
       </div>
     </div>
@@ -256,29 +256,29 @@ export function ReportsSection() {
     <div className="space-y-6">
 
       {/* ── Page header bar ─────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
         {/* Tabs */}
-        <div className="flex items-center gap-1 rounded-2xl bg-surface-100 p-1 ring-1 ring-surface-200">
+        <div className="flex w-full sm:w-auto items-center gap-1 rounded-2xl bg-surface-100 p-1 ring-1 ring-surface-200">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
               onClick={() => setActiveTab(id)}
               className={cn(
-                "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all",
+                "flex flex-1 sm:flex-none items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-all",
                 activeTab === id
                   ? "bg-white text-brand-600 shadow-sm ring-1 ring-surface-200"
                   : "text-slate-500 hover:text-surface-900"
               )}
             >
               <Icon className="h-4 w-4" />
-              {label}
+              <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </div>
 
         {/* Period selector + Export hint */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="flex items-center gap-1 rounded-xl border border-surface-200 bg-white p-1 shadow-sm">
             {PERIODS.map(({ id, label }) => (
               <button
@@ -375,11 +375,11 @@ export function ReportsSection() {
       </div>
 
       {/* ── KPI Row ─────────────────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <KpiCard icon={Package}    label="Total Orders"    value={kpi.totalOrders}                      sub={`${kpi.totalSessions} sessions`}            tone="brand"   />
-        <KpiCard icon={Clock}      label="Total Hours"     value={fmtHours(kpi.totalHours)}             sub={`${kpi.uniqueDrivers} active drivers`}      tone="sky"     />
-        <KpiCard icon={Star}       label="Avg. Rating"     value={kpi.avgRating.toFixed(1)}             sub="driver performance"                         tone="amber"   />
-        <KpiCard icon={Activity}   label="Live Sessions"   value={kpi.activeSessions}                   sub="drivers currently on shift"                 tone={kpi.activeSessions > 0 ? "emerald" : "rose"} />
+        <KpiCard icon={Clock}      label="Total Hours"     value={fmtHours(kpi.totalHours)}             sub={`${kpi.uniqueDrivers} active`}      tone="sky"     />
+        <KpiCard icon={Star}       label="Avg. Rating"     value={kpi.avgRating.toFixed(1)}             sub="performance"                         tone="amber"   />
+        <KpiCard icon={Activity}   label="Live Sessions"   value={kpi.activeSessions}                   sub="on shift"                 tone={kpi.activeSessions > 0 ? "emerald" : "rose"} />
       </div>
 
       {/* ════════════════════════════════════════════════════════

@@ -110,26 +110,26 @@ function StatCard({
 }) {
   const t = toneCfg[tone];
   return (
-    <div className="glass-panel relative overflow-hidden rounded-2xl p-5 ring-1 ring-white/60">
+    <div className="glass-panel relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-5 ring-1 ring-white/60">
       <div
-        className={`pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br ${t.grad} blur-2xl`}
+        className={`pointer-events-none absolute -right-4 sm:-right-6 -top-4 sm:-top-6 h-20 sm:h-24 w-20 sm:w-24 rounded-full bg-gradient-to-br ${t.grad} blur-2xl`}
       />
-      <div className="relative flex items-start justify-between gap-3">
+      <div className="relative flex items-start justify-between gap-2 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider sm:tracking-widest text-slate-400 truncate">
             {label}
           </p>
-          <p className="mt-1.5 text-3xl font-extrabold tracking-tight text-surface-900">
+          <p className="mt-1 sm:mt-1.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-surface-900">
             {value}
           </p>
           {sub && (
-            <p className="mt-1 truncate text-xs text-slate-500">{sub}</p>
+            <p className="mt-0.5 sm:mt-1 truncate text-[11px] sm:text-xs text-slate-500">{sub}</p>
           )}
         </div>
         <span
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg ${t.icon}`}
+          className={`flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br shadow-lg ${t.icon}`}
         >
-          <Icon className="h-5 w-5" strokeWidth={1.8} />
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} />
         </span>
       </div>
     </div>
@@ -305,18 +305,18 @@ export function CpDashboard() {
     <div className="space-y-8">
 
       {/* ── KPI Grid ── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <StatCard icon={Users} label="System Users" value={stats.totalUsers} sub={`${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
-        <StatCard icon={UserCheck} label="Total Drivers" value={stats.totalDrivers} sub={`${stats.activeDrivers} currently active`} tone="emerald" />
-        <StatCard icon={Warehouse} label="Garages" value={stats.totalGarages} sub={`${stats.totalCapacity} total capacity`} tone="sky" />
-        <StatCard icon={Bike} label="Fleet Bikes" value={stats.totalBikes} sub={`${stats.bikesGood} operational · ${stats.bikesIssue} need attention`} tone={stats.bikesIssue > 0 ? "amber" : "emerald"} />
+        <StatCard icon={UserCheck} label="Total Drivers" value={stats.totalDrivers} sub={`${stats.activeDrivers} active`} tone="emerald" />
+        <StatCard icon={Warehouse} label="Garages" value={stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
+        <StatCard icon={Bike} label="Fleet Bikes" value={stats.totalBikes} sub={`${stats.bikesGood} good · ${stats.bikesIssue} issue`} tone={stats.bikesIssue > 0 ? "amber" : "emerald"} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Package} label="Total Orders" value={stats.totalOrders} sub={`across ${stats.totalSessions} sessions`} tone="violet" />
-        <StatCard icon={Star} label="Avg. Rating" value={stats.avgRating} sub="driver performance score" tone="amber" />
-        <StatCard icon={Clock} label="Total Hours" value={stats.totalHours} sub="logged work time" tone="sky" />
-        <StatCard icon={Activity} label="Active Drivers" value={stats.activeDrivers} sub="currently on shift" tone={stats.activeDrivers > 0 ? "emerald" : "rose"} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+        <StatCard icon={Package} label="Total Orders" value={stats.totalOrders} sub={`${stats.totalSessions} sessions`} tone="violet" />
+        <StatCard icon={Star} label="Avg. Rating" value={stats.avgRating} sub="performance" tone="amber" />
+        <StatCard icon={Clock} label="Total Hours" value={stats.totalHours} sub="work time" tone="sky" />
+        <StatCard icon={Activity} label="Active Now" value={stats.activeDrivers} sub="on shift" tone={stats.activeDrivers > 0 ? "emerald" : "rose"} />
       </div>
 
       {/* ── Two-column middle row ── */}

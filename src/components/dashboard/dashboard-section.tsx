@@ -27,20 +27,20 @@ function FilterCard({ icon: Icon, label, value, tone, active, onClick }: { icon:
     <button
       type="button"
       onClick={onClick}
-      className={`glass-panel relative overflow-hidden rounded-2xl p-5 text-left ring-1 ring-white/60 transition-all hover:shadow-lg ${active ? activeRing[t] : ""}`}
+      className={`glass-panel relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-5 text-left ring-1 ring-white/60 transition-all hover:shadow-lg ${active ? activeRing[t] : ""}`}
     >
-      <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br ${toneClasses[t]} opacity-50 blur-xl`} />
-      <div className="relative flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-surface-900">{value}</p>
+      <div className={`absolute -right-4 -top-4 h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-gradient-to-br ${toneClasses[t]} opacity-50 blur-xl`} />
+      <div className="relative flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 truncate">{label}</p>
+          <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl font-bold text-surface-900">{value}</p>
         </div>
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${toneClasses[t]}`}>
-          <Icon className="h-5 w-5" strokeWidth={1.75} />
+        <div className={`flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br ${toneClasses[t]}`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.75} />
         </div>
       </div>
       {active && (
-        <div className="absolute bottom-2 left-5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Filtered</div>
+        <div className="absolute bottom-1.5 sm:bottom-2 left-3 sm:left-5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400">Filtered</div>
       )}
     </button>
   );
@@ -83,7 +83,7 @@ export function DashboardSection() {
   return (
     <div className="space-y-6">
       {/* Filter Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <FilterCard icon={Users} label="Total Drivers" value={stats.total} tone="brand" active={filter === "all"} onClick={() => setFilter("all")} />
         <FilterCard icon={UserCheck} label="Active Outside" value={stats.active} tone="emerald" active={filter === "active"} onClick={() => setFilter("active")} />
         <FilterCard icon={Bike} label="With Bike" value={stats.withBike} tone="brand" active={filter === "with-bike"} onClick={() => setFilter("with-bike")} />
@@ -91,17 +91,17 @@ export function DashboardSection() {
       </div>
 
       {/* Section header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <h3 className="text-lg font-bold text-surface-900">Driver Overview</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className="text-base sm:text-lg font-bold text-surface-900">Driver Overview</h3>
+          <p className="text-xs sm:text-sm text-slate-500">
             {filter === "all" && "All drivers in the fleet"}
             {filter === "active" && "Drivers currently on shift"}
             {filter === "with-bike" && "Drivers with assigned bikes"}
             {filter === "waiting" && "Drivers waiting for bike assignment"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {filter !== "all" && (
             <button
               type="button"
@@ -118,7 +118,7 @@ export function DashboardSection() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {filteredDrivers.map((driver) => (
           <DriverCard
             key={driver.id}

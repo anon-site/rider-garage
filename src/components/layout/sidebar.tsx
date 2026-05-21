@@ -221,14 +221,16 @@ export const Sidebar = memo(function Sidebar() {
               onClick={toggle}
               aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
               className={cn(
-                "flex items-center justify-center rounded-xl bg-white/5 px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white",
-                isOpen ? "w-10 shrink-0" : "flex-1"
+                "flex items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                isOpen
+                  ? "w-10 shrink-0 bg-brand-500/20 text-brand-300 hover:bg-brand-500/30 hover:text-brand-200"
+                  : "flex-1 bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30 hover:from-brand-400 hover:to-brand-500"
               )}
             >
               {isOpen ? (
                 <ChevronLeft className="h-4 w-4 shrink-0" />
               ) : (
-                <ChevronRight className="h-4 w-4 shrink-0" />
+                <ChevronRight className="h-5 w-5 shrink-0" />
               )}
             </button>
           </div>

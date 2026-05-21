@@ -34,18 +34,19 @@ export function GaragesSection() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <h3 className="text-lg font-bold text-surface-900">Garages</h3>
-          <p className="text-sm text-slate-400">{garages.length} total garages</p>
+          <h3 className="text-base sm:text-lg font-bold text-surface-900">Garages</h3>
+          <p className="text-xs sm:text-sm text-slate-400">{garages.length} total garages</p>
         </div>
         <button
           type="button"
           onClick={() => setShowAdd(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 active:scale-[0.98]"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 active:scale-[0.98]"
         >
           <Plus className="h-4 w-4" />
-          Add Garage
+          <span className="sm:hidden">Add</span>
+          <span className="hidden sm:inline">Add Garage</span>
         </button>
       </div>
 
