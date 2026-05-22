@@ -515,6 +515,7 @@ export function ReportsSection() {
             <table className="w-full min-w-[700px] text-sm">
               <thead>
                 <tr className="border-b border-surface-200">
+                  <th className="pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">ID</th>
                   <th className="pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">Driver</th>
                   <th className="pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">Status</th>
                   <th className="pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">Bike</th>
@@ -539,6 +540,11 @@ export function ReportsSection() {
               <tbody className="divide-y divide-surface-100">
                 {driverStats.map((d) => (
                   <tr key={d.id} className="group hover:bg-surface-50/50 transition-colors">
+                    <td className="py-3.5 pr-4">
+                      <span className="inline-flex items-center rounded-lg bg-surface-100 px-2 py-1 text-[11px] font-medium text-slate-600">
+                        {d.id}
+                      </span>
+                    </td>
                     <td className="py-3.5 pr-4">
                       <div className="flex items-center gap-2.5">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-xs font-bold text-white">
@@ -582,7 +588,7 @@ export function ReportsSection() {
                   </tr>
                 ))}
                 {driverStats.length === 0 && (
-                  <tr><td colSpan={7} className="py-10 text-center text-sm text-slate-400">No driver records found.</td></tr>
+                  <tr><td colSpan={8} className="py-10 text-center text-sm text-slate-400">No driver records found.</td></tr>
                 )}
               </tbody>
             </table>

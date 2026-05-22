@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { X, Plus, Bike as BikeIcon } from "lucide-react";
 import type { Bike, BikeStatusId, BikeTypeId } from "@/types/bike";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
@@ -8,14 +8,25 @@ import { useDrivers } from "@/contexts/drivers-context";
 import { useGarages } from "@/contexts/control-panel-context";
 
 type AddBikeModalProps = {
-  onSubmit: (bike: Omit<Bike, "id">) => void;
+  onSubmit: (bike: Omit<Bike, "id">, customId?: string) => void;
   onClose: () => void;
+  existingPlateNumbers?: string[];
+  existingIds?: string[];
 };
 
-export function AddBikeModal({ onSubmit, onClose }: AddBikeModalProps) {
+export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], existingIds = [] }: AddBikeModalProps) {
   const { drivers } = useDrivers();
   const { garages } = useGarages();
+
+  // Only show drivers that don't have a bike assigned
+  const availableDrivers = useMemo(() => drivers.filter(d => !d.bikeId), [drivers]);
+
+  const [customId, setCustomId] = useState("");
   const [plateNumber, setPlateNumber] = useState("");
+
+  // Duplicate checks
+  const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
+  const isDuplicatePlate = plateNumber.trim() !== "" && existingPlateNumbers.includes(plateNumber.trim().toLowerCase());
   const [color, setColor] = useState("");
   const [bikeType, setBikeType] = useState<BikeTypeId>("electric_motorcycle");
   const [garageId, setGarageId] = useState("");
@@ -28,6 +39,7 @@ export function AddBikeModal({ onSubmit, onClose }: AddBikeModalProps) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!plateNumber.trim() || !registrationDate) return;
+    if (isDuplicatePlate || isDuplicateId) return;
     const payload: Omit<Bike, "id"> = {
       plateNumber,
       color,
@@ -41,7 +53,7 @@ export function AddBikeModal({ onSubmit, onClose }: AddBikeModalProps) {
       payload.defectDescription = defectDescription.trim();
     }
     if (notes.trim()) payload.notes = notes.trim();
-    onSubmit(payload);
+    onSubmit(payload, customId.trim() || undefined);
     onClose();
   }
 
@@ -70,6 +82,38 @@ export function AddBikeModal({ onSubmit, onClose }: AddBikeModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-6 pt-5">
+          {/* Bike ID */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">
+              Bike ID <span className="text-slate-400 text-xs font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={customId}
+              onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
+              placeholder="e.g. BK-001 (auto-generated if empty)"
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                isDuplicateId
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : customId.trim() && !isDuplicateId
+                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
+            />
+            {isDuplicateId && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This ID already exists. Please choose a different one.
+              </p>
+            )}
+            {customId.trim() && !isDuplicateId && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                ID is available
+              </p>
+            )}
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Plate Number</label>
@@ -79,8 +123,26 @@ export function AddBikeModal({ onSubmit, onClose }: AddBikeModalProps) {
                 value={plateNumber}
                 onChange={(e) => setPlateNumber(e.target.value)}
                 placeholder="e.g. BG-104"
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  isDuplicatePlate
+                    ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                    : plateNumber.trim() && !isDuplicatePlate
+                    ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                    : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {isDuplicatePlate && (
+                <p className="text-xs text-rose-500 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  This plate number already exists.
+                </p>
+              )}
+              {plateNumber.trim() && !isDuplicatePlate && (
+                <p className="text-xs text-emerald-600 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Plate number is available
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Color</label>
@@ -133,8 +195,10 @@ export function AddBikeModal({ onSubmit, onClose }: AddBikeModalProps) {
                 onChange={(e) => setDriverId(e.target.value)}
                 className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
               >
-                <option value="">No Driver</option>
-                {drivers.map((d) => (
+                <option value="">
+                  {availableDrivers.length === 0 ? "No available drivers" : "No Driver"}
+                </option>
+                {availableDrivers.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
                   </option>
@@ -202,7 +266,12 @@ export function AddBikeModal({ onSubmit, onClose }: AddBikeModalProps) {
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 hover:shadow-lg active:scale-[0.98]"
+              disabled={isDuplicatePlate || isDuplicateId}
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold shadow-md transition-all active:scale-[0.98] ${
+                isDuplicatePlate || isDuplicateId
+                  ? "bg-surface-200 text-slate-400 cursor-not-allowed"
+                  : "bg-brand-600 text-white shadow-brand-200 hover:bg-brand-700 hover:shadow-lg"
+              }`}
             >
               <Plus className="h-4 w-4" />
               Add Bike

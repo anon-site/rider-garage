@@ -9,7 +9,7 @@ import { EditGarageModal } from "./edit-garage-modal";
 import type { Garage } from "@/types/garage";
 
 export function GaragesSection() {
-  const { garages, addGarage, updateGarage, deleteGarage } = useGarages();
+  const { garages, addGarage, updateGarage, changeGarageId, deleteGarage } = useGarages();
   const { users } = useUsers();
   const [showAdd, setShowAdd] = useState(false);
   const [editingGarage, setEditingGarage] = useState<Garage | null>(null);
@@ -95,13 +95,18 @@ export function GaragesSection() {
         <AddGarageModal
           onSubmit={addGarage}
           onClose={() => setShowAdd(false)}
+          existingNames={garages.map(g => g.name.toLowerCase())}
+          existingIds={garages.map(g => g.id)}
         />
       )}
       {editingGarage && (
         <EditGarageModal
           garage={editingGarage}
           onSave={updateGarage}
+          onChangeId={changeGarageId}
           onClose={() => setEditingGarage(null)}
+          existingNames={garages.map(g => g.name.toLowerCase())}
+          existingIds={garages.map(g => g.id)}
         />
       )}
     </div>

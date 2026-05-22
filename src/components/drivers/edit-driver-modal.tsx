@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Save, UserCog } from "lucide-react";
 import type { Driver } from "@/types/driver";
-import type { BikeTypeId } from "@/types/bike";
+import type { BikeTypeId, Bike } from "@/types/bike";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
 import { useGarages } from "@/contexts/control-panel-context";
@@ -11,12 +11,27 @@ import { useGarages } from "@/contexts/control-panel-context";
 type EditDriverModalProps = {
   driver: Driver | null;
   onSave: (id: string, changes: Partial<Omit<Driver, "id">>) => void;
+  onChangeId?: (oldId: string, newId: string) => Promise<void>;
   onClose: () => void;
+  existingIds?: string[];
 };
 
-export function EditDriverModal({ driver, onSave, onClose }: EditDriverModalProps) {
+export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingIds = [] }: EditDriverModalProps) {
   const { bikes } = useBikes();
   const { garages } = useGarages();
+
+  // Show unassigned bikes plus the driver's current bike
+  const availableBikes = useMemo(() => {
+    const unassigned = bikes.filter(b => !b.driverId);
+    if (driver?.bikeId) {
+      const currentBike = bikes.find(b => b.id === driver.bikeId);
+      if (currentBike) {
+        return [...unassigned, currentBike];
+      }
+    }
+    return unassigned;
+  }, [bikes, driver?.bikeId]);
+  const [customId, setCustomId] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [joinDate, setJoinDate] = useState("");
@@ -27,6 +42,7 @@ export function EditDriverModal({ driver, onSave, onClose }: EditDriverModalProp
 
   useEffect(() => {
     if (driver) {
+      setCustomId(driver.id);
       setName(driver.name);
       setPhone(driver.phone);
       setJoinDate(driver.joinDate);
@@ -37,11 +53,26 @@ export function EditDriverModal({ driver, onSave, onClose }: EditDriverModalProp
     }
   }, [driver]);
 
+  const otherIds = driver ? existingIds.filter(id => id !== driver.id) : existingIds;
+  const isDuplicateId = customId.trim() !== "" && otherIds.includes(customId.trim());
+  const hasIdChanged = driver && customId.trim() !== driver.id;
+
   if (!driver) return null;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !joinDate || !driver) return;
+    if (isDuplicateId) return;
+
+    // Handle ID change first if needed
+    if (hasIdChanged && onChangeId && customId.trim()) {
+      try {
+        await onChangeId(driver.id, customId.trim());
+      } catch {
+        return; // Abort if ID change failed
+      }
+    }
+
     const changes: Partial<Omit<Driver, "id">> = {
       name,
       phone,
@@ -51,7 +82,7 @@ export function EditDriverModal({ driver, onSave, onClose }: EditDriverModalProp
     changes.email = email.trim() || undefined;
     changes.garageId = garageId || undefined;
     changes.bikeId = bikeId || undefined;
-    onSave(driver.id, changes);
+    onSave(hasIdChanged ? customId.trim() : driver.id, changes);
     onClose();
   }
 
@@ -80,6 +111,37 @@ export function EditDriverModal({ driver, onSave, onClose }: EditDriverModalProp
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-6 pt-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">
+              Driver ID
+            </label>
+            <input
+              type="text"
+              value={customId}
+              onChange={(e) => setCustomId(e.target.value)}
+              placeholder="e.g. DRV-001"
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                isDuplicateId
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : hasIdChanged && !isDuplicateId
+                  ? "border-amber-400 focus:border-amber-400 focus:ring-amber-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
+            />
+            {isDuplicateId && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This ID already exists. Please choose a different one.
+              </p>
+            )}
+            {hasIdChanged && !isDuplicateId && (
+              <p className="text-xs text-amber-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                ID will be changed on save
+              </p>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-surface-900">Full Name</label>
             <input
@@ -161,8 +223,10 @@ export function EditDriverModal({ driver, onSave, onClose }: EditDriverModalProp
               onChange={(e) => setBikeId(e.target.value)}
               className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
             >
-              <option value="">Waiting (No bike)</option>
-              {bikes.map((b) => (
+              <option value="">
+                {availableBikes.length === 0 ? "No available bikes" : "Waiting"}
+              </option>
+              {availableBikes.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.plateNumber}
                 </option>
@@ -180,7 +244,12 @@ export function EditDriverModal({ driver, onSave, onClose }: EditDriverModalProp
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 hover:shadow-lg active:scale-[0.98]"
+              disabled={isDuplicateId}
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold shadow-md transition-all active:scale-[0.98] ${
+                isDuplicateId
+                  ? "bg-surface-200 text-slate-400 cursor-not-allowed"
+                  : "bg-brand-600 text-white shadow-brand-200 hover:bg-brand-700 hover:shadow-lg"
+              }`}
             >
               <Save className="h-4 w-4" />
               Save Changes

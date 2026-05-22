@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Save, Bike as BikeIcon } from "lucide-react";
 import type { Bike, BikeStatusId, BikeTypeId } from "@/types/bike";
+import type { Driver } from "@/types/driver";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useGarages } from "@/contexts/control-panel-context";
@@ -10,12 +11,29 @@ import { useGarages } from "@/contexts/control-panel-context";
 type EditBikeModalProps = {
   bike: Bike | null;
   onSave: (id: string, changes: Partial<Omit<Bike, "id">>) => void;
+  onChangeId?: (oldId: string, newId: string) => Promise<void>;
   onClose: () => void;
+  existingPlateNumbers?: string[];
+  existingIds?: string[];
 };
 
-export function EditBikeModal({ bike, onSave, onClose }: EditBikeModalProps) {
+export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlateNumbers = [], existingIds = [] }: EditBikeModalProps) {
   const { drivers } = useDrivers();
   const { garages } = useGarages();
+
+  // Show unassigned drivers plus the bike's current driver
+  const availableDrivers = useMemo(() => {
+    const unassigned = drivers.filter(d => !d.bikeId);
+    if (bike?.driverId) {
+      const currentDriver = drivers.find(d => d.id === bike.driverId);
+      if (currentDriver) {
+        return [...unassigned, currentDriver];
+      }
+    }
+    return unassigned;
+  }, [drivers, bike?.driverId]);
+
+  const [customId, setCustomId] = useState("");
   const [plateNumber, setPlateNumber] = useState("");
   const [color, setColor] = useState("");
   const [bikeType, setBikeType] = useState<BikeTypeId>("electric_motorcycle");
@@ -26,8 +44,14 @@ export function EditBikeModal({ bike, onSave, onClose }: EditBikeModalProps) {
   const [registrationDate, setRegistrationDate] = useState("");
   const [notes, setNotes] = useState("");
 
+  const otherPlates = bike ? existingPlateNumbers.filter(p => p !== bike.plateNumber.toLowerCase()) : existingPlateNumbers;
+  const otherIds = bike ? existingIds.filter(id => id !== bike.id) : existingIds;
+  const isDuplicatePlate = plateNumber.trim() !== "" && otherPlates.includes(plateNumber.trim().toLowerCase());
+  const isDuplicateId = customId.trim() !== "" && otherIds.includes(customId.trim());
+
   useEffect(() => {
     if (bike) {
+      setCustomId(bike.id);
       setPlateNumber(bike.plateNumber);
       setColor(bike.color);
       setBikeType(bike.bikeType);
@@ -42,9 +66,16 @@ export function EditBikeModal({ bike, onSave, onClose }: EditBikeModalProps) {
 
   if (!bike) return null;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!plateNumber.trim() || !registrationDate || !bike) return;
+    if (isDuplicatePlate || isDuplicateId) return;
+
+    // Handle ID change if different
+    if (customId.trim() && customId.trim() !== bike.id && onChangeId) {
+      await onChangeId(bike.id, customId.trim());
+    }
+
     const changes: Partial<Omit<Bike, "id">> = {
       plateNumber,
       color,
@@ -56,7 +87,7 @@ export function EditBikeModal({ bike, onSave, onClose }: EditBikeModalProps) {
     changes.driverId = driverId || undefined;
     changes.defectDescription = status === "defective" ? defectDescription.trim() || undefined : undefined;
     changes.notes = notes.trim() || undefined;
-    onSave(bike.id, changes);
+    onSave(customId.trim() || bike.id, changes);
     onClose();
   }
 
@@ -85,6 +116,35 @@ export function EditBikeModal({ bike, onSave, onClose }: EditBikeModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-6 pt-5">
+          {/* Bike ID */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">Bike ID</label>
+            <input
+              type="text"
+              value={customId}
+              onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                isDuplicateId
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : customId.trim() && !isDuplicateId && customId.trim() !== bike?.id
+                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
+            />
+            {isDuplicateId && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This ID already exists. Please choose a different one.
+              </p>
+            )}
+            {customId.trim() && !isDuplicateId && customId.trim() !== bike?.id && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                ID will be changed on save
+              </p>
+            )}
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Plate Number</label>
@@ -93,8 +153,26 @@ export function EditBikeModal({ bike, onSave, onClose }: EditBikeModalProps) {
                 required
                 value={plateNumber}
                 onChange={(e) => setPlateNumber(e.target.value)}
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                  isDuplicatePlate
+                    ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                    : plateNumber.trim() && !isDuplicatePlate
+                    ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                    : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {isDuplicatePlate && (
+                <p className="text-xs text-rose-500 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  This plate number already exists.
+                </p>
+              )}
+              {plateNumber.trim() && !isDuplicatePlate && (
+                <p className="text-xs text-emerald-600 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Plate number is available
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Color</label>
@@ -146,8 +224,10 @@ export function EditBikeModal({ bike, onSave, onClose }: EditBikeModalProps) {
                 onChange={(e) => setDriverId(e.target.value)}
                 className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
               >
-                <option value="">No Driver</option>
-                {drivers.map((d) => (
+                <option value="">
+                  {availableDrivers.length === 0 ? "No available drivers" : "No Driver"}
+                </option>
+                {availableDrivers.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
                   </option>
@@ -215,7 +295,12 @@ export function EditBikeModal({ bike, onSave, onClose }: EditBikeModalProps) {
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 hover:shadow-lg active:scale-[0.98]"
+              disabled={isDuplicatePlate || isDuplicateId}
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold shadow-md transition-all active:scale-[0.98] ${
+                isDuplicatePlate || isDuplicateId
+                  ? "bg-surface-200 text-slate-400 cursor-not-allowed"
+                  : "bg-brand-600 text-white shadow-brand-200 hover:bg-brand-700 hover:shadow-lg"
+              }`}
             >
               <Save className="h-4 w-4" />
               Save Changes

@@ -8,20 +8,30 @@ import { useUsers } from "@/contexts/control-panel-context";
 type EditGarageModalProps = {
   garage: Garage | null;
   onSave: (id: string, changes: Partial<Omit<Garage, "id">>) => void;
+  onChangeId?: (oldId: string, newId: string) => Promise<void>;
   onClose: () => void;
+  existingNames?: string[];
+  existingIds?: string[];
 };
 
-export function EditGarageModal({ garage, onSave, onClose }: EditGarageModalProps) {
+export function EditGarageModal({ garage, onSave, onChangeId, onClose, existingNames = [], existingIds = [] }: EditGarageModalProps) {
   const { users } = useUsers();
   const garageManagers = users.filter((u) => u.role === "garage");
 
+  const [customId, setCustomId] = useState("");
   const [name, setName] = useState(garage?.name ?? "");
   const [location, setLocation] = useState(garage?.location ?? "");
   const [capacity, setCapacity] = useState(garage?.capacity ?? 1);
   const [managerId, setManagerId] = useState(garage?.managerId ?? "");
 
+  const otherNames = garage ? existingNames.filter(n => n !== garage.name.toLowerCase()) : existingNames;
+  const otherIds = garage ? existingIds.filter(id => id !== garage.id) : existingIds;
+  const isDuplicateName = name.trim() !== "" && otherNames.includes(name.trim().toLowerCase());
+  const isDuplicateId = customId.trim() !== "" && otherIds.includes(customId.trim());
+
   useEffect(() => {
     if (garage) {
+      setCustomId(garage.id);
       setName(garage.name);
       setLocation(garage.location);
       setCapacity(garage.capacity);
@@ -31,10 +41,17 @@ export function EditGarageModal({ garage, onSave, onClose }: EditGarageModalProp
 
   if (!garage) return null;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !garage) return;
-    onSave(garage.id, { name, location, capacity, managerId: managerId || undefined });
+    if (isDuplicateName || isDuplicateId) return;
+
+    // Handle ID change if different
+    if (customId.trim() && customId.trim() !== garage.id && onChangeId) {
+      await onChangeId(garage.id, customId.trim());
+    }
+
+    onSave(customId.trim() || garage.id, { name, location, capacity, managerId: managerId || undefined });
     onClose();
   }
 
@@ -58,6 +75,35 @@ export function EditGarageModal({ garage, onSave, onClose }: EditGarageModalProp
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Garage ID */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">Garage ID</label>
+            <input
+              type="text"
+              value={customId}
+              onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                isDuplicateId
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : customId.trim() && !isDuplicateId && customId.trim() !== garage?.id
+                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
+            />
+            {isDuplicateId && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This ID already exists. Please choose a different one.
+              </p>
+            )}
+            {customId.trim() && !isDuplicateId && customId.trim() !== garage?.id && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                ID will be changed on save
+              </p>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-surface-900">
               Garage Name
@@ -67,8 +113,26 @@ export function EditGarageModal({ garage, onSave, onClose }: EditGarageModalProp
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                isDuplicateName
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : name.trim() && !isDuplicateName
+                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
             />
+            {isDuplicateName && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This garage name already exists. Please choose a different one.
+              </p>
+            )}
+            {name.trim() && !isDuplicateName && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Name is available
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -126,7 +190,12 @@ export function EditGarageModal({ garage, onSave, onClose }: EditGarageModalProp
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              disabled={isDuplicateName || isDuplicateId}
+              className={`rounded-xl px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 ${
+                isDuplicateName || isDuplicateId
+                  ? "bg-surface-200 text-slate-400 cursor-not-allowed"
+                  : "bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-300"
+              }`}
             >
               Save Changes
             </button>

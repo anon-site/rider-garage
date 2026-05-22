@@ -39,69 +39,93 @@ function timestamp() {
    Flat-row converters (per entity)
 ─────────────────────────────────────────── */
 function driversToRows(drivers: Driver[]) {
-  return drivers.map((d) => ({
-    ID: d.id,
-    Name: d.name,
-    Phone: d.phone,
-    Email: d.email ?? "",
-    "Join Date": d.joinDate,
-    "Bike ID": d.bikeId ?? "",
-    "Preferred Bike Type": d.preferredBikeType ?? "",
-  }));
+  return [...drivers]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((d) => ({
+      ID: d.id,
+      Name: d.name,
+      Phone: d.phone,
+      Email: d.email ?? "",
+      "Join Date": d.joinDate,
+      "Bike ID": d.bikeId ?? "",
+      "Preferred Bike Type": d.preferredBikeType ?? "",
+    }));
 }
 
 function bikesToRows(bikes: Bike[]) {
-  return bikes.map((b) => ({
-    ID: b.id,
-    "Plate Number": b.plateNumber,
-    Color: b.color,
-    "Bike Type": b.bikeType,
-    Status: b.status,
-    "Driver ID": b.driverId ?? "",
-    "Registration Date": b.registrationDate,
-    "Defect Description": b.defectDescription ?? "",
-    Notes: b.notes ?? "",
-  }));
+  return [...bikes]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((b) => ({
+      ID: b.id,
+      "Plate Number": b.plateNumber,
+      Color: b.color,
+      "Bike Type": b.bikeType,
+      Status: b.status,
+      "Driver ID": b.driverId ?? "",
+      "Registration Date": b.registrationDate,
+      "Defect Description": b.defectDescription ?? "",
+      Notes: b.notes ?? "",
+    }));
 }
 
 function usersToRows(users: User[]) {
-  return users.map((u) => ({
-    ID: u.id,
-    Name: u.name,
-    Email: u.email,
-    Phone: u.phone,
-    Role: u.role,
-    "Garage ID": u.garageId ?? "",
-  }));
+  return [...users]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((u) => ({
+      ID: u.id,
+      Name: u.name,
+      Email: u.email,
+      Phone: u.phone,
+      Role: u.role,
+      "Garage ID": u.garageId ?? "",
+    }));
 }
 
 function garagesToRows(garages: Garage[]) {
-  return garages.map((g) => ({
-    ID: g.id,
-    Name: g.name,
-    Location: g.location,
-    Capacity: g.capacity,
-    "Manager ID": g.managerId ?? "",
-  }));
+  return [...garages]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((g) => ({
+      ID: g.id,
+      Name: g.name,
+      Location: g.location,
+      Capacity: g.capacity,
+      "Manager ID": g.managerId ?? "",
+    }));
 }
 
 function attendanceToRows(records: AttendanceRecord[]) {
-  return records.map((r) => ({
-    ID: r.id,
-    "Driver ID": r.driverId,
-    "Clock In": r.clockIn,
-    "Clock Out": r.clockOut ?? "",
-    "Orders Delivered": r.ordersDelivered,
-    Rating: r.rating,
-    Notes: r.notes ?? "",
-  }));
+  return [...records]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((r) => ({
+      ID: r.id,
+      "Driver ID": r.driverId,
+      "Clock In": r.clockIn,
+      "Clock Out": r.clockOut ?? "",
+      "Orders Delivered": r.ordersDelivered,
+      Rating: r.rating,
+      Notes: r.notes ?? "",
+    }));
+}
+
+/* ───────────────────────────────────────────
+   Sort helpers for consistent export ordering
+─────────────────────────────────────────── */
+function sortById<T extends { id: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => a.id.localeCompare(b.id));
 }
 
 /* ───────────────────────────────────────────
    JSON Export
 ─────────────────────────────────────────── */
 export function exportJSON(data: SiteData, scope: DataScope) {
-  const payload = scope === "all" ? data : { [scope]: data[scope] };
+  const sortedData: SiteData = {
+    drivers: sortById(data.drivers),
+    bikes: sortById(data.bikes),
+    users: sortById(data.users),
+    garages: sortById(data.garages),
+    attendance: sortById(data.attendance),
+  };
+  const payload = scope === "all" ? sortedData : { [scope]: sortedData[scope] };
   const json = JSON.stringify(payload, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   downloadBlob(blob, `rider-garage-${scope}-${timestamp()}.json`);

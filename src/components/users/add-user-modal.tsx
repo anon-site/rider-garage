@@ -8,8 +8,10 @@ import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
 
 type AddUserModalProps = {
-  onSubmit: (user: Omit<User, "id">) => void;
+  onSubmit: (user: Omit<User, "id">, customId?: string) => void;
   onClose: () => void;
+  existingUsernames?: string[];
+  existingIds?: string[];
 };
 
 const PERM_LABELS: { key: keyof CustomPermissions; label: string; desc: string }[] = [
@@ -20,7 +22,7 @@ const PERM_LABELS: { key: keyof CustomPermissions; label: string; desc: string }
   { key: "canViewReports",  label: "View Reports",    desc: "Access the analytics and reports page" },
 ];
 
-export function AddUserModal({ onSubmit, onClose }: AddUserModalProps) {
+export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existingIds = [] }: AddUserModalProps) {
   const { garages } = useGarages();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -30,6 +32,11 @@ export function AddUserModal({ onSubmit, onClose }: AddUserModalProps) {
   const [role, setRole] = useState<RoleId>("observer");
   const [garageId, setGarageId] = useState("");
   const [customPerms, setCustomPerms] = useState<CustomPermissions>({});
+  const [customId, setCustomId] = useState("");
+
+  // Duplicate checks
+  const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
+  const isDuplicateUsername = username.trim() !== "" && existingUsernames.includes(username.trim().toLowerCase());
 
   function handleRoleChange(newRole: RoleId) {
     setRole(newRole);
@@ -51,10 +58,11 @@ export function AddUserModal({ onSubmit, onClose }: AddUserModalProps) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !username.trim() || !password.trim()) return;
+    if (isDuplicateUsername || isDuplicateId) return;
     const payload: Omit<User, "id"> = { name, username, password, email, phone, role };
     if (role === "garage" && garageId) payload.garageId = garageId;
     if (Object.keys(customPerms).length > 0) payload.customPermissions = customPerms;
-    onSubmit(payload);
+    onSubmit(payload, customId.trim() || undefined);
     onClose();
   }
 
@@ -82,6 +90,38 @@ export function AddUserModal({ onSubmit, onClose }: AddUserModalProps) {
 
         <div className="max-h-[80vh] overflow-y-auto">
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
+          {/* User ID */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">
+              User ID <span className="text-slate-400 text-xs font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={customId}
+              onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
+              placeholder="e.g. USR-001 (auto-generated if empty)"
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                isDuplicateId
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : customId.trim() && !isDuplicateId
+                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
+            />
+            {isDuplicateId && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This ID already exists. Please choose a different one.
+              </p>
+            )}
+            {customId.trim() && !isDuplicateId && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                ID is available
+              </p>
+            )}
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">
@@ -124,8 +164,26 @@ export function AddUserModal({ onSubmit, onClose }: AddUserModalProps) {
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
                   placeholder="e.g. ahmed"
                   autoComplete="off"
-                  className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                    isDuplicateUsername
+                      ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                      : username.trim() && !isDuplicateUsername
+                      ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                      : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                  }`}
                 />
+                {isDuplicateUsername && (
+                  <p className="text-xs text-rose-500 flex items-center gap-1">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    This username already exists. Please choose a different one.
+                  </p>
+                )}
+                {username.trim() && !isDuplicateUsername && (
+                  <p className="text-xs text-emerald-600 flex items-center gap-1">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Username is available
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-surface-900">Password</label>
@@ -245,7 +303,15 @@ export function AddUserModal({ onSubmit, onClose }: AddUserModalProps) {
             <button type="button" onClick={onClose} className="rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50">
               Cancel
             </button>
-            <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 active:scale-[0.98]">
+            <button
+              type="submit"
+              disabled={isDuplicateUsername || isDuplicateId}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition-all active:scale-[0.98] ${
+                isDuplicateUsername || isDuplicateId
+                  ? "bg-surface-200 text-slate-400 cursor-not-allowed"
+                  : "bg-brand-600 text-white shadow-brand-200 hover:bg-brand-700"
+              }`}
+            >
               <Plus className="h-4 w-4" />
               Add User
             </button>

@@ -28,6 +28,7 @@ export async function exportExcel(data: ExportData, period: string) {
 
   /* ── Drivers Sheet ── */
   const driverRows = data.driverStats.map((d) => ({
+    ID: d.id,
     Name: d.name,
     Phone: d.phone,
     Status: d.isActive ? "Active" : "Offline",
@@ -38,7 +39,7 @@ export async function exportExcel(data: ExportData, period: string) {
     "Avg. Rating": d.rating.toFixed(1),
   }));
   const wsDrivers = XLSX.utils.json_to_sheet(driverRows);
-  wsDrivers["!cols"] = [{ wch: 24 }, { wch: 18 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
+  wsDrivers["!cols"] = [{ wch: 16 }, { wch: 24 }, { wch: 18 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
   XLSX.utils.book_append_sheet(wb, wsDrivers, "Drivers");
 
   /* ── Bikes Sheet ── */
@@ -129,8 +130,9 @@ export async function exportPDF(data: ExportData, period: string) {
   sectionTitle("Driver Performance");
   autoTable(doc, {
     startY: y,
-    head: [["Driver", "Status", "Bike", "Orders", "Hours", "Sessions", "Avg. Rating"]],
+    head: [["ID", "Driver", "Status", "Bike", "Orders", "Hours", "Sessions", "Avg. Rating"]],
     body: data.driverStats.map((d) => [
+      d.id,
       d.name,
       d.isActive ? "Active" : "Offline",
       d.bike?.plateNumber ?? "—",

@@ -58,7 +58,7 @@ function FilterCard({ icon: Icon, label, value, tone, active, onClick }: {
 }
 
 export function BikesSection() {
-  const { bikes, addBike, updateBike, deleteBike } = useBikes();
+  const { bikes, addBike, updateBike, changeBikeId, deleteBike } = useBikes();
   const { permissions } = useAuth();
   const { garages } = useGarages();
   const readOnly = !permissions.canEdit;
@@ -362,13 +362,21 @@ export function BikesSection() {
       <BikeList bikes={filteredBikes} onEdit={setEditingBike} onDelete={deleteBike} readOnly={readOnly} />
 
       {!readOnly && showAdd && (
-        <AddBikeModal onSubmit={addBike} onClose={() => setShowAdd(false)} />
+        <AddBikeModal
+          onSubmit={addBike}
+          onClose={() => setShowAdd(false)}
+          existingPlateNumbers={bikes.map(b => b.plateNumber.toLowerCase())}
+          existingIds={bikes.map(b => b.id)}
+        />
       )}
       {!readOnly && editingBike && (
         <EditBikeModal
           bike={editingBike}
           onSave={updateBike}
+          onChangeId={changeBikeId}
           onClose={() => setEditingBike(null)}
+          existingPlateNumbers={bikes.map(b => b.plateNumber.toLowerCase())}
+          existingIds={bikes.map(b => b.id)}
         />
       )}
     </div>

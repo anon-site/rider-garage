@@ -66,7 +66,7 @@ function FilterCard({ icon: Icon, label, value, tone, active, onClick }: { icon:
 }
 
 export function DriversSection() {
-  const { drivers, addDriver, updateDriver, deleteDriver } = useDrivers();
+  const { drivers, addDriver, updateDriver, changeDriverId, deleteDriver } = useDrivers();
   const { permissions } = useAuth();
   const { garages } = useGarages();
   const readOnly = !permissions.canEdit;
@@ -433,13 +433,15 @@ export function DriversSection() {
       <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} />
 
       {!readOnly && showAdd && (
-        <AddDriverModal onSubmit={addDriver} onClose={() => setShowAdd(false)} />
+        <AddDriverModal onSubmit={addDriver} onClose={() => setShowAdd(false)} existingIds={drivers.map(d => d.id)} />
       )}
       {!readOnly && editingDriver && (
         <EditDriverModal
           driver={editingDriver}
           onSave={updateDriver}
+          onChangeId={changeDriverId}
           onClose={() => setEditingDriver(null)}
+          existingIds={drivers.map(d => d.id)}
         />
       )}
     </div>

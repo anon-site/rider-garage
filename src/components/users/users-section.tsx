@@ -10,7 +10,7 @@ import { ROLES } from "@/types/user";
 import type { User } from "@/types/user";
 
 export function UsersSection() {
-  const { users, addUser, updateUser, deleteUser } = useUsers();
+  const { users, addUser, updateUser, changeUserId, deleteUser } = useUsers();
   const [showAdd, setShowAdd] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [query, setQuery] = useState("");
@@ -90,13 +90,18 @@ export function UsersSection() {
         <AddUserModal
           onSubmit={addUser}
           onClose={() => setShowAdd(false)}
+          existingUsernames={users.map(u => u.username.toLowerCase())}
+          existingIds={users.map(u => u.id)}
         />
       )}
       {editingUser && (
         <EditUserModal
           user={editingUser}
           onSave={updateUser}
+          onChangeId={changeUserId}
           onClose={() => setEditingUser(null)}
+          existingUsernames={users.map(u => u.username.toLowerCase())}
+          existingIds={users.map(u => u.id)}
         />
       )}
     </div>

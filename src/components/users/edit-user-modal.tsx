@@ -10,7 +10,10 @@ import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
 type EditUserModalProps = {
   user: User | null;
   onSave: (id: string, changes: Partial<Omit<User, "id">>) => void;
+  onChangeId?: (oldId: string, newId: string) => Promise<void>;
   onClose: () => void;
+  existingUsernames?: string[];
+  existingIds?: string[];
 };
 
 const PERM_LABELS: { key: keyof CustomPermissions; label: string; desc: string }[] = [
@@ -21,8 +24,9 @@ const PERM_LABELS: { key: keyof CustomPermissions; label: string; desc: string }
   { key: "canViewReports",  label: "View Reports",    desc: "Access the analytics and reports page" },
 ];
 
-export function EditUserModal({ user, onSave, onClose }: EditUserModalProps) {
+export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsernames = [], existingIds = [] }: EditUserModalProps) {
   const { garages } = useGarages();
+  const [customId, setCustomId] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -32,8 +36,14 @@ export function EditUserModal({ user, onSave, onClose }: EditUserModalProps) {
   const [garageId, setGarageId] = useState("");
   const [customPerms, setCustomPerms] = useState<CustomPermissions>({});
 
+  const otherUsernames = user ? existingUsernames.filter(u => u !== user.username.toLowerCase()) : existingUsernames;
+  const otherIds = user ? existingIds.filter(id => id !== user.id) : existingIds;
+  const isDuplicateUsername = username.trim() !== "" && otherUsernames.includes(username.trim().toLowerCase());
+  const isDuplicateId = customId.trim() !== "" && otherIds.includes(customId.trim());
+
   useEffect(() => {
     if (user) {
+      setCustomId(user.id);
       setName(user.name);
       setUsername(user.username);
       setPassword(user.password);
@@ -66,9 +76,16 @@ export function EditUserModal({ user, onSave, onClose }: EditUserModalProps) {
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !username.trim() || !password.trim() || !user) return;
+    if (isDuplicateUsername || isDuplicateId) return;
+
+    // Handle ID change if different
+    if (customId.trim() && customId.trim() !== user.id && onChangeId) {
+      await onChangeId(user.id, customId.trim());
+    }
+
     const changes: Partial<Omit<User, "id">> = { name, username, password, email, phone, role };
     if (role === "garage" && garageId) {
       changes.garageId = garageId;
@@ -76,7 +93,7 @@ export function EditUserModal({ user, onSave, onClose }: EditUserModalProps) {
       changes.garageId = undefined;
     }
     changes.customPermissions = Object.keys(customPerms).length > 0 ? customPerms : undefined;
-    onSave(user.id, changes);
+    onSave(customId.trim() || user.id, changes);
     onClose();
   }
 
@@ -104,6 +121,35 @@ export function EditUserModal({ user, onSave, onClose }: EditUserModalProps) {
 
         <div className="max-h-[80vh] overflow-y-auto">
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
+          {/* User ID */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">User ID</label>
+            <input
+              type="text"
+              value={customId}
+              onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                isDuplicateId
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : customId.trim() && !isDuplicateId && customId.trim() !== user?.id
+                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
+            />
+            {isDuplicateId && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This ID already exists. Please choose a different one.
+              </p>
+            )}
+            {customId.trim() && !isDuplicateId && customId.trim() !== user?.id && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                ID will be changed on save
+              </p>
+            )}
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">
@@ -143,8 +189,26 @@ export function EditUserModal({ user, onSave, onClose }: EditUserModalProps) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
                   autoComplete="off"
-                  className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                    isDuplicateUsername
+                      ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                      : username.trim() && !isDuplicateUsername
+                      ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                      : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                  }`}
                 />
+                {isDuplicateUsername && (
+                  <p className="text-xs text-rose-500 flex items-center gap-1">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    This username already exists. Please choose a different one.
+                  </p>
+                )}
+                {username.trim() && !isDuplicateUsername && (
+                  <p className="text-xs text-emerald-600 flex items-center gap-1">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Username is available
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-surface-900">Password</label>
@@ -280,7 +344,15 @@ export function EditUserModal({ user, onSave, onClose }: EditUserModalProps) {
             <button type="button" onClick={onClose} className="rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50">
               Cancel
             </button>
-            <button type="submit" className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 active:scale-[0.98]">
+            <button
+              type="submit"
+              disabled={isDuplicateUsername || isDuplicateId}
+              className={`rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition-all active:scale-[0.98] ${
+                isDuplicateUsername || isDuplicateId
+                  ? "bg-surface-200 text-slate-400 cursor-not-allowed"
+                  : "bg-brand-600 text-white shadow-brand-200 hover:bg-brand-700"
+              }`}
+            >
               Save Changes
             </button>
           </div>

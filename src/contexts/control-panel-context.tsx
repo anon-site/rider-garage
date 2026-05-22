@@ -15,6 +15,7 @@ import {
   set,
   update,
   remove,
+  get,
 } from "firebase/database";
 import { db } from "@/lib/firebase";
 import type { User } from "@/types/user";
@@ -41,11 +42,13 @@ type ControlPanelContextValue = {
   users: User[];
   garages: Garage[];
   loading: boolean;
-  addUser: (user: Omit<User, "id">) => Promise<string>;
+  addUser: (user: Omit<User, "id">, customId?: string) => Promise<string>;
   updateUser: (id: string, changes: Partial<Omit<User, "id">>) => Promise<void>;
+  changeUserId: (oldId: string, newId: string) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
-  addGarage: (garage: Omit<Garage, "id">) => Promise<string>;
+  addGarage: (garage: Omit<Garage, "id">, customId?: string) => Promise<string>;
   updateGarage: (id: string, changes: Partial<Omit<Garage, "id">>) => Promise<void>;
+  changeGarageId: (oldId: string, newId: string) => Promise<void>;
   deleteGarage: (id: string) => Promise<void>;
 };
 
@@ -95,14 +98,14 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /* ── Users CRUD ── */
-  const addUser = useCallback(async (user: Omit<User, "id">): Promise<string> => {
-    const newRef = push(ref(db, "users"));
-    await set(newRef, stripUndefined(user));
-    const newId = newRef.key!;
+  const addUser = useCallback(async (user: Omit<User, "id">, customId?: string): Promise<string> => {
+    const userId = customId || push(ref(db, "users")).key!;
+    const userRef = ref(db, `users/${userId}`);
+    await set(userRef, stripUndefined(user));
     if (user.garageId) {
-      await update(ref(db, `garages/${user.garageId}`), { managerId: newId });
+      await update(ref(db, `garages/${user.garageId}`), { managerId: userId });
     }
-    return newId;
+    return userId;
   }, []);
 
   const updateUser = useCallback(async (id: string, changes: Partial<Omit<User, "id">>) => {
@@ -122,6 +125,21 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
     }
   }, [users]);
 
+  const changeUserId = useCallback(async (oldId: string, newId: string) => {
+    const oldRef = ref(db, `users/${oldId}`);
+    const newRef = ref(db, `users/${newId}`);
+    const snapshot = await get(oldRef);
+    if (!snapshot.exists()) throw new Error("User not found");
+    const data = snapshot.val();
+    await set(newRef, data);
+    await remove(oldRef);
+
+    // Update garage reference if user is a manager
+    if (data.garageId) {
+      await update(ref(db, `garages/${data.garageId}`), { managerId: newId });
+    }
+  }, []);
+
   const deleteUser = useCallback(async (id: string) => {
     const user = users.find((u) => u.id === id);
     if (user?.garageId) {
@@ -131,14 +149,14 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
   }, [users]);
 
   /* ── Garages CRUD ── */
-  const addGarage = useCallback(async (garage: Omit<Garage, "id">): Promise<string> => {
-    const newRef = push(ref(db, "garages"));
-    await set(newRef, stripUndefined(garage));
-    const newId = newRef.key!;
+  const addGarage = useCallback(async (garage: Omit<Garage, "id">, customId?: string): Promise<string> => {
+    const garageId = customId || push(ref(db, "garages")).key!;
+    const garageRef = ref(db, `garages/${garageId}`);
+    await set(garageRef, stripUndefined(garage));
     if (garage.managerId) {
-      await update(ref(db, `users/${garage.managerId}`), { garageId: newId });
+      await update(ref(db, `users/${garage.managerId}`), { garageId: garageId });
     }
-    return newId;
+    return garageId;
   }, []);
 
   const updateGarage = useCallback(async (id: string, changes: Partial<Omit<Garage, "id">>) => {
@@ -155,6 +173,21 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
     }
   }, [garages]);
 
+  const changeGarageId = useCallback(async (oldId: string, newId: string) => {
+    const oldRef = ref(db, `garages/${oldId}`);
+    const newRef = ref(db, `garages/${newId}`);
+    const snapshot = await get(oldRef);
+    if (!snapshot.exists()) throw new Error("Garage not found");
+    const data = snapshot.val();
+    await set(newRef, data);
+    await remove(oldRef);
+
+    // Update user reference if garage has a manager
+    if (data.managerId) {
+      await update(ref(db, `users/${data.managerId}`), { garageId: newId });
+    }
+  }, []);
+
   const deleteGarage = useCallback(async (id: string) => {
     const garage = garages.find((g) => g.id === id);
     if (garage?.managerId) {
@@ -167,8 +200,8 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
     <ControlPanelContext.Provider
       value={{
         users, garages, loading,
-        addUser, updateUser, deleteUser,
-        addGarage, updateGarage, deleteGarage,
+        addUser, updateUser, changeUserId, deleteUser,
+        addGarage, updateGarage, changeGarageId, deleteGarage,
       }}
     >
       {children}
@@ -179,13 +212,13 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
 export function useUsers() {
   const ctx = useContext(ControlPanelContext);
   if (!ctx) throw new Error("useUsers must be used within ControlPanelProvider");
-  const { users, loading, addUser, updateUser, deleteUser } = ctx;
-  return { users, loading, addUser, updateUser, deleteUser };
+  const { users, loading, addUser, updateUser, changeUserId, deleteUser } = ctx;
+  return { users, loading, addUser, updateUser, changeUserId, deleteUser };
 }
 
 export function useGarages() {
   const ctx = useContext(ControlPanelContext);
   if (!ctx) throw new Error("useGarages must be used within ControlPanelProvider");
-  const { garages, loading, addGarage, updateGarage, deleteGarage } = ctx;
-  return { garages, loading, addGarage, updateGarage, deleteGarage };
+  const { garages, loading, addGarage, updateGarage, changeGarageId, deleteGarage } = ctx;
+  return { garages, loading, addGarage, updateGarage, changeGarageId, deleteGarage };
 }

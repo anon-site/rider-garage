@@ -6,25 +6,33 @@ import type { Garage } from "@/types/garage";
 import { useUsers } from "@/contexts/control-panel-context";
 
 type AddGarageModalProps = {
-  onSubmit: (garage: Omit<Garage, "id">) => void;
+  onSubmit: (garage: Omit<Garage, "id">, customId?: string) => void;
   onClose: () => void;
+  existingNames?: string[];
+  existingIds?: string[];
 };
 
-export function AddGarageModal({ onSubmit, onClose }: AddGarageModalProps) {
+export function AddGarageModal({ onSubmit, onClose, existingNames = [], existingIds = [] }: AddGarageModalProps) {
   const { users } = useUsers();
   const garageManagers = users.filter((u) => u.role === "garage");
 
+  const [customId, setCustomId] = useState("");
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [capacity, setCapacity] = useState(1);
   const [managerId, setManagerId] = useState("");
 
+  // Duplicate checks
+  const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
+  const isDuplicateName = name.trim() !== "" && existingNames.includes(name.trim().toLowerCase());
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
+    if (isDuplicateName || isDuplicateId) return;
     const payload: Omit<Garage, "id"> = { name, location, capacity };
     if (managerId) payload.managerId = managerId;
-    onSubmit(payload);
+    onSubmit(payload, customId.trim() || undefined);
     onClose();
   }
 
@@ -48,6 +56,38 @@ export function AddGarageModal({ onSubmit, onClose }: AddGarageModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Garage ID */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">
+              Garage ID <span className="text-slate-400 text-xs font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={customId}
+              onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
+              placeholder="e.g. GRG-001 (auto-generated if empty)"
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                isDuplicateId
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : customId.trim() && !isDuplicateId
+                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
+            />
+            {isDuplicateId && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This ID already exists. Please choose a different one.
+              </p>
+            )}
+            {customId.trim() && !isDuplicateId && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                ID is available
+              </p>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-surface-900">
               Garage Name
@@ -58,8 +98,26 @@ export function AddGarageModal({ onSubmit, onClose }: AddGarageModalProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Central Hub"
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                isDuplicateName
+                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                  : name.trim() && !isDuplicateName
+                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
             />
+            {isDuplicateName && (
+              <p className="text-xs text-rose-500 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                This garage name already exists. Please choose a different one.
+              </p>
+            )}
+            {name.trim() && !isDuplicateName && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Name is available
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -118,7 +176,12 @@ export function AddGarageModal({ onSubmit, onClose }: AddGarageModalProps) {
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              disabled={isDuplicateName || isDuplicateId}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 ${
+                isDuplicateName || isDuplicateId
+                  ? "bg-surface-200 text-slate-400 cursor-not-allowed"
+                  : "bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-300"
+              }`}
             >
               <Plus className="h-4 w-4" />
               Add Garage
