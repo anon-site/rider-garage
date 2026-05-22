@@ -38,6 +38,28 @@ function stripUndefined<T extends object>(obj: T): Partial<T> {
   ) as Partial<T>;
 }
 
+function generateUserId(existingIds: string[]): string {
+  const prefix = "USR-";
+  let counter = 1;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  while (existingIds.includes(newId)) {
+    counter++;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  }
+  return newId;
+}
+
+function generateGarageId(existingIds: string[]): string {
+  const prefix = "GRG-";
+  let counter = 1;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  while (existingIds.includes(newId)) {
+    counter++;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  }
+  return newId;
+}
+
 type ControlPanelContextValue = {
   users: User[];
   garages: Garage[];
@@ -99,14 +121,14 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
 
   /* ── Users CRUD ── */
   const addUser = useCallback(async (user: Omit<User, "id">, customId?: string): Promise<string> => {
-    const userId = customId || push(ref(db, "users")).key!;
+    const userId = customId || generateUserId(users.map(u => u.id));
     const userRef = ref(db, `users/${userId}`);
     await set(userRef, stripUndefined(user));
     if (user.garageId) {
       await update(ref(db, `garages/${user.garageId}`), { managerId: userId });
     }
     return userId;
-  }, []);
+  }, [users]);
 
   const updateUser = useCallback(async (id: string, changes: Partial<Omit<User, "id">>) => {
     const oldUser = users.find((u) => u.id === id);
@@ -150,14 +172,14 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
 
   /* ── Garages CRUD ── */
   const addGarage = useCallback(async (garage: Omit<Garage, "id">, customId?: string): Promise<string> => {
-    const garageId = customId || push(ref(db, "garages")).key!;
+    const garageId = customId || generateGarageId(garages.map(g => g.id));
     const garageRef = ref(db, `garages/${garageId}`);
     await set(garageRef, stripUndefined(garage));
     if (garage.managerId) {
       await update(ref(db, `users/${garage.managerId}`), { garageId: garageId });
     }
     return garageId;
-  }, []);
+  }, [garages]);
 
   const updateGarage = useCallback(async (id: string, changes: Partial<Omit<Garage, "id">>) => {
     const oldGarage = garages.find((g) => g.id === id);

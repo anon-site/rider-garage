@@ -18,6 +18,17 @@ function stripUndefined<T extends object>(obj: T): Partial<T> {
   ) as Partial<T>;
 }
 
+function generateBikeId(existingIds: string[]): string {
+  const prefix = "BK-";
+  let counter = 1;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  while (existingIds.includes(newId)) {
+    counter++;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  }
+  return newId;
+}
+
 type BikesContextValue = {
   bikes: Bike[];
   loading: boolean;
@@ -44,7 +55,7 @@ export function BikesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addBike = useCallback(async (bike: Omit<Bike, "id">, customId?: string): Promise<string> => {
-    const bikeId = customId || push(ref(db, "bikes")).key!;
+    const bikeId = customId || generateBikeId(bikes.map(b => b.id));
     const bikeRef = ref(db, `bikes/${bikeId}`);
     await set(bikeRef, stripUndefined(bike));
 
@@ -54,7 +65,7 @@ export function BikesProvider({ children }: { children: ReactNode }) {
     }
 
     return bikeId;
-  }, []);
+  }, [bikes]);
 
   const updateBike = useCallback(async (id: string, changes: Partial<Omit<Bike, "id">>) => {
     // If driverId changed, update old and new driver records

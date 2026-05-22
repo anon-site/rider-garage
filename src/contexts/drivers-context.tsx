@@ -18,6 +18,17 @@ function stripUndefined<T extends object>(obj: T): Partial<T> {
   ) as Partial<T>;
 }
 
+function generateDriverId(existingIds: string[]): string {
+  const prefix = "DRV-";
+  let counter = 1;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  while (existingIds.includes(newId)) {
+    counter++;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  }
+  return newId;
+}
+
 type DriversContextValue = {
   drivers: Driver[];
   loading: boolean;
@@ -44,7 +55,7 @@ export function DriversProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addDriver = useCallback(async (driver: Omit<Driver, "id">, customId?: string): Promise<string> => {
-    const driverId = customId || push(ref(db, "drivers")).key!;
+    const driverId = customId || generateDriverId(drivers.map(d => d.id));
     const driverRef = ref(db, `drivers/${driverId}`);
     await set(driverRef, stripUndefined(driver));
 
@@ -54,7 +65,7 @@ export function DriversProvider({ children }: { children: ReactNode }) {
     }
 
     return driverId;
-  }, []);
+  }, [drivers]);
 
   const updateDriver = useCallback(async (id: string, changes: Partial<Omit<Driver, "id">>) => {
     // If bikeId changed, update old and new bike records

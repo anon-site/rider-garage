@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, KeyRound, ShieldCheck, ShieldOff } from "lucide-react";
+import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, KeyRound, ShieldCheck, ShieldOff, Fingerprint } from "lucide-react";
 import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
@@ -92,6 +92,18 @@ export function UserList({ users, onEdit, onDelete }: UserListProps) {
                   <RoleBadge role={user.role} />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+                  {/* User ID Badge */}
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-mono font-medium ${
+                      user.id.match(/^-[A-Za-z0-9_-]{19,}$/) || user.id.length > 15
+                        ? "bg-slate-100 text-slate-500 ring-1 ring-slate-200"
+                        : "bg-brand-50 text-brand-700 ring-1 ring-brand-200"
+                    }`}
+                    title="User ID"
+                  >
+                    <Fingerprint className="h-3 w-3" />
+                    {user.id}
+                  </span>
                   <span className="inline-flex items-center gap-1.5 font-medium text-brand-600">
                     <AtSign className="h-3.5 w-3.5" />
                     {user.username}
