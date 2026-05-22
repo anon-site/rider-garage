@@ -5,6 +5,7 @@ import {
   Settings,
   Users,
   BarChart3,
+  Warehouse,
   type LucideIcon,
 } from "lucide-react";
 
@@ -13,6 +14,8 @@ export type NavItem = {
   href: string;
   icon: LucideIcon;
   description: string;
+  /** If true, requires canManageUsers permission to view */
+  adminOnly?: boolean;
 };
 
 export const navItems: NavItem[] = [
@@ -21,6 +24,13 @@ export const navItems: NavItem[] = [
     href: "/dashboard",
     icon: LayoutDashboard,
     description: "Overview and quick stats",
+  },
+  {
+    title: "Garages",
+    href: "/garages",
+    icon: Warehouse,
+    description: "Manage garage locations",
+    adminOnly: true,
   },
   {
     title: "Bikes",
