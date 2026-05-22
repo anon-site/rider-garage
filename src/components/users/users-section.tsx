@@ -16,7 +16,7 @@ export function UsersSection() {
   const [showAdd, setShowAdd] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();

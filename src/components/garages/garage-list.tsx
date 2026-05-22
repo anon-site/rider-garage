@@ -14,7 +14,7 @@ type GarageListProps = {
   viewMode?: ViewMode;
 };
 
-export function GarageList({ garages, onEdit, onDelete, viewMode = "list" }: GarageListProps) {
+export function GarageList({ garages, onEdit, onDelete, viewMode = "grid" }: GarageListProps) {
   const { users } = useUsers();
   const managerNameMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);

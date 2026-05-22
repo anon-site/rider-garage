@@ -42,7 +42,7 @@ function StripeColor(status: Bike["status"]) {
   return map[status];
 }
 
-export function BikeList({ bikes, onEdit, onDelete, readOnly = false, viewMode = "list" }: BikeListProps) {
+export function BikeList({ bikes, onEdit, onDelete, readOnly = false, viewMode = "grid" }: BikeListProps) {
   const { drivers } = useDrivers();
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);

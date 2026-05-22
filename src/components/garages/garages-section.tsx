@@ -16,7 +16,7 @@ export function GaragesSection() {
   const [showAdd, setShowAdd] = useState(false);
   const [editingGarage, setEditingGarage] = useState<Garage | null>(null);
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const filteredGarages = useMemo(() => {
     const q = query.trim().toLowerCase();

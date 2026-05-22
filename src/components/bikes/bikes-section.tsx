@@ -71,7 +71,7 @@ export function BikesSection() {
   const [editingBike, setEditingBike] = useState<Bike | null>(null);
   const [filter, setFilter] = useState<BikeFilter>("all");
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
