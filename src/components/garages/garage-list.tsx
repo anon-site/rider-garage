@@ -5,16 +5,20 @@ import { Pencil, Trash2, MapPin, Store, Users, User } from "lucide-react";
 import type { Garage } from "@/types/garage";
 import { useUsers } from "@/contexts/control-panel-context";
 
+type ViewMode = "list" | "grid";
+
 type GarageListProps = {
   garages: Garage[];
   onEdit: (garage: Garage) => void;
   onDelete: (id: string) => void;
+  viewMode?: ViewMode;
 };
 
-export function GarageList({ garages, onEdit, onDelete }: GarageListProps) {
+export function GarageList({ garages, onEdit, onDelete, viewMode = "list" }: GarageListProps) {
   const { users } = useUsers();
   const managerNameMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const isGrid = viewMode === "grid";
 
   function confirmDelete(id: string) {
     if (deletingId === id) {
@@ -40,11 +44,15 @@ export function GarageList({ garages, onEdit, onDelete }: GarageListProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className={isGrid ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" : "space-y-3"}>
       {garages.map((garage) => (
         <div
           key={garage.id}
-          className="glass-panel flex flex-col gap-4 rounded-2xl p-5 transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+          className={`glass-panel transition-shadow hover:shadow-md ${
+            isGrid
+              ? "flex flex-col gap-3 rounded-2xl p-4"
+              : "flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between"
+          }`}
         >
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-center gap-3">

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, X, LayoutGrid, List } from "lucide-react";
 import { useGarages, useUsers } from "@/contexts/control-panel-context";
 import { GarageList } from "./garage-list";
 import { AddGarageModal } from "./add-garage-modal";
 import { EditGarageModal } from "./edit-garage-modal";
 import type { Garage } from "@/types/garage";
+
+type ViewMode = "list" | "grid";
 
 export function GaragesSection() {
   const { garages, addGarage, updateGarage, changeGarageId, deleteGarage } = useGarages();
@@ -14,6 +16,7 @@ export function GaragesSection() {
   const [showAdd, setShowAdd] = useState(false);
   const [editingGarage, setEditingGarage] = useState<Garage | null>(null);
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   const filteredGarages = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -39,15 +42,44 @@ export function GaragesSection() {
           <h3 className="text-base sm:text-lg font-bold text-surface-900">Garages</h3>
           <p className="text-xs sm:text-sm text-slate-400">{garages.length} total garages</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowAdd(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 active:scale-[0.98]"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="sm:hidden">Add</span>
-          <span className="hidden sm:inline">Add Garage</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex items-center rounded-xl bg-surface-100 p-1 ring-1 ring-surface-200">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`rounded-lg p-2 transition-all ${
+                viewMode === "list"
+                  ? "bg-white text-brand-600 shadow-sm ring-1 ring-surface-200"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="List View"
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`rounded-lg p-2 transition-all ${
+                viewMode === "grid"
+                  ? "bg-white text-brand-600 shadow-sm ring-1 ring-surface-200"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAdd(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="sm:hidden">Add</span>
+            <span className="hidden sm:inline">Add Garage</span>
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -89,6 +121,7 @@ export function GaragesSection() {
         garages={filteredGarages}
         onEdit={setEditingGarage}
         onDelete={deleteGarage}
+        viewMode={viewMode}
       />
 
       {showAdd && (

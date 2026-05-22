@@ -123,8 +123,13 @@ export function ReportsSection() {
   const { garages } = useGarages();
   const { user, permissions } = useAuth();
 
+  // Hide garages for garage managers
+  const isGarageManager = user?.role === "garage";
+
   const [period, setPeriod] = useState<Period>("30d");
-  const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "fleet" | "garages">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "fleet" | "garages">(
+    isGarageManager ? "overview" : "overview"
+  );
   const [sortBy, setSortBy] = useState<"orders" | "rating" | "hours">("orders");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [exportOpen, setExportOpen] = useState(false);
@@ -205,7 +210,10 @@ export function ReportsSection() {
     setExportOpen(false);
     setExporting(type);
     const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
-    const exportData = { driverStats, bikes, garageStats, filteredRecords, driverMap };
+    // Exclude garageStats for garage managers in export
+    const exportData = isGarageManager
+      ? { driverStats, bikes, filteredRecords, driverMap }
+      : { driverStats, bikes, garageStats, filteredRecords, driverMap };
     try {
       if (type === "pdf") await exportPDF(exportData, period);
       else await exportExcel(exportData, period);
@@ -243,7 +251,7 @@ export function ReportsSection() {
     { id: "overview", label: "Overview",     icon: Activity },
     { id: "drivers",  label: "Drivers",      icon: Users },
     { id: "fleet",    label: "Fleet",        icon: BikeIcon },
-    { id: "garages",  label: "Garages",      icon: Warehouse },
+    ...(!isGarageManager ? [{ id: "garages", label: "Garages", icon: Warehouse }] : []),
   ] as const;
 
   const PERIODS: { id: Period; label: string }[] = [
@@ -263,7 +271,7 @@ export function ReportsSection() {
             <button
               key={id}
               type="button"
-              onClick={() => setActiveTab(id)}
+              onClick={() => setActiveTab(id as any)}
               className={cn(
                 "flex flex-1 sm:flex-none items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-all",
                 activeTab === id

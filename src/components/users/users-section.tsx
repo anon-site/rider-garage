@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, X, LayoutGrid, List } from "lucide-react";
 import { useUsers } from "@/contexts/control-panel-context";
 import { UserList } from "./user-list";
 import { AddUserModal } from "./add-user-modal";
@@ -9,11 +9,14 @@ import { EditUserModal } from "./edit-user-modal";
 import { ROLES } from "@/types/user";
 import type { User } from "@/types/user";
 
+type ViewMode = "list" | "grid";
+
 export function UsersSection() {
   const { users, addUser, updateUser, changeUserId, deleteUser } = useUsers();
   const [showAdd, setShowAdd] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -35,14 +38,43 @@ export function UsersSection() {
           <h3 className="text-lg font-bold text-surface-900">Users</h3>
           <p className="text-sm text-slate-400">{users.length} total members</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowAdd(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 active:scale-[0.98]"
-        >
-          <Plus className="h-4 w-4" />
-          Add User
-        </button>
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex items-center rounded-xl bg-surface-100 p-1 ring-1 ring-surface-200">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`rounded-lg p-2 transition-all ${
+                viewMode === "list"
+                  ? "bg-white text-brand-600 shadow-sm ring-1 ring-surface-200"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="List View"
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`rounded-lg p-2 transition-all ${
+                viewMode === "grid"
+                  ? "bg-white text-brand-600 shadow-sm ring-1 ring-surface-200"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAdd(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-200 transition-all hover:bg-brand-700 active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" />
+            Add User
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -84,6 +116,7 @@ export function UsersSection() {
         users={filteredUsers}
         onEdit={setEditingUser}
         onDelete={deleteUser}
+        viewMode={viewMode}
       />
 
       {showAdd && (

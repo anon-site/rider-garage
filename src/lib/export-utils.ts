@@ -59,18 +59,20 @@ export async function exportExcel(data: ExportData, period: string) {
   XLSX.utils.book_append_sheet(wb, wsBikes, "Fleet");
 
   /* ── Garages Sheet ── */
-  const garageRows = data.garageStats.map((g) => ({
-    Name: g.name,
-    Location: g.location,
-    Capacity: g.capacity,
-    Drivers: g.driverCount,
-    Bikes: g.bikeCount,
-    Orders: g.orders,
-    "Avg. Rating": g.rating > 0 ? g.rating.toFixed(1) : "—",
-  }));
-  const wsGarages = XLSX.utils.json_to_sheet(garageRows);
-  wsGarages["!cols"] = [{ wch: 22 }, { wch: 24 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 14 }];
-  XLSX.utils.book_append_sheet(wb, wsGarages, "Garages");
+  if (data.garageStats) {
+    const garageRows = data.garageStats.map((g) => ({
+      Name: g.name,
+      Location: g.location,
+      Capacity: g.capacity,
+      Drivers: g.driverCount,
+      Bikes: g.bikeCount,
+      Orders: g.orders,
+      "Avg. Rating": g.rating > 0 ? g.rating.toFixed(1) : "—",
+    }));
+    const wsGarages = XLSX.utils.json_to_sheet(garageRows);
+    wsGarages["!cols"] = [{ wch: 22 }, { wch: 24 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, wsGarages, "Garages");
+  }
 
   /* ── Attendance Sheet ── */
   const attRows = data.filteredRecords.map((r) => {
@@ -171,24 +173,26 @@ export async function exportPDF(data: ExportData, period: string) {
   if (y > 170) { doc.addPage(); addHeader(doc, pageW, period); y = 30; }
 
   /* ── 3. Garage Summary ── */
-  sectionTitle("Garage Summary");
-  autoTable(doc, {
-    startY: y,
-    head: [["Garage", "Location", "Capacity", "Drivers", "Bikes", "Orders", "Avg. Rating"]],
-    body: data.garageStats.map((g) => [
-      g.name,
-      g.location,
-      String(g.capacity),
-      String(g.driverCount),
-      String(g.bikeCount),
-      String(g.orders),
-      g.rating > 0 ? g.rating.toFixed(1) : "—",
-    ]),
-    styles: { fontSize: 8, cellPadding: 3 },
-    headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: "bold" },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    margin: { left: 14, right: 14 },
-  });
+  if (data.garageStats) {
+    sectionTitle("Garage Summary");
+    autoTable(doc, {
+      startY: y,
+      head: [["Garage", "Location", "Capacity", "Drivers", "Bikes", "Orders", "Avg. Rating"]],
+      body: data.garageStats.map((g) => [
+        g.name,
+        g.location,
+        String(g.capacity),
+        String(g.driverCount),
+        String(g.bikeCount),
+        String(g.orders),
+        g.rating > 0 ? g.rating.toFixed(1) : "—",
+      ]),
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: 14, right: 14 },
+    });
+  }
 
   /* ── Page numbers ── */
   const pages = doc.getNumberOfPages();
@@ -228,7 +232,7 @@ export type ExportData = {
     status: string; driverId?: string; garageId?: string;
     registrationDate: string; defectDescription?: string; notes?: string;
   }[];
-  garageStats: {
+  garageStats?: {
     id: string; name: string; location: string; capacity: number;
     driverCount: number; bikeCount: number; orders: number; rating: number;
   }[];

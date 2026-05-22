@@ -6,17 +6,21 @@ import type { Driver } from "@/types/driver";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
 
+type ViewMode = "list" | "grid";
+
 type DriverListProps = {
   drivers: Driver[];
   onEdit: (driver: Driver) => void;
   onDelete: (id: string) => void;
   readOnly?: boolean;
+  viewMode?: ViewMode;
 };
 
-export function DriverList({ drivers, onEdit, onDelete, readOnly = false }: DriverListProps) {
+export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid" }: DriverListProps) {
   const { bikes } = useBikes();
   const bikeMap = Object.fromEntries(bikes.map((b) => [b.id, b.plateNumber]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const isGrid = viewMode === "grid";
 
   function confirmDelete(id: string) {
     if (deletingId === id) {
@@ -38,11 +42,15 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false }: Driv
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+    <div className={isGrid ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" : "space-y-3"}>
       {drivers.map((driver) => (
         <div
           key={driver.id}
-          className="group relative flex flex-col rounded-xl sm:rounded-2xl border border-surface-200 bg-white shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
+          className={`${
+            isGrid
+              ? "group relative flex flex-col rounded-xl sm:rounded-2xl border border-surface-200 bg-white shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
+              : "glass-panel flex flex-col gap-4 rounded-2xl p-5 transition-shadow hover:shadow-md sm:flex-row sm:items-start sm:justify-between"
+          }`}
         >
           {/* Top colored bar */}
           <div className="h-1.5 w-full bg-gradient-to-r from-brand-400 to-brand-600" />

@@ -26,6 +26,7 @@ import { useUsers, useGarages } from "@/contexts/control-panel-context";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
+import { useAuth } from "@/contexts/auth-context";
 import { ROLES } from "@/types/user";
 import { cn } from "@/lib/utils";
 
@@ -236,6 +237,10 @@ export function CpDashboard() {
   const { drivers } = useDrivers();
   const { bikes } = useBikes();
   const { records } = useAttendance();
+  const { user } = useAuth();
+
+  // Hide garages section for garage managers
+  const isGarageManager = user?.role === "garage";
 
   /* ── computed stats ── */
   const stats = useMemo(() => {
@@ -387,62 +392,64 @@ export function CpDashboard() {
           </div>
         </div>
 
-        {/* Garages breakdown */}
-        <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
-          <div className="mb-5 flex items-center justify-between">
-            <SectionTitle icon={Warehouse} title="Garage Network" badge={garageList.length} />
-            <span className="text-xs text-slate-400">Capacity overview</span>
-          </div>
-          <div className="space-y-4">
-            {garageList.map((g) => {
-              const manager = g.managerId ? users.find((u) => u.id === g.managerId) : undefined;
-              const maxCap = Math.max(...garageList.map((x) => x.capacity), 1);
-              const pct = Math.round((g.capacity / maxCap) * 100);
-              return (
-                <div
-                  key={g.id}
-                  className="rounded-xl bg-surface-50/80 px-4 py-3 ring-1 ring-surface-100"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-surface-900">{g.name}</p>
-                      <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
-                        <MapPin className="h-3 w-3 shrink-0" />
-                        {g.location}
+        {/* Garages breakdown - hidden for garage managers */}
+        {!isGarageManager && (
+          <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
+            <div className="mb-5 flex items-center justify-between">
+              <SectionTitle icon={Warehouse} title="Garage Network" badge={garageList.length} />
+              <span className="text-xs text-slate-400">Capacity overview</span>
+            </div>
+            <div className="space-y-4">
+              {garageList.map((g) => {
+                const manager = g.managerId ? users.find((u) => u.id === g.managerId) : undefined;
+                const maxCap = Math.max(...garageList.map((x) => x.capacity), 1);
+                const pct = Math.round((g.capacity / maxCap) * 100);
+                return (
+                  <div
+                    key={g.id}
+                    className="rounded-xl bg-surface-50/80 px-4 py-3 ring-1 ring-surface-100"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-surface-900">{g.name}</p>
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {g.location}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-200">
+                        {g.capacity} slots
+                      </span>
+                    </div>
+                    <div className="mt-3">
+                      <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Capacity</span>
+                        <span>{pct}% of fleet max</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-surface-200">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                    {manager ? (
+                      <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                        <ShieldCheck className="h-3 w-3 text-brand-500" />
+                        Manager: <span className="font-medium text-surface-800">{manager.name}</span>
                       </p>
-                    </div>
-                    <span className="shrink-0 rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-200">
-                      {g.capacity} slots
-                    </span>
+                    ) : (
+                      <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
+                        <UserX className="h-3 w-3 text-rose-400" />
+                        No manager assigned
+                      </p>
+                    )}
                   </div>
-                  <div className="mt-3">
-                    <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Capacity</span>
-                      <span>{pct}% of fleet max</span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-surface-200">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                  {manager ? (
-                    <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
-                      <ShieldCheck className="h-3 w-3 text-brand-500" />
-                      Manager: <span className="font-medium text-surface-800">{manager.name}</span>
-                    </p>
-                  ) : (
-                    <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
-                      <UserX className="h-3 w-3 text-rose-400" />
-                      No manager assigned
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── Fleet Bikes ── */}

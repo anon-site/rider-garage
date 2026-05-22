@@ -15,10 +15,13 @@ const PERM_LABELS: Record<keyof CustomPermissions, string> = {
   canViewReports: "Reports",
 };
 
+type ViewMode = "list" | "grid";
+
 type UserListProps = {
   users: User[];
   onEdit: (user: User) => void;
   onDelete: (id: string) => void;
+  viewMode?: ViewMode;
 };
 
 function RoleBadge({ role }: { role: RoleId }) {
@@ -39,9 +42,10 @@ function RoleBadge({ role }: { role: RoleId }) {
   );
 }
 
-export function UserList({ users, onEdit, onDelete }: UserListProps) {
+export function UserList({ users, onEdit, onDelete, viewMode = "list" }: UserListProps) {
   const { garages } = useGarages();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const isGrid = viewMode === "grid";
   const garageNameMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
 
   function confirmDelete(id: string) {
@@ -68,11 +72,15 @@ export function UserList({ users, onEdit, onDelete }: UserListProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className={isGrid ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" : "space-y-3"}>
       {users.map((user) => (
         <div
           key={user.id}
-          className="glass-panel flex flex-col gap-4 rounded-2xl p-5 transition-shadow hover:shadow-md sm:flex-row sm:items-start sm:justify-between"
+          className={`glass-panel transition-shadow hover:shadow-md ${
+            isGrid
+              ? "flex flex-col gap-3 rounded-2xl p-4"
+              : "flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-start sm:justify-between"
+          }`}
         >
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-center gap-3">

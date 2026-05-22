@@ -6,11 +6,14 @@ import type { Bike } from "@/types/bike";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
 
+type ViewMode = "list" | "grid";
+
 type BikeListProps = {
   bikes: Bike[];
   onEdit: (bike: Bike) => void;
   onDelete: (id: string) => void;
   readOnly?: boolean;
+  viewMode?: ViewMode;
 };
 
 function StatusBadge({ status }: { status: Bike["status"] }) {
@@ -39,10 +42,11 @@ function StripeColor(status: Bike["status"]) {
   return map[status];
 }
 
-export function BikeList({ bikes, onEdit, onDelete, readOnly = false }: BikeListProps) {
+export function BikeList({ bikes, onEdit, onDelete, readOnly = false, viewMode = "list" }: BikeListProps) {
   const { drivers } = useDrivers();
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const isGrid = viewMode === "grid";
 
   function confirmDelete(id: string) {
     if (deletingId === id) {

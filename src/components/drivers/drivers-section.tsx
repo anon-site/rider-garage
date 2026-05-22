@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Plus, Users, Bike, Clock, X, EyeOff,
-  Warehouse, LayoutGrid, ChevronDown, MapPin, Check, Search,
+  Warehouse, LayoutGrid, List, ChevronDown, MapPin, Check, Search,
 } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -14,6 +14,7 @@ import { EditDriverModal } from "./edit-driver-modal";
 import type { Driver } from "@/types/driver";
 
 type DriverFilter = "all" | "with-bike" | "waiting";
+type ViewMode = "list" | "grid";
 
 function FilterCard({ icon: Icon, label, value, tone, active, onClick }: { icon: React.ElementType; label: React.ReactNode; value: number; tone?: "brand" | "emerald" | "amber"; active: boolean; onClick: () => void; }) {
   const toneClasses = {
@@ -78,6 +79,7 @@ export function DriversSection() {
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [filter, setFilter] = useState<DriverFilter>("all");
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -411,6 +413,33 @@ export function DriversSection() {
               <span className="sm:hidden">{filteredDrivers.length}</span>
             </span>
           )}
+          {/* View Mode Toggle */}
+          <div className="flex items-center rounded-xl bg-surface-100 p-1 ring-1 ring-surface-200">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`rounded-lg p-2 transition-all ${
+                viewMode === "list"
+                  ? "bg-white text-brand-600 shadow-sm ring-1 ring-surface-200"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="List View"
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`rounded-lg p-2 transition-all ${
+                viewMode === "grid"
+                  ? "bg-white text-brand-600 shadow-sm ring-1 ring-surface-200"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+          </div>
           {readOnly ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
               <EyeOff className="h-3.5 w-3.5" />
@@ -430,7 +459,7 @@ export function DriversSection() {
         </div>
       </div>
 
-      <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} />
+      <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} viewMode={viewMode} />
 
       {!readOnly && showAdd && (
         <AddDriverModal onSubmit={addDriver} onClose={() => setShowAdd(false)} existingIds={drivers.map(d => d.id)} />
