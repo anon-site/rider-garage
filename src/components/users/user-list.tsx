@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, KeyRound, ShieldCheck, ShieldOff, Fingerprint } from "lucide-react";
+import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, ShieldCheck, ShieldOff, Fingerprint } from "lucide-react";
 import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
@@ -107,10 +107,6 @@ export function UserList({ users, onEdit, onDelete }: UserListProps) {
                   <span className="inline-flex items-center gap-1.5 font-medium text-brand-600">
                     <AtSign className="h-3.5 w-3.5" />
                     {user.username}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <KeyRound className="h-3.5 w-3.5" />
-                    {user.password}
                   </span>
                   {user.email && (
                     <span className="inline-flex items-center gap-1.5">
