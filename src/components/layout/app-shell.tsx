@@ -24,7 +24,7 @@ export function AppShell({ children, title, description }: AppShellProps) {
       >
         <div className="pointer-events-none fixed inset-0 opacity-[0.35]" style={{ backgroundImage: "radial-gradient(circle, #cbd5e1 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
         <Header title={title} description={description} />
-        <main className="relative flex-1 animate-[fadeIn_0.18s_ease-out] p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="relative flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );
