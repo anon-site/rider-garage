@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
-  BarChart3, TrendingUp, Package, Star, Clock, Users,
+  TrendingUp, Package, Star, Clock, Users,
   Bike as BikeIcon, Warehouse, Calendar, Download,
   ChevronDown, ChevronUp, Filter, AlertTriangle,
   CheckCircle2, ArrowUpRight, ArrowDownRight, Minus,
@@ -26,9 +26,6 @@ function fmtHours(h: number) {
   const hh = Math.floor(h);
   const mm = Math.round((h - hh) * 60);
   return `${hh}h ${mm}m`;
-}
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 function fmtShortDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
@@ -248,11 +245,11 @@ export function ReportsSection() {
   }
 
   const TABS = [
-    { id: "overview", label: "Overview",     icon: Activity },
-    { id: "drivers",  label: "Drivers",      icon: Users },
-    { id: "fleet",    label: "Fleet",        icon: BikeIcon },
-    ...(!isGarageManager ? [{ id: "garages", label: "Garages", icon: Warehouse }] : []),
-  ] as const;
+    { id: "overview" as const, label: "Overview",     icon: Activity },
+    { id: "drivers" as const,  label: "Drivers",      icon: Users },
+    { id: "fleet" as const,    label: "Fleet",        icon: BikeIcon },
+    ...(!isGarageManager ? [{ id: "garages" as const, label: "Garages", icon: Warehouse }] : []),
+  ];
 
   const PERIODS: { id: Period; label: string }[] = [
     { id: "7d",  label: "Last 7 days" },
@@ -271,7 +268,7 @@ export function ReportsSection() {
             <button
               key={id}
               type="button"
-              onClick={() => setActiveTab(id as any)}
+              onClick={() => setActiveTab(id as "overview" | "drivers" | "fleet" | "garages")}
               className={cn(
                 "flex flex-1 sm:flex-none items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-all",
                 activeTab === id
