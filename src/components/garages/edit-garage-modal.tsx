@@ -51,7 +51,8 @@ export function EditGarageModal({ garage, onSave, onChangeId, onClose, existingN
       await onChangeId(garage.id, customId.trim());
     }
 
-    onSave(customId.trim() || garage.id, { name, location, capacity, managerId: managerId || undefined });
+    // Always use original garage.id - ID change is handled separately by onChangeId
+    onSave(garage.id, { name, location, capacity, managerId: managerId || undefined });
     onClose();
   }
 

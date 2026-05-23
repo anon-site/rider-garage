@@ -87,7 +87,8 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
     changes.driverId = driverId || undefined;
     changes.defectDescription = status === "defective" ? defectDescription.trim() || undefined : undefined;
     changes.notes = notes.trim() || undefined;
-    onSave(customId.trim() || bike.id, changes);
+    // Always use original bike.id - ID change is handled separately by onChangeId
+    onSave(bike.id, changes);
     onClose();
   }
 

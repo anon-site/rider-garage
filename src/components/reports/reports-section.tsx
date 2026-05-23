@@ -120,8 +120,10 @@ export function ReportsSection() {
   const { garages } = useGarages();
   const { user, permissions } = useAuth();
 
-  // Hide garages for garage managers
+  // Hide garages for garage managers and supervisors
   const isGarageManager = user?.role === "garage";
+  const isSupervisor = user?.role === "supervisor";
+  const hideGaragesTab = isGarageManager || isSupervisor;
 
   const [period, setPeriod] = useState<Period>("30d");
   const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "fleet" | "garages">(
@@ -248,7 +250,7 @@ export function ReportsSection() {
     { id: "overview" as const, label: "Overview",     icon: Activity },
     { id: "drivers" as const,  label: "Drivers",      icon: Users },
     { id: "fleet" as const,    label: "Fleet",        icon: BikeIcon },
-    ...(!isGarageManager ? [{ id: "garages" as const, label: "Garages", icon: Warehouse }] : []),
+    ...(!hideGaragesTab ? [{ id: "garages" as const, label: "Garages", icon: Warehouse }] : []),
   ];
 
   const PERIODS: { id: Period; label: string }[] = [

@@ -82,7 +82,8 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
     changes.email = email.trim() || undefined;
     changes.garageId = garageId || undefined;
     changes.bikeId = bikeId || undefined;
-    onSave(hasIdChanged ? customId.trim() : driver.id, changes);
+    // Always use original driver.id - ID change is handled separately by onChangeId
+    onSave(driver.id, changes);
     onClose();
   }
 

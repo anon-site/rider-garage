@@ -93,7 +93,8 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
       changes.garageId = undefined;
     }
     changes.customPermissions = Object.keys(customPerms).length > 0 ? customPerms : undefined;
-    onSave(customId.trim() || user.id, changes);
+    // Always use original user.id - ID change is handled separately by onChangeId
+    onSave(user.id, changes);
     onClose();
   }
 
