@@ -79,9 +79,10 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
       joinDate,
       preferredBikeType,
     };
-    changes.email = email.trim() || undefined;
-    changes.garageId = garageId || undefined;
-    changes.bikeId = bikeId || undefined;
+    // Use null to explicitly clear values in Firebase, undefined won't update
+    changes.email = email.trim() || null;
+    changes.garageId = garageId || null;
+    changes.bikeId = bikeId || null;
     // Always use original driver.id - ID change is handled separately by onChangeId
     onSave(driver.id, changes);
     onClose();

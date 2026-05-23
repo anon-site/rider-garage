@@ -83,10 +83,11 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
       status,
       registrationDate,
     };
-    changes.garageId = garageId || undefined;
-    changes.driverId = driverId || undefined;
-    changes.defectDescription = status === "defective" ? defectDescription.trim() || undefined : undefined;
-    changes.notes = notes.trim() || undefined;
+    // Use null to explicitly clear values in Firebase, undefined won't update
+    changes.garageId = garageId || null;
+    changes.driverId = driverId || null;
+    changes.defectDescription = status === "defective" ? defectDescription.trim() || null : null;
+    changes.notes = notes.trim() || null;
     // Always use original bike.id - ID change is handled separately by onChangeId
     onSave(bike.id, changes);
     onClose();

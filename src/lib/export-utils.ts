@@ -229,8 +229,8 @@ export type ExportData = {
   }[];
   bikes: {
     id: string; plateNumber: string; bikeType: string; color: string;
-    status: string; driverId?: string; garageId?: string;
-    registrationDate: string; defectDescription?: string; notes?: string;
+    status: string; driverId?: string | null; garageId?: string | null;
+    registrationDate: string; defectDescription?: string | null; notes?: string | null;
   }[];
   garageStats?: {
     id: string; name: string; location: string; capacity: number;

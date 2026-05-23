@@ -5,8 +5,8 @@ export type Driver = {
   name: string;
   phone: string;
   joinDate: string;
-  email?: string;
-  garageId?: string;
-  bikeId?: string;
+  email?: string | null;
+  garageId?: string | null;
+  bikeId?: string | null;
   preferredBikeType?: BikeTypeId;
 };

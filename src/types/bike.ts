@@ -18,10 +18,10 @@ export type Bike = {
   plateNumber: string;
   color: string;
   bikeType: BikeTypeId;
-  garageId?: string;
-  driverId?: string;
+  garageId?: string | null;
+  driverId?: string | null;
   status: BikeStatusId;
-  defectDescription?: string;
+  defectDescription?: string | null;
   registrationDate: string;
-  notes?: string;
+  notes?: string | null;
 };

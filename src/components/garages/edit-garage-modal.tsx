@@ -52,7 +52,8 @@ export function EditGarageModal({ garage, onSave, onChangeId, onClose, existingN
     }
 
     // Always use original garage.id - ID change is handled separately by onChangeId
-    onSave(garage.id, { name, location, capacity, managerId: managerId || undefined });
+    // Use null to explicitly clear managerId in Firebase, undefined won't update
+    onSave(garage.id, { name, location, capacity, managerId: managerId || null });
     onClose();
   }
 

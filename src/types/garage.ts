@@ -3,5 +3,5 @@ export type Garage = {
   name: string;
   location: string;
   capacity: number;
-  managerId?: string;
+  managerId?: string | null;
 };
