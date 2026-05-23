@@ -24,5 +24,5 @@ export type User = {
   phone: string;
   role: RoleId;
   garageId?: string;
-  customPermissions?: CustomPermissions;
+  customPermissions?: CustomPermissions | null;
 };

@@ -92,7 +92,8 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
     } else {
       changes.garageId = undefined;
     }
-    changes.customPermissions = Object.keys(customPerms).length > 0 ? customPerms : undefined;
+    // Save customPermissions: use null to clear existing overrides, or the object if has overrides
+    changes.customPermissions = Object.keys(customPerms).length > 0 ? customPerms : null;
     // Always use original user.id - ID change is handled separately by onChangeId
     onSave(user.id, changes);
     onClose();
