@@ -75,74 +75,60 @@ export function AddGarageModal({ onSubmit, onClose, existingNames = [], existing
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Garage ID */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">
-              Garage ID <span className="text-slate-400 text-xs font-normal">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={customId}
-              onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
-              placeholder="e.g. GRG-001 (auto-generated if empty)"
-              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
-                isDuplicateId
-                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
-                  : customId.trim() && !isDuplicateId
-                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
-                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
-              }`}
-            />
-            {isDuplicateId && (
-              <p className="text-xs text-rose-500 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
-                This ID already exists. Please choose a different one.
-              </p>
-            )}
-            {customId.trim() && !isDuplicateId && (
-              <p className="text-xs text-emerald-600 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                ID is available
-              </p>
-            )}
+          {/* ID + Name */}
+          <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">
+                Garage ID <span className="text-slate-400 text-xs font-normal">(auto)</span>
+              </label>
+              <input
+                type="text"
+                value={customId}
+                onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
+                placeholder="e.g. GRG-001"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  isDuplicateId
+                    ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                    : customId.trim() && !isDuplicateId
+                    ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                    : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
+              />
+              {isDuplicateId && (
+                <p className="text-xs text-rose-500 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  ID exists
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Garage Name</label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Central Hub"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  isDuplicateName
+                    ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                    : name.trim() && !isDuplicateName
+                    ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                    : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
+              />
+              {isDuplicateName && (
+                <p className="text-xs text-rose-500 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  Name exists
+                </p>
+              )}
+            </div>
           </div>
 
+          {/* Location */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">
-              Garage Name
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Central Hub"
-              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
-                isDuplicateName
-                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
-                  : name.trim() && !isDuplicateName
-                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
-                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
-              }`}
-            />
-            {isDuplicateName && (
-              <p className="text-xs text-rose-500 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
-                This garage name already exists. Please choose a different one.
-              </p>
-            )}
-            {name.trim() && !isDuplicateName && (
-              <p className="text-xs text-emerald-600 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Name is available
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">
-              Location
-            </label>
+            <label className="text-sm font-medium text-surface-900">Location</label>
             <input
               type="text"
               required
@@ -153,36 +139,34 @@ export function AddGarageModal({ onSubmit, onClose, existingNames = [], existing
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">
-              Capacity
-            </label>
-            <input
-              type="number"
-              required
-              min={1}
-              value={capacity}
-              onChange={(e) => setCapacity(Number(e.target.value))}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">
-              Manager
-            </label>
-            <select
-              value={managerId}
-              onChange={(e) => setManagerId(e.target.value)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            >
-              <option value="">Select a manager</option>
-              {garageManagers.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
+          {/* Capacity + Manager */}
+          <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Capacity</label>
+              <input
+                type="number"
+                required
+                min={1}
+                value={capacity}
+                onChange={(e) => setCapacity(Number(e.target.value))}
+                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Manager</label>
+              <select
+                value={managerId}
+                onChange={(e) => setManagerId(e.target.value)}
+                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              >
+                <option value="">Select a manager</option>
+                {garageManagers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

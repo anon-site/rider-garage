@@ -113,46 +113,45 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 p-5 sm:p-6">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">
-              Driver ID
-            </label>
-            <input
-              type="text"
-              value={customId}
-              onChange={(e) => setCustomId(e.target.value)}
-              placeholder="e.g. DRV-001"
-              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
-                isDuplicateId
-                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
-                  : hasIdChanged && !isDuplicateId
-                  ? "border-amber-400 focus:border-amber-400 focus:ring-amber-100"
-                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
-              }`}
-            />
-            {isDuplicateId && (
-              <p className="text-xs text-rose-500 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
-                This ID already exists. Please choose a different one.
-              </p>
-            )}
-            {hasIdChanged && !isDuplicateId && (
-              <p className="text-xs text-amber-600 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-                ID will be changed on save
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">Full Name</label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            />
+          <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Driver ID</label>
+              <input
+                type="text"
+                value={customId}
+                onChange={(e) => setCustomId(e.target.value)}
+                placeholder="e.g. DRV-001"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  isDuplicateId
+                    ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                    : hasIdChanged && !isDuplicateId
+                    ? "border-amber-400 focus:border-amber-400 focus:ring-amber-100"
+                    : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
+              />
+              {isDuplicateId && (
+                <p className="text-xs text-rose-500 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  ID exists
+                </p>
+              )}
+              {hasIdChanged && !isDuplicateId && (
+                <p className="text-xs text-amber-600 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  ID will change
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Full Name</label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              />
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

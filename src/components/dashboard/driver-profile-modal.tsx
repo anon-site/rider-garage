@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import {
   X,
   LogIn,
@@ -67,6 +67,12 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const calBtnRef = useRef<HTMLButtonElement>(null);
+  const getCalPos = useCallback(() => {
+    const r = calBtnRef.current?.getBoundingClientRect();
+    if (!r) return { top: 0, left: 0 };
+    return { top: r.bottom + 6, left: Math.max(8, r.right - 280) };
+  }, []);
   const [calMonth, setCalMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
@@ -238,9 +244,9 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
         {/* ===== Action Panel ===== */}
         {canClock && <div className="border-b border-surface-100 bg-surface-50/60 p-3 sm:p-5">
           {!hasOpenExit ? (
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <div className="flex-1 space-y-4 sm:flex sm:items-end sm:gap-4 sm:space-y-0">
-                <div className="flex-1 space-y-1.5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="grid grid-cols-[1fr_90px] gap-3 sm:grid-cols-[240px_90px]">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Exit Time</label>
                   <input
                     type="datetime-local"
@@ -249,7 +255,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                     className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-900 shadow-sm outline-none transition-colors focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                   />
                 </div>
-                <div className="w-full sm:w-32 space-y-1.5">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Rating</label>
                   <input
                     type="number"
@@ -280,9 +286,9 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                   Exited at <strong className="text-rose-800">{formatDateTime(latestRecord!.clockIn)}</strong>
                 </span>
               </div>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                <div className="flex-1 space-y-4 sm:flex sm:items-end sm:gap-4 sm:space-y-0">
-                  <div className="flex-1 space-y-1.5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-[240px_90px_90px]">
+                  <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Entry Time</label>
                     <input
                       type="datetime-local"
@@ -291,7 +297,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                       className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-900 shadow-sm outline-none transition-colors focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                     />
                   </div>
-                  <div className="w-full sm:w-32 space-y-1.5">
+                  <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Rating</label>
                     <input
                       type="number"
@@ -302,7 +308,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                       className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-900 shadow-sm outline-none transition-colors focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                     />
                   </div>
-                  <div className="w-full sm:w-40 space-y-1.5">
+                  <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Orders</label>
                     <input
                       type="number"
@@ -337,6 +343,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
             {driverRecords.length > 0 && (
               <div className="relative ml-auto">
                 <button
+                  ref={calBtnRef}
                   type="button"
                   onClick={() => setCalendarOpen((v) => !v)}
                   className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
@@ -360,8 +367,8 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
 
                   return (
                     <>
-                      <div className="fixed inset-0 z-10" onClick={() => setCalendarOpen(false)} />
-                      <div className="absolute right-0 top-full z-20 mt-2 w-[280px] rounded-xl border border-surface-200 bg-white p-3 shadow-xl ring-1 ring-black/5">
+                      <div className="fixed inset-0 z-[70]" onClick={() => setCalendarOpen(false)} />
+                      <div className="fixed z-[80] w-[280px] rounded-xl border border-surface-200 bg-white p-3 shadow-xl ring-1 ring-black/5" style={getCalPos()}>
                         <div className="flex items-center justify-between mb-2">
                           <button
                             type="button"
@@ -434,6 +441,12 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-200 py-12 text-center">
               <PackageOpen className="h-10 w-10 text-slate-300" />
               <p className="mt-3 text-sm font-medium text-slate-400">No shift records yet</p>
+            </div>
+          ) : filteredRecords.length === 0 && selectedDate ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-200 py-10 text-center">
+              <CalendarDays className="h-9 w-9 text-slate-300" />
+              <p className="mt-3 text-sm font-semibold text-slate-500">No work on this day</p>
+              <p className="mt-1 text-xs text-slate-400">{selectedDate}</p>
             </div>
           ) : (
             <div className="space-y-3">

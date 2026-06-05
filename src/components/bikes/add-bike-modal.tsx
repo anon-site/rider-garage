@@ -101,39 +101,32 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 p-6 pt-5">
-          {/* Bike ID */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">
-              Bike ID <span className="text-slate-400 text-xs font-normal">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={customId}
-              onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
-              placeholder="e.g. BK-001 (auto-generated if empty)"
-              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
-                isDuplicateId
-                  ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
-                  : customId.trim() && !isDuplicateId
-                  ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
-                  : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
-              }`}
-            />
-            {isDuplicateId && (
-              <p className="text-xs text-rose-500 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
-                This ID already exists. Please choose a different one.
-              </p>
-            )}
-            {customId.trim() && !isDuplicateId && (
-              <p className="text-xs text-emerald-600 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                ID is available
-              </p>
-            )}
-          </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
+            {/* Bike ID */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">
+                Bike ID <span className="text-slate-400 text-xs font-normal">(auto)</span>
+              </label>
+              <input
+                type="text"
+                value={customId}
+                onChange={(e) => setCustomId(e.target.value.replace(/\s+/g, ""))}
+                placeholder="e.g. BK-001"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  isDuplicateId
+                    ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                    : customId.trim() && !isDuplicateId
+                    ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
+                    : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
+              />
+              {isDuplicateId && (
+                <p className="text-xs text-rose-500 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  ID exists
+                </p>
+              )}
+            </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Plate Number</label>
               <input
@@ -153,7 +146,7 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
               {isDuplicatePlate && (
                 <p className="text-xs text-rose-500 flex items-center gap-1">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500" />
-                  This plate number already exists.
+                  Plate exists
                 </p>
               )}
               {plateNumber.trim() && !isDuplicatePlate && (
@@ -163,6 +156,10 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Color + Type */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Color</label>
               <input
@@ -173,9 +170,6 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
                 className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
               />
             </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Type</label>
               <select
@@ -190,6 +184,10 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Garage + Driver */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Garage</label>
               <select
@@ -205,9 +203,6 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Driver</label>
               <select
@@ -225,6 +220,10 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Status + Reg Date */}
+          <div className="grid gap-4 sm:grid-cols-[1fr_1fr]">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Status</label>
               <select
@@ -239,8 +238,19 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
                 ))}
               </select>
             </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Registration Date</label>
+              <input
+                type="date"
+                required
+                value={registrationDate}
+                onChange={(e) => setRegistrationDate(e.target.value)}
+                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              />
+            </div>
           </div>
 
+          {/* Defect */}
           {status === "defective" && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Defect Description</label>
@@ -254,27 +264,16 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-surface-900">Registration Date</label>
-              <input
-                type="date"
-                required
-                value={registrationDate}
-                onChange={(e) => setRegistrationDate(e.target.value)}
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-surface-900">Notes</label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={1}
-                placeholder="Optional notes..."
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 resize-none"
-              />
-            </div>
+          {/* Notes */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="Optional notes..."
+              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 resize-none"
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-3">
