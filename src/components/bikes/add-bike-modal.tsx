@@ -6,6 +6,7 @@ import type { Bike, BikeStatusId, BikeTypeId } from "@/types/bike";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useGarages } from "@/contexts/control-panel-context";
+import { useModalBehavior } from "@/hooks/use-modal";
 
 type AddBikeModalProps = {
   onSubmit: (bike: Omit<Bike, "id">, customId?: string) => void;
@@ -15,6 +16,7 @@ type AddBikeModalProps = {
 };
 
 export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], existingIds = [] }: AddBikeModalProps) {
+  useModalBehavior(true, onClose);
   const { drivers } = useDrivers();
   const { garages } = useGarages();
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import type { Garage } from "@/types/garage";
 import { useUsers } from "@/contexts/control-panel-context";
+import { useModalBehavior } from "@/hooks/use-modal";
 
 type EditGarageModalProps = {
   garage: Garage | null;
@@ -15,6 +16,7 @@ type EditGarageModalProps = {
 };
 
 export function EditGarageModal({ garage, onSave, onChangeId, onClose, existingNames = [], existingIds = [] }: EditGarageModalProps) {
+  useModalBehavior(true, onClose);
   const { users } = useUsers();
   const garageManagers = users.filter((u) => u.role === "garage");
 

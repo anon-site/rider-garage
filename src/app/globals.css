@@ -52,5 +52,46 @@
   .brand-glow {
     box-shadow: 0 0 40px -8px color-mix(in srgb, var(--color-brand-500) 35%, transparent);
   }
+
+  /* Toast animations */
+  .animate-in {
+    animation: animate-in 0.3s ease-out;
+  }
+  .slide-in-from-right-5 {
+    --tw-enter-translate-x: 1.25rem;
+  }
+  .fade-in {
+    --tw-enter-opacity: 0;
+  }
+
+  /* Focus visible ring for accessibility */
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2;
+  }
+}
+
+@keyframes animate-in {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: translateX(var(--tw-enter-translate-x, 0)) translateY(var(--tw-enter-translate-y, 0));
+  }
+}
+
+/* Custom scrollbar */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
 }
 

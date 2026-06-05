@@ -41,7 +41,6 @@ export function GaragesSection() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-surface-900">Garages</h3>
           <p className="text-xs sm:text-sm text-slate-400">{garages.length} total garages</p>
         </div>
         <div className="flex items-center gap-2">

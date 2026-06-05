@@ -7,6 +7,7 @@ import type { Driver } from "@/types/driver";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useGarages } from "@/contexts/control-panel-context";
+import { useModalBehavior } from "@/hooks/use-modal";
 
 type EditBikeModalProps = {
   bike: Bike | null;
@@ -18,6 +19,7 @@ type EditBikeModalProps = {
 };
 
 export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlateNumbers = [], existingIds = [] }: EditBikeModalProps) {
+  useModalBehavior(true, onClose);
   const { drivers } = useDrivers();
   const { garages } = useGarages();
 

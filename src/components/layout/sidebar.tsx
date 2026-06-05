@@ -203,39 +203,20 @@ export const Sidebar = memo(function Sidebar() {
             </div>
           )}
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={logout}
-              title="Sign out"
-              className={cn(
-                "flex items-center justify-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-rose-500/20 hover:text-rose-300",
-                isOpen ? "flex-1" : "w-full"
-              )}
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              <span className={cn("truncate transition-all duration-300", isOpen ? "opacity-100" : "w-0 opacity-0")}>
-                Sign out
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={toggle}
-              aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-              className={cn(
-                "flex items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                isOpen
-                  ? "w-10 shrink-0 bg-brand-500/20 text-brand-300 hover:bg-brand-500/30 hover:text-brand-200"
-                  : "flex-1 bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/30 hover:from-brand-400 hover:to-brand-500"
-              )}
-            >
-              {isOpen ? (
-                <ChevronLeft className="h-4 w-4 shrink-0" />
-              ) : (
-                <ChevronRight className="h-5 w-5 shrink-0" />
-              )}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={logout}
+            title="Sign out"
+            className={cn(
+              "flex items-center justify-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-rose-500/20 hover:text-rose-300",
+              isOpen ? "flex-1" : "w-full"
+            )}
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            <span className={cn("truncate transition-all duration-300", isOpen ? "opacity-100" : "w-0 opacity-0")}>
+              Sign out
+            </span>
+          </button>
         </div>
       </aside>
     </>

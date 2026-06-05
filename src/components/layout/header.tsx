@@ -41,7 +41,7 @@ export function Header({ title, description }: HeaderProps) {
           type="button"
           onClick={toggle}
           aria-label="Toggle navigation"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-surface-200 bg-white text-surface-800 shadow-sm transition-all hover:bg-surface-100 hover:shadow-md active:scale-95 lg:hidden"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-surface-200 bg-white text-surface-800 shadow-sm transition-all hover:bg-surface-100 hover:shadow-md active:scale-95"
         >
           <Menu className="h-5 w-5" strokeWidth={2} />
         </button>

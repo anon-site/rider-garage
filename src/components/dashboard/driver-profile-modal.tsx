@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useCallback } from "react";
+import { useModalBehavior } from "@/hooks/use-modal";
 import {
   X,
   LogIn,
@@ -55,6 +56,7 @@ function nowISO() {
 }
 
 export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileModalProps) {
+  useModalBehavior(true, onClose);
   const { addRecord, updateRecord, deleteRecord, getRecordsByDriver, getLatestRecord } =
     useAttendance();
   const { permissions } = useAuth();

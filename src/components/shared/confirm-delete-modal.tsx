@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, AlertTriangle, Lock } from "lucide-react";
 import { useUsers } from "@/contexts/control-panel-context";
+import { useModalBehavior } from "@/hooks/use-modal";
 
 type ConfirmDeleteModalProps = {
   title: string;
@@ -12,6 +13,7 @@ type ConfirmDeleteModalProps = {
 };
 
 export function ConfirmDeleteModal({ title, description, onConfirm, onCancel }: ConfirmDeleteModalProps) {
+  useModalBehavior(true, onCancel);
   const { users } = useUsers();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,7 +33,7 @@ export function ConfirmDeleteModal({ title, description, onConfirm, onCancel }: 
   }
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-label={title}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
 

@@ -7,6 +7,7 @@ import type { BikeTypeId } from "@/types/bike";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
 import { useGarages } from "@/contexts/control-panel-context";
+import { useModalBehavior } from "@/hooks/use-modal";
 
 /* ── Helper: Generate next ID suggestion ── */
 function generateNextIdSuggestion(existingIds: string[]): string {
@@ -58,6 +59,7 @@ type AddDriverModalProps = {
 };
 
 export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDriverModalProps) {
+  useModalBehavior(true, onClose);
   const { bikes } = useBikes();
   const { garages } = useGarages();
 

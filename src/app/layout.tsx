@@ -9,6 +9,8 @@ import { BikesProvider } from "@/contexts/bikes-context";
 import { DriversProvider } from "@/contexts/drivers-context";
 import { AttendanceProvider } from "@/contexts/attendance-context";
 import { AuthGate } from "@/components/auth/auth-gate";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,10 +40,14 @@ export default function RootLayout({
               <AttendanceProvider>
                 <AuthProvider>
                   <AuthGate>
-                    <SidebarProvider>
-                      <Sidebar />
-                      {children}
-                    </SidebarProvider>
+                    <ToastProvider>
+                      <SidebarProvider>
+                        <Sidebar />
+                        <ErrorBoundary>
+                          {children}
+                        </ErrorBoundary>
+                      </SidebarProvider>
+                    </ToastProvider>
                   </AuthGate>
                 </AuthProvider>
               </AttendanceProvider>

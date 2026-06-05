@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Users, Bike, UserCheck, Clock, X } from "lucide-react";
+import { Users, Bike, UserCheck, Clock, X, PackageOpen } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -118,16 +118,28 @@ export function DashboardSection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3">
-        {filteredDrivers.map((driver) => (
-          <DriverCard
-            key={driver.id}
-            driver={driver}
-            bike={driver.bikeId ? bikeMap[driver.bikeId] : undefined}
-            onProfile={() => setProfileDriver(driver)}
-          />
-        ))}
-      </div>
+      {filteredDrivers.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-200 py-16 text-center">
+          <PackageOpen className="h-10 w-10 text-slate-300" />
+          <p className="mt-3 text-sm font-semibold text-slate-500">
+            {filter === "all" ? "No drivers yet" : "No drivers match this filter"}
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            {filter !== "all" ? "Try selecting a different category above" : "Add drivers from the Drivers page"}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3">
+          {filteredDrivers.map((driver) => (
+            <DriverCard
+              key={driver.id}
+              driver={driver}
+              bike={driver.bikeId ? bikeMap[driver.bikeId] : undefined}
+              onProfile={() => setProfileDriver(driver)}
+            />
+          ))}
+        </div>
+      )}
 
       {profileDriver && (
         <DriverProfileModal
