@@ -7,6 +7,7 @@ import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
 import { hashPassword, isHashedPassword } from "@/lib/crypto";
+import { userEditSchema, type UserEditFormData } from "@/lib/schemas";
 
 type EditUserModalProps = {
   user: User | null;
@@ -37,6 +38,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
   const [role, setRole] = useState<RoleId>("observer");
   const [garageId, setGarageId] = useState("");
   const [customPerms, setCustomPerms] = useState<CustomPermissions>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const otherUsernames = user ? existingUsernames.filter(u => u !== user.username.toLowerCase()) : existingUsernames;
   const otherIds = user ? existingIds.filter(id => id !== user.id) : existingIds;
@@ -80,8 +82,34 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setValidationErrors({});
+    
     if (!name.trim() || !username.trim() || !password.trim() || !user) return;
     if (isDuplicateUsername || isDuplicateId) return;
+
+    // Validate with Zod
+    const formData: UserEditFormData = {
+      name,
+      username,
+      password: password || undefined,
+      email: email || undefined,
+      phone: phone || undefined,
+      role,
+      garageId: role === "garage" ? garageId : undefined,
+      customPermissions: Object.keys(customPerms).length > 0 ? customPerms : undefined,
+    };
+    
+    const result = userEditSchema.safeParse(formData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as string] = err.message;
+        }
+      });
+      setValidationErrors(errors);
+      return;
+    }
 
     // Handle ID change if different
     if (customId.trim() && customId.trim() !== user.id && onChangeId) {
@@ -169,9 +197,12 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                 type="text"
                 required
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                onChange={(e) => { setName(e.target.value); setValidationErrors(prev => ({ ...prev, name: '' })); }}
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                  validationErrors.name ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.name && <p className="text-xs text-rose-500">{validationErrors.name}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -181,9 +212,12 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                onChange={(e) => { setEmail(e.target.value); setValidationErrors(prev => ({ ...prev, email: '' })); }}
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                  validationErrors.email ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.email && <p className="text-xs text-rose-500">{validationErrors.email}</p>}
             </div>
           </div>
 
@@ -197,10 +231,10 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                   type="text"
                   required
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
+                  onChange={(e) => { setUsername(e.target.value.toLowerCase().replace(/\s+/g, "")); setValidationErrors(prev => ({ ...prev, username: '' })); }}
                   autoComplete="off"
                   className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
-                    isDuplicateUsername
+                    isDuplicateUsername || validationErrors.username
                       ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
                       : username.trim() && !isDuplicateUsername
                       ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
@@ -213,6 +247,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                     This username already exists. Please choose a different one.
                   </p>
                 )}
+                {validationErrors.username && <p className="text-xs text-rose-500">{validationErrors.username}</p>}
                 {username.trim() && !isDuplicateUsername && (
                   <p className="text-xs text-emerald-600 flex items-center gap-1">
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -227,9 +262,11 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                     type={showPass ? "text" : "password"}
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); setValidationErrors(prev => ({ ...prev, password: '' })); }}
                     autoComplete="new-password"
-                    className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 pr-10 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                    className={`w-full rounded-xl border bg-white px-3 py-2 pr-10 text-sm text-surface-900 outline-none focus:ring-2 ${
+                      validationErrors.password ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                    }`}
                   />
                   <button
                     type="button"
@@ -240,6 +277,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {validationErrors.password && <p className="text-xs text-rose-500">{validationErrors.password}</p>}
               </div>
             </div>
           </div>
@@ -251,9 +289,12 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              onChange={(e) => { setPhone(e.target.value); setValidationErrors(prev => ({ ...prev, phone: '' })); }}
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                validationErrors.phone ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
             />
+            {validationErrors.phone && <p className="text-xs text-rose-500">{validationErrors.phone}</p>}
           </div>
 
           <div className="space-y-1.5">

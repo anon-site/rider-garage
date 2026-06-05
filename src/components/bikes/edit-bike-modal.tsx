@@ -8,6 +8,7 @@ import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useGarages } from "@/contexts/control-panel-context";
 import { useModalBehavior } from "@/hooks/use-modal";
+import { bikeEditSchema, type BikeEditFormData } from "@/lib/schemas";
 
 type EditBikeModalProps = {
   bike: Bike | null;
@@ -45,6 +46,7 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
   const [defectDescription, setDefectDescription] = useState("");
   const [registrationDate, setRegistrationDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const otherPlates = bike ? existingPlateNumbers.filter(p => p !== bike.plateNumber.toLowerCase()) : existingPlateNumbers;
   const otherIds = bike ? existingIds.filter(id => id !== bike.id) : existingIds;
@@ -70,8 +72,35 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setValidationErrors({});
+    
     if (!plateNumber.trim() || !registrationDate || !bike) return;
     if (isDuplicatePlate || isDuplicateId) return;
+
+    // Validate with Zod
+    const formData: BikeEditFormData = {
+      plateNumber,
+      bikeType,
+      color,
+      status,
+      garageId: garageId || "",
+      driverId: driverId || "",
+      registrationDate,
+      defectDescription: status === "defective" ? (defectDescription || "") : "",
+      notes: notes || "",
+    };
+    
+    const result = bikeEditSchema.safeParse(formData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as string] = err.message;
+        }
+      });
+      setValidationErrors(errors);
+      return;
+    }
 
     // Handle ID change if different
     if (customId.trim() && customId.trim() !== bike.id && onChangeId) {
@@ -155,9 +184,9 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
                 type="text"
                 required
                 value={plateNumber}
-                onChange={(e) => setPlateNumber(e.target.value)}
+                onChange={(e) => { setPlateNumber(e.target.value); setValidationErrors(prev => ({ ...prev, plateNumber: '' })); }}
                 className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
-                  isDuplicatePlate
+                  isDuplicatePlate || validationErrors.plateNumber
                     ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
                     : plateNumber.trim() && !isDuplicatePlate
                     ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
@@ -170,6 +199,7 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
                   Plate exists
                 </p>
               )}
+              {validationErrors.plateNumber && <p className="text-xs text-rose-500">{validationErrors.plateNumber}</p>}
             </div>
           </div>
 
@@ -180,9 +210,12 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
               <input
                 type="text"
                 value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                onChange={(e) => { setColor(e.target.value); setValidationErrors(prev => ({ ...prev, color: '' })); }}
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                  validationErrors.color ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.color && <p className="text-xs text-rose-500">{validationErrors.color}</p>}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Type</label>
@@ -258,9 +291,12 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
                 type="date"
                 required
                 value={registrationDate}
-                onChange={(e) => setRegistrationDate(e.target.value)}
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                onChange={(e) => { setRegistrationDate(e.target.value); setValidationErrors(prev => ({ ...prev, registrationDate: '' })); }}
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
+                  validationErrors.registrationDate ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.registrationDate && <p className="text-xs text-rose-500">{validationErrors.registrationDate}</p>}
             </div>
           </div>
 

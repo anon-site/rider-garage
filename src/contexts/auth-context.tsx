@@ -12,6 +12,7 @@ import {
 import type { User, RoleId } from "@/types/user";
 import type { CustomPermissions } from "@/types/user";
 import { verifyPassword, isHashedPassword } from "@/lib/crypto";
+import { recordFailedAttempt, recordSuccessfulLogin, getRemainingLockoutTime } from "@/lib/rate-limiter";
 
 /* ── Permission matrix ─────────────────────────────────────────────────
   canEdit:        add / edit / delete records in Bikes & Drivers
@@ -114,10 +115,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (username: string, password: string, allUsers: User[], rememberMe = false): Promise<string | null> => {
+      // Check rate limiting first
+      const lockoutTime = getRemainingLockoutTime();
+      if (lockoutTime !== null) {
+        const minutes = Math.floor(lockoutTime / 60000);
+        const seconds = Math.floor((lockoutTime % 60000) / 1000);
+        return `Too many failed attempts. Please try again in ${minutes}m ${seconds}s.`;
+      }
+
       const found = allUsers.find(
         (u) => u.username.toLowerCase() === username.trim().toLowerCase()
       );
-      if (!found) return "No account found with this username.";
+      if (!found) {
+        recordFailedAttempt();
+        return "No account found with this username.";
+      }
       
       // Check password - support both hashed and plain text for migration
       let passwordValid = false;
@@ -128,7 +140,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         passwordValid = password === found.password;
       }
       
-      if (!passwordValid) return "Incorrect password.";
+      if (!passwordValid) {
+        const result = recordFailedAttempt();
+        if (result.locked) {
+          const minutes = Math.floor((result.remainingTime || 0) / 60000);
+          const seconds = Math.floor(((result.remainingTime || 0) % 60000) / 1000);
+          return `Too many failed attempts. Account locked for ${minutes}m ${seconds}s.`;
+        }
+        return "Incorrect password.";
+      }
+      
+      // Successful login - clear rate limiting
+      recordSuccessfulLogin();
       
       setUser(found);
       // Save to localStorage if rememberMe, otherwise sessionStorage

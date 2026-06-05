@@ -8,6 +8,7 @@ import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
 import { useGarages } from "@/contexts/control-panel-context";
 import { useModalBehavior } from "@/hooks/use-modal";
+import { driverSchema, type DriverFormData } from "@/lib/schemas";
 
 /* ── Helper: Generate next ID suggestion ── */
 function generateNextIdSuggestion(existingIds: string[]): string {
@@ -73,6 +74,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
   const [garageId, setGarageId] = useState("");
   const [preferredBikeType, setPreferredBikeType] = useState<BikeTypeId>("electric_motorcycle");
   const [bikeId, setBikeId] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
   const isValidId = customId.trim() !== "" && !isDuplicateId;
@@ -89,8 +91,32 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !joinDate) return;
+    setValidationErrors({});
+    
     if (isDuplicateId) return;
+    
+    // Validate with Zod
+    const formData: DriverFormData = {
+      name,
+      phone: phone || "",
+      garageId: garageId || "",
+      bikeId: bikeId || "",
+      notes: "",
+    };
+    
+    const result = driverSchema.safeParse(formData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as string] = err.message;
+        }
+      });
+      setValidationErrors(errors);
+      return;
+    }
+    
+    if (!name.trim() || !joinDate) return;
     const payload: Omit<Driver, "id"> = {
       name,
       phone,
@@ -172,10 +198,13 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
                 type="text"
                 required
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); setValidationErrors(prev => ({ ...prev, name: '' })); }}
                 placeholder="e.g. Ali Kareem"
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  validationErrors.name ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.name && <p className="text-xs text-rose-500">{validationErrors.name}</p>}
             </div>
           </div>
 
@@ -185,10 +214,13 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => { setPhone(e.target.value); setValidationErrors(prev => ({ ...prev, phone: '' })); }}
                 placeholder="e.g. +964 770 123 4567"
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  validationErrors.phone ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.phone && <p className="text-xs text-rose-500">{validationErrors.phone}</p>}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Join Date</label>

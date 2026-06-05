@@ -7,6 +7,7 @@ import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
 import { hashPassword } from "@/lib/crypto";
+import { userSchema, type UserFormData } from "@/lib/schemas";
 
 type AddUserModalProps = {
   onSubmit: (user: Omit<User, "id">, customId?: string) => void;
@@ -34,6 +35,7 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
   const [role, setRole] = useState<RoleId>("observer");
   const [garageId, setGarageId] = useState("");
   const [customPerms, setCustomPerms] = useState<CustomPermissions>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const [customId, setCustomId] = useState("");
 
@@ -79,8 +81,33 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !username.trim() || !password.trim()) return;
+    setValidationErrors({});
+    
     if (isDuplicateUsername || isDuplicateId) return;
+    
+    // Validate with Zod
+    const formData: UserFormData = {
+      name,
+      username,
+      password,
+      email: email || undefined,
+      phone: phone || undefined,
+      role,
+      garageId: role === "garage" ? garageId : undefined,
+      customPermissions: Object.keys(customPerms).length > 0 ? customPerms : undefined,
+    };
+    
+    const result = userSchema.safeParse(formData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as string] = err.message;
+        }
+      });
+      setValidationErrors(errors);
+      return;
+    }
     
     // Hash the password before saving
     const hashedPassword = await hashPassword(password);
@@ -157,10 +184,13 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
                 type="text"
                 required
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); setValidationErrors(prev => ({ ...prev, name: '' })); }}
                 placeholder="e.g. Ahmed Hassan"
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  validationErrors.name ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.name && <p className="text-xs text-rose-500">{validationErrors.name}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -170,10 +200,13 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setValidationErrors(prev => ({ ...prev, email: '' })); }}
                 placeholder="e.g. ahmed@email.com"
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  validationErrors.email ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.email && <p className="text-xs text-rose-500">{validationErrors.email}</p>}
             </div>
           </div>
 
@@ -187,11 +220,11 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
                   type="text"
                   required
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
+                  onChange={(e) => { setUsername(e.target.value.toLowerCase().replace(/\s+/g, "")); setValidationErrors(prev => ({ ...prev, username: '' })); }}
                   placeholder="e.g. ahmed"
                   autoComplete="off"
                   className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
-                    isDuplicateUsername
+                    isDuplicateUsername || validationErrors.username
                       ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
                       : username.trim() && !isDuplicateUsername
                       ? "border-emerald-400 focus:border-emerald-400 focus:ring-emerald-100"
@@ -204,7 +237,8 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
                     This username already exists. Please choose a different one.
                   </p>
                 )}
-                {username.trim() && !isDuplicateUsername && (
+                {validationErrors.username && <p className="text-xs text-rose-500">{validationErrors.username}</p>}
+                {username.trim() && !isDuplicateUsername && !validationErrors.username && (
                   <p className="text-xs text-emerald-600 flex items-center gap-1">
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     Username is available
@@ -218,10 +252,12 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
                     type={showPass ? "text" : "password"}
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); setValidationErrors(prev => ({ ...prev, password: '' })); }}
                     placeholder="e.g. pass123"
                     autoComplete="new-password"
-                    className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 pr-10 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                    className={`w-full rounded-xl border bg-white px-3 py-2 pr-10 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                      validationErrors.password ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                    }`}
                   />
                   <button
                     type="button"
@@ -232,6 +268,7 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {validationErrors.password && <p className="text-xs text-rose-500">{validationErrors.password}</p>}
               </div>
             </div>
           </div>
@@ -243,10 +280,13 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => { setPhone(e.target.value); setValidationErrors(prev => ({ ...prev, phone: '' })); }}
               placeholder="e.g. +964 770 123 4567"
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                validationErrors.phone ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              }`}
             />
+            {validationErrors.phone && <p className="text-xs text-rose-500">{validationErrors.phone}</p>}
           </div>
 
           <div className="space-y-1.5">
