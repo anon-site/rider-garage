@@ -105,7 +105,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-surface-950/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5">
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5 flex flex-col">
         {/* Header */}
         <div className="relative bg-gradient-to-br from-surface-900 to-surface-800 p-5 text-white">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, #fff 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
@@ -126,7 +126,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 p-6 pt-5">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 p-5 sm:p-6">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-surface-900">
               Driver ID <span className="font-normal text-slate-400">(optional - auto-generated if empty)</span>
@@ -206,64 +206,66 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">Email <span className="font-normal text-slate-400">(optional)</span></label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. ali@example.com"
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Email <span className="font-normal text-slate-400">(optional)</span></label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. ali@example.com"
+                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Garage</label>
+              <select
+                value={garageId}
+                onChange={(e) => setGarageId(e.target.value)}
+                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              >
+                <option value="">No Garage</option>
+                {garages.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">Garage</label>
-            <select
-              value={garageId}
-              onChange={(e) => setGarageId(e.target.value)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            >
-              <option value="">No Garage</option>
-              {garages.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Preferred Bike Type</label>
+              <select
+                value={preferredBikeType}
+                onChange={(e) => setPreferredBikeType(e.target.value as BikeTypeId)}
+                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              >
+                {BIKE_TYPES.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-900">Assigned Bike</label>
+              <select
+                value={bikeId}
+                onChange={(e) => setBikeId(e.target.value)}
+                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              >
+                <option value="">
+                  {availableBikes.length === 0 ? "No available bikes" : "Waiting"}
                 </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">Preferred Bike Type</label>
-            <select
-              value={preferredBikeType}
-              onChange={(e) => setPreferredBikeType(e.target.value as BikeTypeId)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            >
-              {BIKE_TYPES.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">Assigned Bike</label>
-            <select
-              value={bikeId}
-              onChange={(e) => setBikeId(e.target.value)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            >
-              <option value="">
-                {availableBikes.length === 0 ? "No available bikes" : "Waiting"}
-              </option>
-              {availableBikes.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.plateNumber}
-                </option>
-              ))}
-            </select>
+                {availableBikes.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.plateNumber}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-3">

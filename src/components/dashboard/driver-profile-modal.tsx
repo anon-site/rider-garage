@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   X,
   LogIn,
@@ -17,6 +17,8 @@ import {
   Bike,
   PackageOpen,
   Timer,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { AttendanceRecord } from "@/types/attendance";
@@ -63,6 +65,27 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
 
   const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calMonth, setCalMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+
+  // Dates that have records
+  const recordDatesSet = useMemo(() => {
+    const s = new Set<string>();
+    driverRecords.forEach((r) => {
+      s.add(new Date(r.clockIn).toISOString().slice(0, 10));
+    });
+    return s;
+  }, [driverRecords]);
+
+  // Filtered records by selected date
+  const filteredRecords = useMemo(() => {
+    if (!selectedDate) return driverRecords;
+    return driverRecords.filter((r) => new Date(r.clockIn).toISOString().slice(0, 10) === selectedDate);
+  }, [driverRecords, selectedDate]);
 
   const [exitDate, setExitDate] = useState(nowISO());
   const [exitRating, setExitRating] = useState(80);
@@ -140,73 +163,80 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-surface-950/60 backdrop-blur-sm" />
-      <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5">
+      <div className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl ring-1 ring-black/5">
         {/* ===== Hero Header ===== */}
-        <div className="relative bg-gradient-to-br from-surface-900 to-surface-800 p-6 text-white">
+        <div className="relative bg-gradient-to-br from-surface-900 to-surface-800 p-4 sm:p-6 text-white">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, #fff 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-          <div className="relative flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl font-bold backdrop-blur-md ring-1 ring-white/20">
+          <div className="relative">
+            {/* Top row: close + status */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                {hasOpenExit ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/30">
+                    <MapPin className="h-3 w-3" />
+                    Outside
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-slate-300 ring-1 ring-white/15">
+                    <Home className="h-3 w-3" />
+                    Inside
+                  </span>
+                )}
+                {latestRecord && (
+                  <div className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${latestRecord.rating >= 80 ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30" : "bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/30"}`}>
+                    <Star className="h-3 w-3 fill-current" />
+                    {latestRecord.rating}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-slate-300 backdrop-blur-sm ring-1 ring-white/15 transition-colors hover:bg-white/20 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Driver info */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-white/10 text-lg sm:text-xl font-bold backdrop-blur-md ring-1 ring-white/20">
                 {initials}
               </div>
-              <div className="min-w-0">
-                <h3 className="text-xl font-bold tracking-tight">{driver.name}</h3>
-                <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-300">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5" />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base sm:text-lg font-bold tracking-tight truncate">{driver.name}</h3>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-300">
+                  <span className="inline-flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
                     {driver.phone}
                   </span>
                   {driver.email && (
-                    <span className="hidden sm:inline-flex items-center gap-1.5">
+                    <span className="hidden sm:inline-flex items-center gap-1">
                       {driver.email}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium backdrop-blur-sm ring-1 ring-white/15">
-                    <CalendarDays className="h-3 w-3" />
-                    Joined {driver.joinDate}
-                  </span>
-                  {bikeName && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/20 px-2.5 py-1 text-xs font-medium text-brand-200 ring-1 ring-brand-400/30">
-                      <Bike className="h-3 w-3" />
-                      {bikeName}
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {hasOpenExit ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-400/30">
-                  <MapPin className="h-3 w-3" />
-                  Outside
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-300 ring-1 ring-white/15">
-                  <Home className="h-3 w-3" />
-                  Inside
+
+            {/* Tags */}
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium backdrop-blur-sm ring-1 ring-white/15">
+                <CalendarDays className="h-3 w-3" />
+                Joined {driver.joinDate}
+              </span>
+              {bikeName && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/20 px-2 py-0.5 text-[11px] font-medium text-brand-200 ring-1 ring-brand-400/30">
+                  <Bike className="h-3 w-3" />
+                  {bikeName}
                 </span>
               )}
-              {latestRecord && (
-                <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${latestRecord.rating >= 80 ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30" : "bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/30"}`}>
-                  <Star className="h-3 w-3 fill-current" />
-                  {latestRecord.rating}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={onClose}
-                className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-slate-300 backdrop-blur-sm ring-1 ring-white/15 transition-colors hover:bg-white/20 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </button>
             </div>
           </div>
         </div>
 
         {/* ===== Action Panel ===== */}
-        {canClock && <div className="border-b border-surface-100 bg-surface-50/60 p-5">
+        {canClock && <div className="border-b border-surface-100 bg-surface-50/60 p-3 sm:p-5">
           {!hasOpenExit ? (
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <div className="flex-1 space-y-4 sm:flex sm:items-end sm:gap-4 sm:space-y-0">
@@ -297,13 +327,107 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
         </div>}
 
         {/* ===== Shift History ===== */}
-        <div className="flex-1 overflow-y-auto bg-white p-5">
+        <div className="flex-1 overflow-y-auto bg-white p-3 sm:p-5">
           <div className="mb-4 flex items-center gap-2">
             <Clock className="h-4 w-4 text-slate-400" />
             <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500">Shift History</h4>
-            <span className="ml-auto rounded-full bg-surface-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
-              {driverRecords.length}
+            <span className="rounded-full bg-surface-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+              {filteredRecords.length}{selectedDate ? ` / ${driverRecords.length}` : ""}
             </span>
+            {driverRecords.length > 0 && (
+              <div className="relative ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setCalendarOpen((v) => !v)}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                    calendarOpen || selectedDate
+                      ? "bg-brand-600 text-white shadow-sm hover:bg-brand-700"
+                      : "bg-surface-100 text-slate-600 ring-1 ring-surface-200 hover:bg-surface-200"
+                  }`}
+                >
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  {selectedDate ? selectedDate : "Calendar"}
+                </button>
+
+                {/* Mini Calendar Popover */}
+                {calendarOpen && (() => {
+                  const { year, month } = calMonth;
+                  const firstDay = new Date(year, month, 1).getDay();
+                  const daysInMonth = new Date(year, month + 1, 0).getDate();
+                  const monthName = new Date(year, month).toLocaleString("en", { month: "long", year: "numeric" });
+                  const today = new Date().toISOString().slice(0, 10);
+                  const days: (number | null)[] = [...Array.from<null>({ length: firstDay }).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+
+                  return (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setCalendarOpen(false)} />
+                      <div className="absolute right-0 top-full z-20 mt-2 w-[280px] rounded-xl border border-surface-200 bg-white p-3 shadow-xl ring-1 ring-black/5">
+                        <div className="flex items-center justify-between mb-2">
+                          <button
+                            type="button"
+                            onClick={() => setCalMonth((p) => p.month === 0 ? { year: p.year - 1, month: 11 } : { ...p, month: p.month - 1 })}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-surface-100"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <h5 className="text-xs font-bold text-surface-900">{monthName}</h5>
+                          <button
+                            type="button"
+                            onClick={() => setCalMonth((p) => p.month === 11 ? { year: p.year + 1, month: 0 } : { ...p, month: p.month + 1 })}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-surface-100"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-0.5 text-center">
+                          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+                            <div key={d} className="py-1 text-[9px] font-semibold uppercase text-slate-400">{d}</div>
+                          ))}
+                          {days.map((day, i) => {
+                            if (day === null) return <div key={`e-${i}`} />;
+                            const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                            const hasRecord = recordDatesSet.has(dateStr);
+                            const isSelected = selectedDate === dateStr;
+                            const isToday = dateStr === today;
+                            return (
+                              <button
+                                key={dateStr}
+                                type="button"
+                                onClick={() => { setSelectedDate(isSelected ? null : dateStr); if (!isSelected) setCalendarOpen(false); }}
+                                className={`relative mx-auto flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-medium transition-all ${
+                                  isSelected
+                                    ? "bg-brand-600 text-white shadow-sm"
+                                    : hasRecord
+                                    ? "bg-brand-100 text-brand-700 hover:bg-brand-200 font-bold"
+                                    : isToday
+                                    ? "bg-surface-200 text-surface-900 font-bold"
+                                    : "text-slate-500 hover:bg-surface-50"
+                                }`}
+                              >
+                                {day}
+                                {hasRecord && !isSelected && (
+                                  <span className="absolute bottom-0 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-brand-500" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {selectedDate && (
+                          <div className="mt-2 flex items-center justify-between border-t border-surface-100 pt-2">
+                            <span className="text-[11px] font-medium text-brand-700">
+                              {filteredRecords.length} record{filteredRecords.length !== 1 ? "s" : ""}
+                            </span>
+                            <button type="button" onClick={() => { setSelectedDate(null); setCalendarOpen(false); }} className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors">
+                              Clear
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
           </div>
 
           {driverRecords.length === 0 ? (
@@ -313,7 +437,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
             </div>
           ) : (
             <div className="space-y-3">
-              {driverRecords.map((record, idx) => (
+              {filteredRecords.map((record, idx) => (
                 <div key={record.id}>
                   {editingRecord?.id === record.id ? (
                     <div className="rounded-2xl border-2 border-brand-200 bg-brand-50/40 p-4 space-y-3">

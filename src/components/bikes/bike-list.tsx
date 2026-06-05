@@ -12,6 +12,7 @@ type BikeListProps = {
   onEdit: (bike: Bike) => void;
   onDelete: (id: string) => void;
   readOnly?: boolean;
+  compact?: boolean;
 };
 
 function StatusBadge({ status }: { status: Bike["status"] }) {
@@ -24,7 +25,7 @@ function StatusBadge({ status }: { status: Bike["status"] }) {
 
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${styles[status]}`}
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${styles[status]}`}
     >
       {label}
     </span>
@@ -40,7 +41,7 @@ function StripeColor(status: Bike["status"]) {
   return map[status];
 }
 
-export function BikeList({ bikes, onEdit, onDelete, readOnly = false }: BikeListProps) {
+export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = false }: BikeListProps) {
   const { drivers } = useDrivers();
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -60,7 +61,7 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false }: BikeList
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3">
+    <div className={`grid gap-3 ${compact ? "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]"}`}>
       {bikes.map((bike) => (
         <div
           key={bike.id}
@@ -69,30 +70,30 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false }: BikeList
           {/* Top colored bar */}
           <div className={`h-1 w-full ${StripeColor(bike.status)}`} />
 
-          <div className="flex flex-1 flex-col gap-2.5 p-3">
+          <div className={`flex flex-1 flex-col p-4 ${compact ? "gap-2.5" : "gap-3"}`}>
             {/* Header row */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-sm">
-                  <BikeIcon className="h-4 w-4" />
+                <div className={`flex shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-sm ${compact ? "h-10 w-10" : "h-9 w-9"}`}>
+                  <BikeIcon className={compact ? "h-5 w-5" : "h-4 w-4"} />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-sm font-bold text-surface-900 truncate">
+                  <h4 className={`font-bold text-surface-900 truncate ${compact ? "text-[13px]" : "text-sm"}`}>
                     {bike.plateNumber}
                   </h4>
-                  <span className="text-[11px] text-slate-400">{bike.color}</span>
+                  <span className="text-xs text-slate-400">{bike.color}</span>
                 </div>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
                 <StatusBadge status={bike.status} />
-                <span className="rounded-md bg-surface-50 px-1.5 py-0.5 text-[9px] font-medium text-slate-500 ring-1 ring-surface-200">
+                <span className="rounded-md bg-surface-50 px-1.5 py-0.5 text-[11px] font-medium text-slate-500 ring-1 ring-surface-200">
                   {BIKE_TYPES.find((t) => t.id === bike.bikeType)?.label ?? bike.bikeType}
                 </span>
               </div>
             </div>
 
             {/* Info row */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-[13px]">
               <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 ring-1 ring-surface-200">
                 <Calendar className="h-3 w-3 shrink-0 text-slate-400" />
                 <span className="text-slate-600">{bike.registrationDate}</span>
@@ -107,7 +108,7 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false }: BikeList
 
             {/* Defect */}
             {bike.defectDescription && (
-              <div className="flex items-start gap-1.5 rounded-md bg-red-50 px-2 py-1.5 text-xs text-red-700">
+              <div className="flex items-start gap-1.5 rounded-md bg-red-50 px-2 py-1.5 text-[13px] text-red-700">
                 <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
                 <span className="line-clamp-2">{bike.defectDescription}</span>
               </div>
@@ -115,7 +116,7 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false }: BikeList
 
             {/* Notes */}
             {bike.notes && (
-              <div className="flex items-start gap-1.5 text-xs text-slate-500">
+              <div className="flex items-start gap-1.5 text-[13px] text-slate-500">
                 <FileText className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" />
                 <span className="line-clamp-2">{bike.notes}</span>
               </div>

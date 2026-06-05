@@ -70,9 +70,9 @@ export function GarageBikesModal({ garage, onClose }: GarageBikesModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-7xl max-h-[92vh] overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-surface-200 flex flex-col">
+      <div className="relative w-[95vw] max-w-6xl max-h-[88vh] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-surface-200 flex flex-col">
         {/* Header */}
-        <div className="relative bg-gradient-to-br from-surface-900 to-surface-800 px-6 py-5">
+        <div className="relative bg-gradient-to-br from-surface-900 to-surface-800 px-5 py-4">
           <div
             className="absolute inset-0 opacity-10"
             style={{
@@ -82,33 +82,33 @@ export function GarageBikesModal({ garage, onClose }: GarageBikesModalProps) {
             }}
           />
           <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400/20 ring-1 ring-amber-400/30">
-                <Warehouse className="h-6 w-6 text-amber-400" />
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 ring-1 ring-amber-400/30">
+                <Warehouse className="h-5 w-5 text-amber-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">{garage.name}</h2>
-                <p className="text-sm text-slate-400">{garage.location}</p>
+                <h2 className="text-base font-bold text-white">{garage.name}</h2>
+                <p className="text-xs text-slate-400">{garage.location}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="rounded-full bg-brand-500/20 px-3 py-1 text-xs font-bold text-brand-300 ring-1 ring-brand-500/30">
-                <BikeIcon className="mr-1.5 inline h-3.5 w-3.5" />
+            <div className="flex items-center gap-2.5">
+              <span className="rounded-full bg-brand-500/20 px-2.5 py-1 text-xs font-bold text-brand-300 ring-1 ring-brand-500/30">
+                <BikeIcon className="mr-1 inline h-3.5 w-3.5" />
                 {garageBikes.length} bike{garageBikes.length !== 1 ? "s" : ""}
               </span>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
           {garageBikes.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-100">
@@ -195,6 +195,7 @@ export function GarageBikesModal({ garage, onClose }: GarageBikesModalProps) {
                   onEdit={() => {}}
                   onDelete={() => {}}
                   readOnly
+                  compact
                 />
               )}
 
