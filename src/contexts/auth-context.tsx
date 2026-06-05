@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { User, RoleId } from "@/types/user";
 import type { CustomPermissions } from "@/types/user";
+import { verifyPassword, isHashedPassword } from "@/lib/crypto";
 
 /* ── Permission matrix ─────────────────────────────────────────────────
   canEdit:        add / edit / delete records in Bikes & Drivers
@@ -62,7 +63,7 @@ export type AuthContextValue = {
   user: User | null;
   permissions: Permissions;
   /** Returns null on success, error string on failure */
-  login: (username: string, password: string, allUsers: User[], rememberMe?: boolean) => string | null;
+  login: (username: string, password: string, allUsers: User[], rememberMe?: boolean) => Promise<string | null>;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -83,14 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from localStorage on mount
+  // Load user from storage on mount (check localStorage first, then sessionStorage)
   useEffect(() => {
-    const savedUser = localStorage.getItem("rider-garage-user");
+    const savedUser = localStorage.getItem("rider-garage-user") || sessionStorage.getItem("rider-garage-user");
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
         localStorage.removeItem("rider-garage-user");
+        sessionStorage.removeItem("rider-garage-user");
       }
     }
     setIsLoading(false);
@@ -111,16 +113,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const login = useCallback(
-    (username: string, password: string, allUsers: User[], rememberMe = false): string | null => {
+    async (username: string, password: string, allUsers: User[], rememberMe = false): Promise<string | null> => {
       const found = allUsers.find(
         (u) => u.username.toLowerCase() === username.trim().toLowerCase()
       );
       if (!found) return "No account found with this username.";
-      if (password !== found.password) return "Incorrect password.";
-      setUser(found);
-      if (rememberMe) {
-        localStorage.setItem("rider-garage-user", JSON.stringify(found));
+      
+      // Check password - support both hashed and plain text for migration
+      let passwordValid = false;
+      if (isHashedPassword(found.password)) {
+        passwordValid = await verifyPassword(password, found.password);
+      } else {
+        // Legacy plain text comparison
+        passwordValid = password === found.password;
       }
+      
+      if (!passwordValid) return "Incorrect password.";
+      
+      setUser(found);
+      // Save to localStorage if rememberMe, otherwise sessionStorage
+      const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem("rider-garage-user", JSON.stringify(found));
       return null;
     },
     []
@@ -129,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem("rider-garage-user");
+    sessionStorage.removeItem("rider-garage-user");
   }, []);
 
   const value = useMemo<AuthContextValue>(

@@ -26,11 +26,11 @@ export function LoginPage() {
       setError(null);
       setLoading(true);
       await new Promise((r) => setTimeout(r, 700));
-      const err = login(username.trim(), password, users, rememberMe);
+      const err = await login(username.trim(), password, users, rememberMe);
       if (err) setError(err);
       setLoading(false);
     },
-    [username, password, login, users]
+    [username, password, login, users, rememberMe]
   );
 
   return (

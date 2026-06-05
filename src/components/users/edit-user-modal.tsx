@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, ShieldCheck, RotateCcw } from "lucide-react";
+import { X, ShieldCheck, RotateCcw, Eye, EyeOff } from "lucide-react";
 import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
+import { hashPassword, isHashedPassword } from "@/lib/crypto";
 
 type EditUserModalProps = {
   user: User | null;
@@ -30,6 +31,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<RoleId>("observer");
@@ -86,7 +88,13 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
       await onChangeId(user.id, customId.trim());
     }
 
-    const changes: Partial<Omit<User, "id">> = { name, username, password, email, phone, role };
+    // Hash password if it's been changed (not the same as existing)
+    let finalPassword = password;
+    if (password !== user.password) {
+      finalPassword = await hashPassword(password);
+    }
+
+    const changes: Partial<Omit<User, "id">> = { name, username, password: finalPassword, email, phone, role };
     if (role === "garage" && garageId) {
       changes.garageId = garageId;
     } else {
@@ -214,14 +222,24 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-surface-900">Password</label>
-                <input
-                  type="text"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
-                  className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-                />
+                <div className="relative">
+                  <input
+                    type={showPass ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 pr-10 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

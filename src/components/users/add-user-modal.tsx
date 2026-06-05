@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { X, Plus, ShieldCheck, RotateCcw } from "lucide-react";
+import { X, Plus, ShieldCheck, RotateCcw, Eye, EyeOff } from "lucide-react";
 import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
+import { hashPassword } from "@/lib/crypto";
 
 type AddUserModalProps = {
   onSubmit: (user: Omit<User, "id">, customId?: string) => void;
@@ -27,6 +28,7 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<RoleId>("observer");
@@ -75,11 +77,15 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !username.trim() || !password.trim()) return;
     if (isDuplicateUsername || isDuplicateId) return;
-    const payload: Omit<User, "id"> = { name, username, password, email, phone, role };
+    
+    // Hash the password before saving
+    const hashedPassword = await hashPassword(password);
+    
+    const payload: Omit<User, "id"> = { name, username, password: hashedPassword, email, phone, role };
     if (role === "garage" && garageId) payload.garageId = garageId;
     if (Object.keys(customPerms).length > 0) payload.customPermissions = customPerms;
     onSubmit(payload, customId.trim() || undefined);
@@ -207,15 +213,25 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-surface-900">Password</label>
-                <input
-                  type="text"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="e.g. pass123"
-                  autoComplete="new-password"
-                  className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-                />
+                <div className="relative">
+                  <input
+                    type={showPass ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="e.g. pass123"
+                    autoComplete="new-password"
+                    className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 pr-10 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
