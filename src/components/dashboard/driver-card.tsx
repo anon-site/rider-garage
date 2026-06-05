@@ -24,7 +24,7 @@ export function DriverCard({ driver, bike, onProfile }: DriverCardProps) {
     .toUpperCase();
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-surface-200 bg-white shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5">
+    <div className="animate-border-gradient group relative flex flex-col overflow-hidden rounded-xl border border-surface-200 bg-white shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5">
       {/* Top bar */}
       <div className={`h-1.5 w-full ${isOutside ? "bg-gradient-to-r from-emerald-400 to-emerald-600" : "bg-gradient-to-r from-surface-300 to-surface-400"}`} />
 

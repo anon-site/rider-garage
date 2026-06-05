@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Search, X, LayoutGrid, List } from "lucide-react";
 import { useGarages, useUsers } from "@/contexts/control-panel-context";
 import { GarageList } from "./garage-list";
@@ -18,7 +18,15 @@ export function GaragesSection() {
   const [editingGarage, setEditingGarage] = useState<Garage | null>(null);
   const [viewingGarage, setViewingGarage] = useState<Garage | null>(null);
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem("garages-view-mode");
+    return (saved === "list" || saved === "grid") ? saved : "grid";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("garages-view-mode", viewMode);
+  }, [viewMode]);
 
   const filteredGarages = useMemo(() => {
     const q = query.trim().toLowerCase();

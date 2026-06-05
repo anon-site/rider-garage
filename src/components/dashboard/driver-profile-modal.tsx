@@ -18,6 +18,7 @@ import {
   Bike,
   PackageOpen,
   Timer,
+  RotateCcw,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -343,7 +344,17 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
               {filteredRecords.length}{selectedDate ? ` / ${driverRecords.length}` : ""}
             </span>
             {driverRecords.length > 0 && (
-              <div className="relative ml-auto">
+              <div className="relative ml-auto flex items-center gap-2">
+                {selectedDate && (
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedDate(null); setCalendarOpen(false); }}
+                    className="inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-surface-200 transition-all hover:bg-surface-100"
+                    title="Reset filter"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                )}
                 <button
                   ref={calBtnRef}
                   type="button"

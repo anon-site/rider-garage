@@ -136,7 +136,7 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
       {drivers.map((driver) => (
         <div
           key={driver.id}
-          className="group relative flex flex-col rounded-xl border border-surface-200 bg-white shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
+          className="animate-border-gradient group relative flex flex-col rounded-xl border border-surface-200 bg-white shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
         >
           {/* Top colored bar */}
           <div className="h-1 w-full bg-gradient-to-r from-brand-400 to-brand-600" />

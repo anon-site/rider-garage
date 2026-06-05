@@ -53,6 +53,43 @@
     box-shadow: 0 0 40px -8px color-mix(in srgb, var(--color-brand-500) 35%, transparent);
   }
 
+  /* Animated gradient border on hover */
+  .animate-border-gradient {
+    position: relative;
+  }
+  .animate-border-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    background: linear-gradient(
+      45deg,
+      var(--color-brand-500),
+      var(--color-brand-300),
+      var(--color-brand-600),
+      var(--color-brand-400),
+      var(--color-brand-500)
+    );
+    background-size: 300% 300%;
+    border-radius: inherit;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    animation: gradient-shift 3s ease infinite;
+    pointer-events: none;
+  }
+  .animate-border-gradient:hover::before {
+    opacity: 1;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
   /* Toast animations */
   .animate-in {
     animation: animate-in 0.3s ease-out;

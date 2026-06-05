@@ -79,7 +79,15 @@ export function DriversSection() {
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [filter, setFilter] = useState<DriverFilter>("all");
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem("drivers-view-mode");
+    return (saved === "list" || saved === "grid") ? saved : "grid";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("drivers-view-mode", viewMode);
+  }, [viewMode]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {

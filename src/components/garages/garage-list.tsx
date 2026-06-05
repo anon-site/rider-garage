@@ -137,7 +137,7 @@ export function GarageList({ garages, onEdit, onDelete, onView, viewMode = "grid
       {garages.map((garage) => (
         <div
           key={garage.id}
-          className="glass-panel flex flex-col gap-3 rounded-2xl p-4 transition-shadow hover:shadow-md"
+          className="animate-border-gradient glass-panel flex flex-col gap-3 rounded-2xl p-4 transition-shadow hover:shadow-md"
         >
           <div className="min-w-0 flex-1 space-y-1.5">
             {/* Title */}
