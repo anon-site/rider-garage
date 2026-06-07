@@ -61,7 +61,7 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
   }
 
   return (
-    <div className={`grid gap-3 ${compact ? "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]"}`}>
+    <div className={`grid gap-3 ${compact ? "grid-cols-[repeat(auto-fill,minmax(280px,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"}`}>
       {bikes.map((bike) => (
         <div
           key={bike.id}
