@@ -50,8 +50,8 @@ export async function exportExcel(data: ExportData, period: string) {
     Type: b.bikeType,
     Color: b.color ?? "—",
     Status: b.status,
-    "Driver ID": b.driverId ?? "—",
-    "Garage ID": b.garageId ?? "—",
+    Driver: b.driverId ? (data.driverMap[b.driverId] ?? b.driverId) : "—",
+    Garage: b.garageId ? (data.garageMap?.[b.garageId] ?? b.garageId) : "—",
     "Reg. Date": fmtDate(b.registrationDate),
     Defect: b.defectDescription ?? "—",
     Notes: b.notes ?? "—",
@@ -158,12 +158,13 @@ export async function exportPDF(data: ExportData, period: string) {
   sectionTitle("Fleet Status");
   autoTable(doc, {
     startY: y,
-    head: [["Plate", "Type", "Color", "Status", "Reg. Date", "Defect"]],
+    head: [["Plate", "Type", "Color", "Status", "Driver", "Reg. Date", "Defect"]],
     body: data.bikes.map((b) => [
       b.plateNumber,
       b.bikeType,
       b.color ?? "—",
       b.status,
+      b.driverId ? (data.driverMap[b.driverId] ?? b.driverId) : "—",
       fmtDate(b.registrationDate),
       b.defectDescription ?? "—",
     ]),
@@ -244,4 +245,5 @@ export type ExportData = {
     ordersDelivered: number; rating: number; notes?: string;
   }[];
   driverMap: Record<string, string>;
+  garageMap?: Record<string, string>;
 };

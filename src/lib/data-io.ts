@@ -38,7 +38,7 @@ function timestamp() {
 /* ───────────────────────────────────────────
    Flat-row converters (per entity)
 ─────────────────────────────────────────── */
-function driversToRows(drivers: Driver[]) {
+function driversToRows(drivers: Driver[], bikeMap?: Record<string, string>) {
   return [...drivers]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((d) => ({
@@ -47,12 +47,12 @@ function driversToRows(drivers: Driver[]) {
       Phone: d.phone,
       "App ID": d.appId ?? "",
       "Join Date": d.joinDate ?? "",
-      "Bike ID": d.bikeId ?? "",
+      "Bike Plate": d.bikeId ? (bikeMap?.[d.bikeId] ?? d.bikeId) : "",
       "Preferred Bike Type": d.preferredBikeType ?? "",
     }));
 }
 
-function bikesToRows(bikes: Bike[]) {
+function bikesToRows(bikes: Bike[], driverMap?: Record<string, string>) {
   return [...bikes]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((b) => ({
@@ -61,7 +61,7 @@ function bikesToRows(bikes: Bike[]) {
       Color: b.color,
       "Bike Type": b.bikeType,
       Status: b.status,
-      "Driver ID": b.driverId ?? "",
+      "Driver": b.driverId ? (driverMap?.[b.driverId] ?? b.driverId) : "",
       "Registration Date": b.registrationDate,
       "Defect Description": b.defectDescription ?? "",
       Notes: b.notes ?? "",
@@ -139,6 +139,9 @@ export async function exportExcel(data: SiteData, scope: DataScope) {
 
   const wb = XLSX.utils.book_new();
 
+  const bikeMap = Object.fromEntries(data.bikes.map((b) => [b.id, b.plateNumber]));
+  const driverMap = Object.fromEntries(data.drivers.map((d) => [d.id, d.name]));
+
   function addSheet(name: string, rows: Record<string, unknown>[]) {
     if (rows.length === 0) return;
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -149,8 +152,8 @@ export async function exportExcel(data: SiteData, scope: DataScope) {
     XLSX.utils.book_append_sheet(wb, ws, name);
   }
 
-  if (scope === "all" || scope === "drivers") addSheet("Drivers", driversToRows(data.drivers));
-  if (scope === "all" || scope === "bikes") addSheet("Bikes", bikesToRows(data.bikes));
+  if (scope === "all" || scope === "drivers") addSheet("Drivers", driversToRows(data.drivers, bikeMap));
+  if (scope === "all" || scope === "bikes") addSheet("Bikes", bikesToRows(data.bikes, driverMap));
   if (scope === "all" || scope === "users") addSheet("Users", usersToRows(data.users));
   if (scope === "all" || scope === "garages") addSheet("Garages", garagesToRows(data.garages));
   if (scope === "all" || scope === "attendance") addSheet("Attendance", attendanceToRows(data.attendance));
@@ -200,8 +203,11 @@ export async function exportPDF(data: SiteData, scope: DataScope) {
     });
   }
 
-  if (scope === "all" || scope === "drivers") addTable("Drivers", driversToRows(data.drivers));
-  if (scope === "all" || scope === "bikes") addTable("Fleet Bikes", bikesToRows(data.bikes));
+  const bikeMapPdf = Object.fromEntries(data.bikes.map((b) => [b.id, b.plateNumber]));
+  const driverMapPdf = Object.fromEntries(data.drivers.map((d) => [d.id, d.name]));
+
+  if (scope === "all" || scope === "drivers") addTable("Drivers", driversToRows(data.drivers, bikeMapPdf));
+  if (scope === "all" || scope === "bikes") addTable("Fleet Bikes", bikesToRows(data.bikes, driverMapPdf));
   if (scope === "all" || scope === "users") addTable("System Users", usersToRows(data.users));
   if (scope === "all" || scope === "garages") addTable("Garages", garagesToRows(data.garages));
   if (scope === "all" || scope === "attendance") addTable("Attendance", attendanceToRows(data.attendance));
@@ -228,8 +234,11 @@ function rowsToCsv(rows: Record<string, unknown>[]): string {
 export function exportCSV(data: SiteData, scope: DataScope) {
   const sections: { name: string; rows: Record<string, unknown>[] }[] = [];
 
-  if (scope === "all" || scope === "drivers") sections.push({ name: "Drivers", rows: driversToRows(data.drivers) });
-  if (scope === "all" || scope === "bikes") sections.push({ name: "Bikes", rows: bikesToRows(data.bikes) });
+  const bikeMap = Object.fromEntries(data.bikes.map((b) => [b.id, b.plateNumber]));
+  const driverMap = Object.fromEntries(data.drivers.map((d) => [d.id, d.name]));
+
+  if (scope === "all" || scope === "drivers") sections.push({ name: "Drivers", rows: driversToRows(data.drivers, bikeMap) });
+  if (scope === "all" || scope === "bikes") sections.push({ name: "Bikes", rows: bikesToRows(data.bikes, driverMap) });
   if (scope === "all" || scope === "users") sections.push({ name: "Users", rows: usersToRows(data.users) });
   if (scope === "all" || scope === "garages") sections.push({ name: "Garages", rows: garagesToRows(data.garages) });
   if (scope === "all" || scope === "attendance") sections.push({ name: "Attendance", rows: attendanceToRows(data.attendance) });

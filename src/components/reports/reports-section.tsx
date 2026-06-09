@@ -209,10 +209,11 @@ export function ReportsSection() {
     setExportOpen(false);
     setExporting(type);
     const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
+    const garageMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
     // Exclude garageStats for garage managers in export
     const exportData = isGarageManager
-      ? { driverStats, bikes, filteredRecords, driverMap }
-      : { driverStats, bikes, garageStats, filteredRecords, driverMap };
+      ? { driverStats, bikes, filteredRecords, driverMap, garageMap }
+      : { driverStats, bikes, garageStats, filteredRecords, driverMap, garageMap };
     try {
       if (type === "pdf") await exportPDF(exportData, period);
       else await exportExcel(exportData, period);
