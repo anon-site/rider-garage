@@ -11,7 +11,8 @@ function fmtHours(h: number) {
   const mm = Math.round((h - hh) * 60);
   return `${hh}h ${mm}m`;
 }
-function fmtDate(iso: string) {
+function fmtDate(iso: string | null | undefined) {
+  if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 function nowLabel() {
@@ -47,7 +48,7 @@ export async function exportExcel(data: ExportData, period: string) {
   const bikeRows = data.bikes.map((b) => ({
     Plate: b.plateNumber,
     Type: b.bikeType,
-    Color: b.color,
+    Color: b.color ?? "—",
     Status: b.status,
     "Driver ID": b.driverId ?? "—",
     "Garage ID": b.garageId ?? "—",
@@ -161,7 +162,7 @@ export async function exportPDF(data: ExportData, period: string) {
     body: data.bikes.map((b) => [
       b.plateNumber,
       b.bikeType,
-      b.color,
+      b.color ?? "—",
       b.status,
       fmtDate(b.registrationDate),
       b.defectDescription ?? "—",
@@ -230,9 +231,9 @@ export type ExportData = {
     bike?: { plateNumber: string; status: string } | undefined;
   }[];
   bikes: {
-    id: string; plateNumber: string; bikeType: string; color: string;
+    id: string; plateNumber: string; bikeType: string; color?: string | null;
     status: string; driverId?: string | null; garageId?: string | null;
-    registrationDate: string; defectDescription?: string | null; notes?: string | null;
+    registrationDate?: string | null; defectDescription?: string | null; notes?: string | null;
   }[];
   garageStats?: {
     id: string; name: string; location: string; capacity: number;
