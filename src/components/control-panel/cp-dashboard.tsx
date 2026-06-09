@@ -43,7 +43,8 @@ function fmtHours(h: number) {
   return `${hh}h ${mm}m`;
 }
 
-function fmtDate(iso: string) {
+function fmtDate(iso: string | null | undefined) {
+  if (!iso) return "N/A";
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
