@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search } from "lucide-react";
+import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -59,6 +59,7 @@ export function DashboardSection() {
 
   const [filter, setFilter] = useState<FilterType>("all");
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [profileDriver, setProfileDriver] = useState<Driver | null>(null);
 
   const filteredDrivers = useMemo(() => {
@@ -140,6 +141,29 @@ export function DashboardSection() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-100 px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-surface-200">
             {filteredDrivers.length} shown
           </span>
+          {/* View toggle */}
+          <div className="flex rounded-lg border border-surface-200 bg-white p-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
+                viewMode === "grid" ? "bg-brand-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="Grid view"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
+                viewMode === "list" ? "bg-brand-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="List view"
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -154,13 +178,14 @@ export function DashboardSection() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3">
+        <div className={viewMode === "grid" ? "grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3" : "flex flex-col gap-2"}>
           {filteredDrivers.map((driver) => (
             <DriverCard
               key={driver.id}
               driver={driver}
               bike={driver.bikeId ? bikeMap[driver.bikeId] : undefined}
               onProfile={() => setProfileDriver(driver)}
+              viewMode={viewMode}
             />
           ))}
         </div>

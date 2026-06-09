@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Plus, Bike as BikeIcon, CheckCircle2, AlertTriangle,
   UserCheck, X, EyeOff, Warehouse, ChevronDown, MapPin, Check,
-  Search,
+  Search, LayoutGrid, List,
 } from "lucide-react";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -70,6 +70,7 @@ export function BikesSection() {
   const [editingBike, setEditingBike] = useState<Bike | null>(null);
   const [filter, setFilter] = useState<BikeFilter>("all");
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -341,6 +342,29 @@ export function BikesSection() {
               {filteredBikes.length} shown
             </span>
           )}
+          {/* View toggle */}
+          <div className="flex rounded-lg border border-surface-200 bg-white p-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
+                viewMode === "grid" ? "bg-brand-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="Grid view"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
+                viewMode === "list" ? "bg-brand-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"
+              }`}
+              title="List view"
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
           {readOnly ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
               <EyeOff className="h-3.5 w-3.5" />
@@ -359,7 +383,7 @@ export function BikesSection() {
         </div>
       </div>
 
-      <BikeList bikes={filteredBikes} onEdit={setEditingBike} onDelete={deleteBike} readOnly={readOnly} />
+      <BikeList bikes={filteredBikes} onEdit={setEditingBike} onDelete={deleteBike} readOnly={readOnly} viewMode={viewMode} />
 
       {!readOnly && showAdd && (
         <AddBikeModal

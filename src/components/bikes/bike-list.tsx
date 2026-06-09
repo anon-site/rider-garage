@@ -13,6 +13,7 @@ type BikeListProps = {
   onDelete: (id: string) => void;
   readOnly?: boolean;
   compact?: boolean;
+  viewMode?: "grid" | "list";
 };
 
 function StatusBadge({ status }: { status: Bike["status"] }) {
@@ -41,7 +42,7 @@ function StripeColor(status: Bike["status"]) {
   return map[status];
 }
 
-export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = false }: BikeListProps) {
+export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = false, viewMode = "grid" }: BikeListProps) {
   const { drivers } = useDrivers();
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -56,6 +57,74 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
         <BikeIcon className="mx-auto h-10 w-10 text-slate-400" />
         <h3 className="mt-4 text-lg font-semibold text-surface-900">No Bikes Yet</h3>
         <p className="mt-1 text-sm text-slate-500">Add your first bike using the button above.</p>
+      </div>
+    );
+  }
+
+  if (viewMode === "list") {
+    return (
+      <div className="flex flex-col gap-2">
+        {bikes.map((bike) => {
+          const typeName = BIKE_TYPES.find((t) => t.id === bike.bikeType)?.label ?? bike.bikeType;
+          const driverName = bike.driverId ? (driverMap[bike.driverId] ?? "Unknown") : null;
+          return (
+            <div
+              key={bike.id}
+              className="group flex items-center gap-3 rounded-xl border border-surface-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md hover:border-brand-200"
+            >
+              <div className={`w-1 self-stretch rounded-full ${
+                bike.status === "good" ? "bg-emerald-500" :
+                bike.status === "defective" ? "bg-red-500" : "bg-amber-500"
+              }`} />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-sm">
+                <BikeIcon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1 grid grid-cols-[1fr_auto] sm:grid-cols-[1.5fr_1fr_1fr_auto] items-center gap-x-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-surface-900 truncate">{bike.plateNumber}</p>
+                  <p className="text-xs text-slate-400">{bike.color ?? "—"} · {typeName}</p>
+                </div>
+                <div className="hidden sm:block">
+                  <StatusBadge status={bike.status} />
+                </div>
+                <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
+                  <User className="h-3 w-3 shrink-0 text-slate-400" />
+                  <span className="truncate">{driverName ?? "No Driver"}</span>
+                </div>
+                <div className="flex items-center gap-2 justify-end">
+                  <span className="sm:hidden"><StatusBadge status={bike.status} /></span>
+                  {!readOnly && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onEdit(bike)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 bg-surface-50 px-3 py-1.5 text-xs font-medium text-surface-600 shadow-sm transition-all hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingId(bike.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 bg-surface-50 px-2 py-1.5 text-xs font-medium text-surface-600 shadow-sm transition-all hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {deletingId && (
+          <ConfirmDeleteModal
+            title="Delete Bike"
+            description="This action cannot be undone."
+            onConfirm={() => { onDelete(deletingId); setDeletingId(null); }}
+            onCancel={() => setDeletingId(null)}
+          />
+        )}
       </div>
     );
   }
