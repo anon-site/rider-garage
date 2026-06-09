@@ -219,11 +219,6 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                     <Phone className="h-3 w-3" />
                     {driver.phone}
                   </span>
-                  {driver.email && (
-                    <span className="hidden sm:inline-flex items-center gap-1">
-                      {driver.email}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
