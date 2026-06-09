@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Phone, Mail, Calendar, Bike as BikeIcon, User as UserIcon } from "lucide-react";
+import { Pencil, Trash2, Phone, Calendar, Bike as BikeIcon, User as UserIcon } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";

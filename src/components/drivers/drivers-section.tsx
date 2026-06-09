@@ -128,7 +128,6 @@ export function DriversSection() {
     return filterPassed.filter((d) =>
       d.name.toLowerCase().includes(q) ||
       d.phone.toLowerCase().includes(q) ||
-      (d.email?.toLowerCase().includes(q) ?? false) ||
       (d.preferredBikeType?.toLowerCase().includes(q) ?? false)
     );
   }, [filterPassed, query]);
