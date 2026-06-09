@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Users, Bike, UserCheck, Clock, X, PackageOpen } from "lucide-react";
+import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -58,20 +58,24 @@ export function DashboardSection() {
   );
 
   const [filter, setFilter] = useState<FilterType>("all");
+  const [query, setQuery] = useState("");
   const [profileDriver, setProfileDriver] = useState<Driver | null>(null);
 
   const filteredDrivers = useMemo(() => {
+    let result = drivers;
     switch (filter) {
-      case "active":
-        return drivers.filter((d) => hasOpenExit(d.id));
-      case "with-bike":
-        return drivers.filter((d) => d.bikeId);
-      case "waiting":
-        return drivers.filter((d) => !d.bikeId);
-      default:
-        return drivers;
+      case "active":   result = drivers.filter((d) => hasOpenExit(d.id)); break;
+      case "with-bike": result = drivers.filter((d) => d.bikeId); break;
+      case "waiting":  result = drivers.filter((d) => !d.bikeId); break;
     }
-  }, [drivers, filter, hasOpenExit]);
+    const q = query.trim().toLowerCase();
+    if (!q) return result;
+    return result.filter((d) =>
+      d.name.toLowerCase().includes(q) ||
+      d.phone.toLowerCase().includes(q) ||
+      (d.appId?.toLowerCase().includes(q) ?? false)
+    );
+  }, [drivers, filter, hasOpenExit, query]);
 
   const stats = useMemo(() => ({
     total: drivers.length,
@@ -88,6 +92,27 @@ export function DashboardSection() {
         <FilterCard icon={UserCheck} label="Active Outside" value={stats.active} tone="emerald" active={filter === "active"} onClick={() => setFilter("active")} />
         <FilterCard icon={Bike} label="With Bike" value={stats.withBike} tone="brand" active={filter === "with-bike"} onClick={() => setFilter("with-bike")} />
         <FilterCard icon={Clock} label="Waiting" value={stats.waiting} tone="amber" active={filter === "waiting"} onClick={() => setFilter("waiting")} />
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by name, phone or App ID…"
+          className="w-full rounded-xl border border-surface-200 bg-white py-2.5 pl-9 pr-9 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Section header */}
