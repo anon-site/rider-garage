@@ -6,7 +6,7 @@ import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
-import { hashPassword, isHashedPassword } from "@/lib/crypto";
+import { hashPassword } from "@/lib/crypto";
 import { userEditSchema, type UserEditFormData } from "@/lib/schemas";
 
 type EditUserModalProps = {
