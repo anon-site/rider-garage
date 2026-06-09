@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUsers } from "@/contexts/control-panel-context";
-import { cn } from "@/lib/utils";
 
 /* ── Hexagon rows config ── */
 const HEX_ROWS = [12, 11, 12, 11, 12];

@@ -77,7 +77,6 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
-  const isValidId = customId.trim() !== "" && !isDuplicateId;
 
   // Generate suggestion based on existing IDs
   const suggestedId = useMemo(() => generateNextIdSuggestion(existingIds), [existingIds]);
@@ -87,6 +86,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
     if (!customId && suggestedId) {
       setCustomId(suggestedId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suggestedId]);
 
   function handleSubmit(e: React.FormEvent) {

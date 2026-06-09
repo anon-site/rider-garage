@@ -114,7 +114,7 @@ export function BikesSection() {
     if (!q) return filterPassed;
     return filterPassed.filter((b) =>
       b.plateNumber.toLowerCase().includes(q) ||
-      b.color.toLowerCase().includes(q) ||
+      (b.color?.toLowerCase().includes(q) ?? false) ||
       b.status.toLowerCase().includes(q) ||
       b.bikeType.toLowerCase().includes(q) ||
       (b.driverId ? (driverMap[b.driverId] ?? "").includes(q) : false) ||

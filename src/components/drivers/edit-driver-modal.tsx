@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { X, Save, UserCog } from "lucide-react";
 import type { Driver } from "@/types/driver";
-import type { BikeTypeId, Bike } from "@/types/bike";
+import type { BikeTypeId } from "@/types/bike";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
 import { useGarages } from "@/contexts/control-panel-context";

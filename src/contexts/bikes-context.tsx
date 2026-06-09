@@ -8,7 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { ref, onValue, push, set, update, remove, get } from "firebase/database";
+import { ref, onValue, set, update, remove, get } from "firebase/database";
 import { db } from "@/lib/firebase";
 import type { Bike } from "@/types/bike";
 
