@@ -40,7 +40,9 @@ export async function exportExcel(data: ExportData, period: string) {
     Sessions: d.sessions,
     "Avg. Rating": d.rating.toFixed(1),
   }));
-  const wsDrivers = XLSX.utils.json_to_sheet(driverRows);
+  const driverSummary: Record<string, unknown> = {};
+  Object.keys(driverRows[0] ?? {}).forEach((k, i) => { driverSummary[k] = i === 0 ? `Total: ${driverRows.length}` : ""; });
+  const wsDrivers = XLSX.utils.json_to_sheet(driverRows.length ? [...driverRows, driverSummary] : driverRows);
   wsDrivers["!cols"] = [{ wch: 16 }, { wch: 24 }, { wch: 18 }, { wch: 16 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
   XLSX.utils.book_append_sheet(wb, wsDrivers, "Drivers");
 
@@ -56,7 +58,9 @@ export async function exportExcel(data: ExportData, period: string) {
     Defect: b.defectDescription ?? "—",
     Notes: b.notes ?? "—",
   }));
-  const wsBikes = XLSX.utils.json_to_sheet(bikeRows);
+  const bikeSummary: Record<string, unknown> = {};
+  Object.keys(bikeRows[0] ?? {}).forEach((k, i) => { bikeSummary[k] = i === 0 ? `Total: ${bikeRows.length}` : ""; });
+  const wsBikes = XLSX.utils.json_to_sheet(bikeRows.length ? [...bikeRows, bikeSummary] : bikeRows);
   wsBikes["!cols"] = [{ wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 22 }, { wch: 22 }];
   XLSX.utils.book_append_sheet(wb, wsBikes, "Fleet");
 
@@ -71,7 +75,9 @@ export async function exportExcel(data: ExportData, period: string) {
       Orders: g.orders,
       "Avg. Rating": g.rating > 0 ? g.rating.toFixed(1) : "—",
     }));
-    const wsGarages = XLSX.utils.json_to_sheet(garageRows);
+    const garageSummary: Record<string, unknown> = {};
+    Object.keys(garageRows[0] ?? {}).forEach((k, i) => { garageSummary[k] = i === 0 ? `Total: ${garageRows.length}` : ""; });
+    const wsGarages = XLSX.utils.json_to_sheet(garageRows.length ? [...garageRows, garageSummary] : garageRows);
     wsGarages["!cols"] = [{ wch: 22 }, { wch: 24 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 14 }];
     XLSX.utils.book_append_sheet(wb, wsGarages, "Garages");
   }
@@ -90,7 +96,9 @@ export async function exportExcel(data: ExportData, period: string) {
       Notes: r.notes ?? "—",
     };
   });
-  const wsAtt = XLSX.utils.json_to_sheet(attRows);
+  const attSummary: Record<string, unknown> = {};
+  Object.keys(attRows[0] ?? {}).forEach((k, i) => { attSummary[k] = i === 0 ? `Total: ${attRows.length}` : ""; });
+  const wsAtt = XLSX.utils.json_to_sheet(attRows.length ? [...attRows, attSummary] : attRows);
   wsAtt["!cols"] = [{ wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 24 }];
   XLSX.utils.book_append_sheet(wb, wsAtt, "Attendance");
 
@@ -150,6 +158,9 @@ export async function exportPDF(data: ExportData, period: string) {
     headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: "bold" },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 14, right: 14 },
+    foot: [[`Total: ${data.driverStats.length}`, "", "", "", "", "", "", "", ""]],
+    footStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold", fontSize: 8 },
+    showFoot: "lastPage",
   });
   y = (doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y + 12;
   if (y > 170) { doc.addPage(); addHeader(doc, pageW, period); y = 30; }
@@ -172,6 +183,9 @@ export async function exportPDF(data: ExportData, period: string) {
     headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: "bold" },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 14, right: 14 },
+    foot: [[`Total: ${data.bikes.length}`, "", "", "", "", "", ""]],
+    footStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold", fontSize: 8 },
+    showFoot: "lastPage",
   });
   y = (doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y + 12;
   if (y > 170) { doc.addPage(); addHeader(doc, pageW, period); y = 30; }
@@ -195,6 +209,9 @@ export async function exportPDF(data: ExportData, period: string) {
       headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: "bold" },
       alternateRowStyles: { fillColor: [248, 250, 252] },
       margin: { left: 14, right: 14 },
+      foot: [[`Total: ${data.garageStats!.length}`, "", "", "", "", "", ""]],
+      footStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold", fontSize: 8 },
+      showFoot: "lastPage",
     });
   }
 

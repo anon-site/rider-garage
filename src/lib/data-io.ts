@@ -144,9 +144,13 @@ export async function exportExcel(data: SiteData, scope: DataScope) {
 
   function addSheet(name: string, rows: Record<string, unknown>[]) {
     if (rows.length === 0) return;
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const colWidths = Object.keys(rows[0]).map((key) => ({
-      wch: Math.max(key.length, ...rows.map((r) => String(r[key] ?? "").length)) + 2,
+    const summaryRow: Record<string, unknown> = {};
+    const keys = Object.keys(rows[0]);
+    keys.forEach((k, i) => { summaryRow[k] = i === 0 ? `Total: ${rows.length}` : ""; });
+    const allRows = [...rows, summaryRow];
+    const ws = XLSX.utils.json_to_sheet(allRows);
+    const colWidths = keys.map((key) => ({
+      wch: Math.max(key.length, ...allRows.map((r) => String(r[key] ?? "").length)) + 2,
     }));
     ws["!cols"] = colWidths;
     XLSX.utils.book_append_sheet(wb, ws, name);
@@ -185,7 +189,7 @@ export async function exportPDF(data: SiteData, scope: DataScope) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text(`Rider Garage  ·  Exported ${new Date().toLocaleString()}`, pageW - 14, 16, { align: "right" });
+    doc.text(`Total: ${rows.length}  ·  Exported ${new Date().toLocaleString()}`, pageW - 14, 16, { align: "right" });
 
     const head = [Object.keys(rows[0])];
     const body = rows.map((r) => Object.values(r).map(String));
@@ -200,6 +204,9 @@ export async function exportPDF(data: SiteData, scope: DataScope) {
       tableLineColor: [226, 232, 240],
       tableLineWidth: 0.2,
       margin: { left: 14, right: 14 },
+      foot: [[`Total: ${rows.length}`, ...Array(head[0].length - 1).fill("")]],
+      footStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold", fontSize: 8 },
+      showFoot: "lastPage",
     });
   }
 
