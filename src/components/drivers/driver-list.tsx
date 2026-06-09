@@ -65,12 +65,6 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                     <Phone className="h-3 w-3 text-slate-400" />
                     {driver.phone}
                   </span>
-                  {driver.email && (
-                    <span className="inline-flex items-center gap-1">
-                      <Mail className="h-3 w-3 text-slate-400" />
-                      <span className="truncate">{driver.email}</span>
-                    </span>
-                  )}
                 </div>
               </div>
 
@@ -187,14 +181,6 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                 </span>
               )}
             </div>
-
-            {/* Email */}
-            {driver.email && (
-              <div className="flex items-center gap-1.5 text-[13px] text-slate-500">
-                <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <span className="truncate">{driver.email}</span>
-              </div>
-            )}
 
             {/* Actions */}
             {!readOnly && (
