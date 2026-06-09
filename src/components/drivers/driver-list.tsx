@@ -65,10 +65,10 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                     <Phone className="h-3 w-3 text-slate-400" />
                     {driver.phone}
                   </span>
-                  {driver.appId && (
+                  {driver.email && (
                     <span className="inline-flex items-center gap-1">
                       <Mail className="h-3 w-3 text-slate-400" />
-                      <span className="truncate">{driver.appId}</span>
+                      <span className="truncate">{driver.email}</span>
                     </span>
                   )}
                 </div>
@@ -78,7 +78,7 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
               <div className="hidden sm:flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 ring-1 ring-surface-200">
                   <Calendar className="h-3 w-3 shrink-0 text-slate-400" />
-                  <span className="text-slate-600">{driver.joinDate ?? "—"}</span>
+                  <span className="text-slate-600">{driver.joinDate}</span>
                 </span>
                 <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 ring-1 ${driver.bikeId ? "bg-surface-50 ring-surface-200" : "bg-amber-50 ring-amber-200"}`}>
                   <BikeIcon className={`h-3 w-3 shrink-0 ${driver.bikeId ? "text-slate-400" : "text-amber-500"}`} />
@@ -188,11 +188,11 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
               )}
             </div>
 
-            {/* App ID */}
-            {driver.appId && (
+            {/* Email */}
+            {driver.email && (
               <div className="flex items-center gap-1.5 text-[13px] text-slate-500">
                 <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <span className="truncate">{driver.appId}</span>
+                <span className="truncate">{driver.email}</span>
               </div>
             )}
 

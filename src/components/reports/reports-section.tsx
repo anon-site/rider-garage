@@ -636,7 +636,7 @@ export function ReportsSection() {
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
                         <p className="font-bold text-surface-900">{bike.plateNumber}</p>
-                        <p className="text-xs text-slate-500 capitalize">{bike.bikeType.replace("_"," ")} · {bike.color ?? "—"}</p>
+                        <p className="text-xs text-slate-500 capitalize">{bike.bikeType.replace("_"," ")} · {bike.color}</p>
                       </div>
                       <span className={cn(
                         "rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1",

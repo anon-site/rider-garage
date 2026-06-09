@@ -47,11 +47,11 @@ export async function exportExcel(data: ExportData, period: string) {
   const bikeRows = data.bikes.map((b) => ({
     Plate: b.plateNumber,
     Type: b.bikeType,
-    Color: b.color ?? "—",
+    Color: b.color,
     Status: b.status,
     "Driver ID": b.driverId ?? "—",
     "Garage ID": b.garageId ?? "—",
-    "Reg. Date": b.registrationDate ? fmtDate(b.registrationDate) : "—",
+    "Reg. Date": fmtDate(b.registrationDate),
     Defect: b.defectDescription ?? "—",
     Notes: b.notes ?? "—",
   }));
@@ -161,9 +161,9 @@ export async function exportPDF(data: ExportData, period: string) {
     body: data.bikes.map((b) => [
       b.plateNumber,
       b.bikeType,
-      b.color ?? "—",
+      b.color,
       b.status,
-      b.registrationDate ? fmtDate(b.registrationDate) : "—",
+      fmtDate(b.registrationDate),
       b.defectDescription ?? "—",
     ]),
     styles: { fontSize: 8, cellPadding: 3 },
@@ -230,9 +230,9 @@ export type ExportData = {
     bike?: { plateNumber: string; status: string } | undefined;
   }[];
   bikes: {
-    id: string; plateNumber: string; bikeType: string; color?: string | null;
+    id: string; plateNumber: string; bikeType: string; color: string;
     status: string; driverId?: string | null; garageId?: string | null;
-    registrationDate?: string | null; defectDescription?: string | null; notes?: string | null;
+    registrationDate: string; defectDescription?: string | null; notes?: string | null;
   }[];
   garageStats?: {
     id: string; name: string; location: string; capacity: number;

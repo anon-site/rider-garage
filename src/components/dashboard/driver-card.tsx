@@ -61,7 +61,7 @@ export function DriverCard({ driver, bike, onProfile }: DriverCardProps) {
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 text-xs ring-1 ring-surface-200">
             <Calendar className="h-3 w-3 text-slate-400" />
-            <span className="text-slate-600">{driver.joinDate ?? "—"}</span>
+            <span className="text-slate-600">{driver.joinDate}</span>
           </span>
           {bike ? (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-1 text-xs ring-1 ring-brand-200">

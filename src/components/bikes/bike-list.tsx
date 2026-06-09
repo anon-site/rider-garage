@@ -81,7 +81,7 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
                   <h4 className={`font-bold text-surface-900 truncate ${compact ? "text-[13px]" : "text-sm"}`}>
                     {bike.plateNumber}
                   </h4>
-                  <span className="text-xs text-slate-400">{bike.color ?? "—"}</span>
+                  <span className="text-xs text-slate-400">{bike.color}</span>
                 </div>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
@@ -96,7 +96,7 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
             <div className="flex flex-wrap items-center gap-2 text-[13px]">
               <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 ring-1 ring-surface-200">
                 <Calendar className="h-3 w-3 shrink-0 text-slate-400" />
-                <span className="text-slate-600">{bike.registrationDate ?? "—"}</span>
+                <span className="text-slate-600">{bike.registrationDate}</span>
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 ring-1 ring-surface-200">
                 <User className="h-3 w-3 shrink-0 text-slate-400" />
