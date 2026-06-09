@@ -219,9 +219,9 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                     <Phone className="h-3 w-3" />
                     {driver.phone}
                   </span>
-                  {driver.email && (
+                  {driver.appId && (
                     <span className="hidden sm:inline-flex items-center gap-1">
-                      {driver.email}
+                      {driver.appId}
                     </span>
                   )}
                 </div>
@@ -232,7 +232,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium backdrop-blur-sm ring-1 ring-white/15">
                 <CalendarDays className="h-3 w-3" />
-                Joined {driver.joinDate}
+                Joined {driver.joinDate ?? "—"}
               </span>
               {bikeName && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/20 px-2 py-0.5 text-[11px] font-medium text-brand-200 ring-1 ring-brand-400/30">

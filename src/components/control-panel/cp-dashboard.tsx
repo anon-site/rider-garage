@@ -488,16 +488,18 @@ export function CpDashboard() {
                   <div>
                     <p className="font-bold text-surface-900">{bike.plateNumber}</p>
                     <p className="text-xs text-slate-500 capitalize">
-                      {bike.bikeType.replace("_", " ")} · {bike.color}
+                      {bike.bikeType.replace("_", " ")} · {bike.color ?? "—"}
                     </p>
                   </div>
                   <BikeStatusBadge status={bike.status} />
                 </div>
                 <div className="mt-3 space-y-1.5 text-xs text-slate-500">
-                  <p className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3" />
-                    Registered: {fmtDate(bike.registrationDate)}
-                  </p>
+                  {bike.registrationDate && (
+                    <p className="flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" />
+                      Registered: {fmtDate(bike.registrationDate)}
+                    </p>
+                  )}
                   {driver ? (
                     <p className="flex items-center gap-1.5">
                       <UserCheck className="h-3 w-3 text-brand-500" />
@@ -557,7 +559,7 @@ export function CpDashboard() {
                       </div>
                       <div>
                         <p className="font-semibold text-surface-900">{d.name}</p>
-                        <p className="text-[11px] text-slate-400">Joined {fmtDate(d.joinDate)}</p>
+                        {d.joinDate && <p className="text-[11px] text-slate-400">Joined {fmtDate(d.joinDate)}</p>}
                       </div>
                     </div>
                   </td>

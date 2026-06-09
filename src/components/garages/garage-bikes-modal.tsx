@@ -59,7 +59,7 @@ export function GarageBikesModal({ garage, onClose }: GarageBikesModalProps) {
       const statusName = (BIKE_STATUSES.find((s) => s.id === b.status)?.label ?? "").toLowerCase();
       return (
         b.plateNumber.toLowerCase().includes(q) ||
-        b.color.toLowerCase().includes(q) ||
+        (b.color?.toLowerCase().includes(q) ?? false) ||
         typeName.includes(q) ||
         statusName.includes(q) ||
         driverName.includes(q) ||
@@ -237,7 +237,7 @@ export function GarageBikesModal({ garage, onClose }: GarageBikesModalProps) {
                           <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-600 text-xs sm:text-sm">
                             {BIKE_TYPES.find((t) => t.id === bike.bikeType)?.label ?? bike.bikeType}
                           </td>
-                          <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-600 text-xs sm:text-sm">{bike.color}</td>
+                          <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-600 text-xs sm:text-sm">{bike.color ?? "—"}</td>
                           <td className="px-3 sm:px-4 py-2 sm:py-3">
                             <StatusBadge status={bike.status} />
                             {bike.defectDescription && (
@@ -250,7 +250,7 @@ export function GarageBikesModal({ garage, onClose }: GarageBikesModalProps) {
                           <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-600 text-xs sm:text-sm">
                             {bike.driverId ? (driverMap[bike.driverId] ?? "Unknown") : "—"}
                           </td>
-                          <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-600 text-xs sm:text-sm">{bike.registrationDate}</td>
+                          <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-600 text-xs sm:text-sm">{bike.registrationDate ?? "—"}</td>
                           <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-500 max-w-[150px] sm:max-w-[200px] truncate text-xs sm:text-sm">
                             {bike.notes || "—"}
                           </td>
