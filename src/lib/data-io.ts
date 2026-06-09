@@ -45,8 +45,8 @@ function driversToRows(drivers: Driver[]) {
       ID: d.id,
       Name: d.name,
       Phone: d.phone,
-      Email: d.email ?? "",
-      "Join Date": d.joinDate,
+      "App ID": d.appId ?? "",
+      "Join Date": d.joinDate ?? "",
       "Bike ID": d.bikeId ?? "",
       "Preferred Bike Type": d.preferredBikeType ?? "",
     }));

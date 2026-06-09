@@ -57,13 +57,13 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
     if (bike) {
       setCustomId(bike.id);
       setPlateNumber(bike.plateNumber);
-      setColor(bike.color);
+      setColor(bike.color ?? "");
       setBikeType(bike.bikeType);
       setGarageId(bike.garageId ?? "");
       setDriverId(bike.driverId ?? "");
       setStatus(bike.status);
       setDefectDescription(bike.defectDescription ?? "");
-      setRegistrationDate(bike.registrationDate);
+      setRegistrationDate(bike.registrationDate ?? "");
       setNotes(bike.notes ?? "");
     }
   }, [bike]);
@@ -109,12 +109,12 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
 
     const changes: Partial<Omit<Bike, "id">> = {
       plateNumber,
-      color,
       bikeType,
       status,
-      registrationDate,
     };
     // Use null to explicitly clear values in Firebase, undefined won't update
+    changes.color = color.trim() || null;
+    changes.registrationDate = registrationDate || null;
     changes.garageId = garageId || null;
     changes.driverId = driverId || null;
     changes.defectDescription = status === "defective" ? defectDescription.trim() || null : null;
@@ -289,7 +289,6 @@ export function EditBikeModal({ bike, onSave, onChangeId, onClose, existingPlate
               <label className="text-sm font-medium text-surface-900">Registration Date</label>
               <input
                 type="date"
-                required
                 value={registrationDate}
                 onChange={(e) => { setRegistrationDate(e.target.value); setValidationErrors(prev => ({ ...prev, registrationDate: '' })); }}
                 className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${

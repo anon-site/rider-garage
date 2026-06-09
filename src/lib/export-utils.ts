@@ -31,6 +31,7 @@ export async function exportExcel(data: ExportData, period: string) {
     ID: d.id,
     Name: d.name,
     Phone: d.phone,
+    "App ID": d.appId ?? "—",
     Status: d.isActive ? "Active" : "Offline",
     Bike: d.bike?.plateNumber ?? "—",
     Orders: d.orders,
@@ -39,7 +40,7 @@ export async function exportExcel(data: ExportData, period: string) {
     "Avg. Rating": d.rating.toFixed(1),
   }));
   const wsDrivers = XLSX.utils.json_to_sheet(driverRows);
-  wsDrivers["!cols"] = [{ wch: 16 }, { wch: 24 }, { wch: 18 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
+  wsDrivers["!cols"] = [{ wch: 16 }, { wch: 24 }, { wch: 18 }, { wch: 16 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
   XLSX.utils.book_append_sheet(wb, wsDrivers, "Drivers");
 
   /* ── Bikes Sheet ── */
@@ -132,10 +133,11 @@ export async function exportPDF(data: ExportData, period: string) {
   sectionTitle("Driver Performance");
   autoTable(doc, {
     startY: y,
-    head: [["ID", "Driver", "Status", "Bike", "Orders", "Hours", "Sessions", "Avg. Rating"]],
+    head: [["ID", "Driver", "App ID", "Status", "Bike", "Orders", "Hours", "Sessions", "Avg. Rating"]],
     body: data.driverStats.map((d) => [
       d.id,
       d.name,
+      d.appId ?? "—",
       d.isActive ? "Active" : "Offline",
       d.bike?.plateNumber ?? "—",
       String(d.orders),
@@ -223,7 +225,7 @@ function addHeader(doc: InstanceType<typeof import("jspdf").default>, pageW: num
 /* ── Shared data shape ── */
 export type ExportData = {
   driverStats: {
-    id: string; name: string; phone: string; isActive: boolean;
+    id: string; name: string; phone: string; appId?: string; isActive: boolean;
     orders: number; hours: number; sessions: number; rating: number;
     bike?: { plateNumber: string; status: string } | undefined;
   }[];

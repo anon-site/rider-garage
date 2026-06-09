@@ -36,11 +36,11 @@ export const garageEditSchema = garageSchema.partial();
 export const bikeSchema = z.object({
   plateNumber: z.string().min(3, "Plate number must be at least 3 characters").max(20, "Plate number must be less than 20 characters"),
   bikeType: z.string().min(1, "Bike type is required"),
-  color: z.string().min(2, "Color must be at least 2 characters").max(50, "Color must be less than 50 characters"),
+  color: z.string().min(2, "Color must be at least 2 characters").max(50, "Color must be less than 50 characters").optional().or(z.literal("")),
   status: z.enum(["good", "maintenance", "defective"]),
   garageId: z.string().optional().or(z.literal("")),
   driverId: z.string().optional().or(z.literal("")),
-  registrationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  registrationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().or(z.literal("")),
   defectDescription: z.string().max(500, "Defect description must be less than 500 characters").optional().or(z.literal("")),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional().or(z.literal("")),
 });
@@ -51,6 +51,8 @@ export const bikeEditSchema = bikeSchema.partial();
 export const driverSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
   phone: z.string().min(10, "Phone number must be at least 10 characters").max(20, "Phone number must be less than 20 characters"),
+  joinDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().or(z.literal("")),
+  appId: z.string().min(1, "App ID is required").max(100, "App ID must be less than 100 characters"),
   bikeId: z.string().optional().or(z.literal("")),
   garageId: z.string().optional().or(z.literal("")),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional().or(z.literal("")),

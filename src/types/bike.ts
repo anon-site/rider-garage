@@ -16,12 +16,12 @@ export type BikeStatusId = (typeof BIKE_STATUSES)[number]["id"];
 export type Bike = {
   id: string;
   plateNumber: string;
-  color: string;
+  color?: string | null;
   bikeType: BikeTypeId;
   garageId?: string | null;
   driverId?: string | null;
   status: BikeStatusId;
   defectDescription?: string | null;
-  registrationDate: string;
+  registrationDate?: string | null;
   notes?: string | null;
 };

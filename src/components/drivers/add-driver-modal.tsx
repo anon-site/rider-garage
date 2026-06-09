@@ -70,7 +70,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [joinDate, setJoinDate] = useState("");
-  const [email, setEmail] = useState("");
+  const [appId, setAppId] = useState("");
   const [garageId, setGarageId] = useState("");
   const [preferredBikeType, setPreferredBikeType] = useState<BikeTypeId>("electric_motorcycle");
   const [bikeId, setBikeId] = useState("");
@@ -99,6 +99,8 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
     const formData: DriverFormData = {
       name,
       phone: phone || "",
+      joinDate: joinDate || "",
+      appId: appId || "",
       garageId: garageId || "",
       bikeId: bikeId || "",
       notes: "",
@@ -116,14 +118,14 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
       return;
     }
     
-    if (!name.trim() || !joinDate) return;
+    if (!name.trim() || !appId.trim()) return;
     const payload: Omit<Driver, "id"> = {
       name,
       phone,
-      joinDate,
+      appId: appId.trim(),
       preferredBikeType,
     };
-    if (email.trim()) payload.email = email.trim();
+    if (joinDate) payload.joinDate = joinDate;
     if (garageId) payload.garageId = garageId;
     if (bikeId) payload.bikeId = bikeId;
     onSubmit(payload, customId.trim() || undefined);
@@ -226,7 +228,6 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
               <label className="text-sm font-medium text-surface-900">Join Date</label>
               <input
                 type="date"
-                required
                 value={joinDate}
                 onChange={(e) => setJoinDate(e.target.value)}
                 className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
@@ -236,14 +237,18 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-surface-900">Email <span className="font-normal text-slate-400">(optional)</span></label>
+              <label className="text-sm font-medium text-surface-900">App ID</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. ali@example.com"
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                type="text"
+                required
+                value={appId}
+                onChange={(e) => { setAppId(e.target.value); setValidationErrors(prev => ({ ...prev, appId: '' })); }}
+                placeholder="e.g. APP-12345"
+                className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 ${
+                  validationErrors.appId ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+                }`}
               />
+              {validationErrors.appId && <p className="text-xs text-rose-500">{validationErrors.appId}</p>}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Garage</label>

@@ -92,11 +92,11 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
     
     const payload: Omit<Bike, "id"> = {
       plateNumber,
-      color,
       bikeType,
       status,
-      registrationDate,
     };
+    if (color.trim()) payload.color = color.trim();
+    if (registrationDate) payload.registrationDate = registrationDate;
     if (garageId) payload.garageId = garageId;
     if (driverId) payload.driverId = driverId;
     if (status === "defective" && defectDescription.trim()) {
@@ -277,7 +277,6 @@ export function AddBikeModal({ onSubmit, onClose, existingPlateNumbers = [], exi
               <label className="text-sm font-medium text-surface-900">Registration Date</label>
               <input
                 type="date"
-                required
                 value={registrationDate}
                 onChange={(e) => { setRegistrationDate(e.target.value); setValidationErrors(prev => ({ ...prev, registrationDate: '' })); }}
                 className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:ring-2 ${
