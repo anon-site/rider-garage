@@ -59,7 +59,7 @@ export function GarageBikesModal({ garage, onClose }: GarageBikesModalProps) {
       const statusName = (BIKE_STATUSES.find((s) => s.id === b.status)?.label ?? "").toLowerCase();
       return (
         b.plateNumber.toLowerCase().includes(q) ||
-        b.color.toLowerCase().includes(q) ||
+        (b.color?.toLowerCase().includes(q) ?? false) ||
         typeName.includes(q) ||
         statusName.includes(q) ||
         driverName.includes(q) ||
