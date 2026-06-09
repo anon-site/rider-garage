@@ -3,7 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, LogOut, Warehouse } from "lucide-react";
+import { ChevronLeft, ChevronRight, Zap, LogOut, Warehouse } from "lucide-react";
 import { navItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
@@ -25,7 +25,7 @@ const ROLE_COLORS: Record<string, string> = {
 
 export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname();
-  const { isOpen, isMobile, close } = useSidebar();
+  const { isOpen, isMobile, toggle, close } = useSidebar();
   const { user, permissions, logout } = useAuth();
 
   /* Filter nav items by role and permissions */

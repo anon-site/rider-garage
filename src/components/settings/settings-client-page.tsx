@@ -9,24 +9,19 @@ import { ImportExportSection } from "./import-export-section";
 import type { SiteData } from "@/lib/data-io";
 
 export function SettingsClientPage() {
-  const { addDriver } = useDrivers();
-  const { addBike } = useBikes();
-  const { addUser } = useUsers();
-  const { addGarage } = useGarages();
-  const { addRecord } = useAttendance();
+  const { drivers, addDriver } = useDrivers();
+  const { bikes, addBike } = useBikes();
+  const { users, addUser } = useUsers();
+  const { garages, addGarage } = useGarages();
+  const { records, addRecord } = useAttendance();
 
   const handleImport = useCallback(
     (data: Partial<SiteData>) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      if (data.drivers) data.drivers.forEach(({ id, ...rest }) => addDriver(rest));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      if (data.bikes) data.bikes.forEach(({ id, ...rest }) => addBike(rest));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      if (data.users) data.users.forEach(({ id, ...rest }) => addUser(rest));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      if (data.garages) data.garages.forEach(({ id, ...rest }) => addGarage(rest));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      if (data.attendance) data.attendance.forEach(({ id, ...rest }) => addRecord(rest));
+      if (data.drivers) data.drivers.forEach(({ id: _id, ...rest }) => addDriver(rest));
+      if (data.bikes) data.bikes.forEach(({ id: _id, ...rest }) => addBike(rest));
+      if (data.users) data.users.forEach(({ id: _id, ...rest }) => addUser(rest));
+      if (data.garages) data.garages.forEach(({ id: _id, ...rest }) => addGarage(rest));
+      if (data.attendance) data.attendance.forEach(({ id: _id, ...rest }) => addRecord(rest));
     },
     [addDriver, addBike, addUser, addGarage, addRecord]
   );

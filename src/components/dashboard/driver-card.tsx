@@ -1,6 +1,6 @@
 "use client";
 
-import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home } from "lucide-react";
+import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, MapPin, Home } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { Bike } from "@/types/bike";
 import { useAttendance } from "@/contexts/attendance-context";

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { X, Save, Bike as BikeIcon } from "lucide-react";
 import type { Bike, BikeStatusId, BikeTypeId } from "@/types/bike";
+import type { Driver } from "@/types/driver";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useGarages } from "@/contexts/control-panel-context";

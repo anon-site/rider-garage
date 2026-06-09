@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, ShieldCheck, Fingerprint, Crown, Eye, Wrench } from "lucide-react";
+import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, ShieldCheck, ShieldOff, Fingerprint, Crown, Eye, Wrench } from "lucide-react";
 import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
