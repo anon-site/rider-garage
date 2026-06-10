@@ -275,7 +275,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
             <select
               value={deliveryCategoryId}
               onChange={(e) => setDeliveryCategoryId(e.target.value)}
-              className="w-2/3 rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 border-surface-200 focus:border-brand-400 focus:ring-brand-100"
+              className="w-1/2 rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 border-surface-200 focus:border-brand-400 focus:ring-brand-100"
             >
               <option value="">No Category</option>
               {deliveryCategories
