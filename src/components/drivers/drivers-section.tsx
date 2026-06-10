@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useAuth } from "@/contexts/auth-context";
-import { useGarages, useDeliveryCategories } from "@/contexts/control-panel-context";
+import { useGarages } from "@/contexts/control-panel-context";
 import { DriverList } from "./driver-list";
 import { AddDriverModal } from "./add-driver-modal";
 import { EditDriverModal } from "./edit-driver-modal";
@@ -70,7 +70,6 @@ export function DriversSection() {
   const { drivers, addDriver, updateDriver, changeDriverId, deleteDriver } = useDrivers();
   const { permissions } = useAuth();
   const { garages } = useGarages();
-  const { deliveryCategories } = useDeliveryCategories();
   const readOnly = !permissions.canEdit;
   const isAdmin = permissions.canManageUsers;
 

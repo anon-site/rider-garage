@@ -249,6 +249,7 @@ export type ExportData = {
     id: string; name: string; phone: string; appId?: string; isActive: boolean;
     orders: number; hours: number; sessions: number; rating: number;
     bike?: { plateNumber: string; status: string } | undefined;
+    deliveryCategoryId?: string;
   }[];
   bikes: {
     id: string; plateNumber: string; bikeType: string; color?: string | null;
