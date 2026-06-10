@@ -6,7 +6,7 @@ import type { Driver } from "@/types/driver";
 import type { BikeTypeId } from "@/types/bike";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
-import { useGarages } from "@/contexts/control-panel-context";
+import { useGarages, useDeliveryCategories } from "@/contexts/control-panel-context";
 import { useModalBehavior } from "@/hooks/use-modal";
 import { driverSchema, type DriverFormData } from "@/lib/schemas";
 
@@ -63,6 +63,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
   useModalBehavior(true, onClose);
   const { bikes } = useBikes();
   const { garages } = useGarages();
+  const { deliveryCategories } = useDeliveryCategories();
 
   // Only show bikes that are not assigned to any driver
   const availableBikes = useMemo(() => bikes.filter(b => !b.driverId), [bikes]);
@@ -74,6 +75,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
   const [garageId, setGarageId] = useState("");
   const [preferredBikeType, setPreferredBikeType] = useState<BikeTypeId>("electric_motorcycle");
   const [bikeId, setBikeId] = useState("");
+  const [deliveryCategoryId, setDeliveryCategoryId] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
@@ -128,6 +130,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
     if (joinDate) payload.joinDate = joinDate;
     if (garageId) payload.garageId = garageId;
     if (bikeId) payload.bikeId = bikeId;
+    if (deliveryCategoryId) payload.deliveryCategoryId = deliveryCategoryId;
     onSubmit(payload, customId.trim() || undefined);
     onClose();
   }
@@ -265,6 +268,25 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">Delivery Category</label>
+            <select
+              value={deliveryCategoryId}
+              onChange={(e) => setDeliveryCategoryId(e.target.value)}
+              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+            >
+              <option value="">No Category</option>
+              {deliveryCategories
+                .filter(cat => cat.isActive !== false)
+                .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
+                .map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+            </select>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

@@ -38,7 +38,7 @@ function timestamp() {
 /* ───────────────────────────────────────────
    Flat-row converters (per entity)
 ─────────────────────────────────────────── */
-function driversToRows(drivers: Driver[], bikeMap?: Record<string, string>) {
+function driversToRows(drivers: Driver[], bikeMap?: Record<string, string>, deliveryCategoryMap?: Record<string, string>) {
   return [...drivers]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((d) => ({
@@ -49,6 +49,7 @@ function driversToRows(drivers: Driver[], bikeMap?: Record<string, string>) {
       "Join Date": d.joinDate ?? "",
       "Bike Plate": d.bikeId ? (bikeMap?.[d.bikeId] ?? d.bikeId) : "",
       "Preferred Bike Type": d.preferredBikeType ?? "",
+      "Delivery Category": d.deliveryCategoryId ? (deliveryCategoryMap?.[d.deliveryCategoryId] ?? d.deliveryCategoryId) : "",
     }));
 }
 
@@ -141,6 +142,10 @@ export async function exportExcel(data: SiteData, scope: DataScope) {
 
   const bikeMap = Object.fromEntries(data.bikes.map((b) => [b.id, b.plateNumber]));
   const driverMap = Object.fromEntries(data.drivers.map((d) => [d.id, d.name]));
+  
+  // Create delivery category map for drivers export
+  const deliveryCategories = (data as any).deliveryCategories || [];
+  const deliveryCategoryMap = Object.fromEntries(deliveryCategories.map((cat: any) => [cat.id, cat.name]));
 
   function addSheet(name: string, rows: Record<string, unknown>[]) {
     if (rows.length === 0) return;
@@ -156,7 +161,7 @@ export async function exportExcel(data: SiteData, scope: DataScope) {
     XLSX.utils.book_append_sheet(wb, ws, name);
   }
 
-  if (scope === "all" || scope === "drivers") addSheet("Drivers", driversToRows(data.drivers, bikeMap));
+  if (scope === "all" || scope === "drivers") addSheet("Drivers", driversToRows(data.drivers, bikeMap, deliveryCategoryMap));
   if (scope === "all" || scope === "bikes") addSheet("Bikes", bikesToRows(data.bikes, driverMap));
   if (scope === "all" || scope === "users") addSheet("Users", usersToRows(data.users));
   if (scope === "all" || scope === "garages") addSheet("Garages", garagesToRows(data.garages));
@@ -175,6 +180,10 @@ export async function exportPDF(data: SiteData, scope: DataScope) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   let isFirst = true;
+
+  // Create delivery category map for drivers export
+  const deliveryCategories = (data as any).deliveryCategories || [];
+  const deliveryCategoryMap = Object.fromEntries(deliveryCategories.map((cat: any) => [cat.id, cat.name]));
 
   function addTable(title: string, rows: Record<string, unknown>[]) {
     if (rows.length === 0) return;
@@ -213,7 +222,7 @@ export async function exportPDF(data: SiteData, scope: DataScope) {
   const bikeMapPdf = Object.fromEntries(data.bikes.map((b) => [b.id, b.plateNumber]));
   const driverMapPdf = Object.fromEntries(data.drivers.map((d) => [d.id, d.name]));
 
-  if (scope === "all" || scope === "drivers") addTable("Drivers", driversToRows(data.drivers, bikeMapPdf));
+  if (scope === "all" || scope === "drivers") addTable("Drivers", driversToRows(data.drivers, bikeMapPdf, deliveryCategoryMap));
   if (scope === "all" || scope === "bikes") addTable("Fleet Bikes", bikesToRows(data.bikes, driverMapPdf));
   if (scope === "all" || scope === "users") addTable("System Users", usersToRows(data.users));
   if (scope === "all" || scope === "garages") addTable("Garages", garagesToRows(data.garages));

@@ -35,6 +35,7 @@ export async function exportExcel(data: ExportData, period: string) {
     "App ID": d.appId ?? "—",
     Status: d.isActive ? "Active" : "Offline",
     Bike: d.bike?.plateNumber ?? "—",
+    "Delivery Category": d.deliveryCategoryId ? (data.deliveryCategoryMap?.[d.deliveryCategoryId] ?? d.deliveryCategoryId) : "—",
     Orders: d.orders,
     Hours: fmtHours(d.hours),
     Sessions: d.sessions,
@@ -43,7 +44,7 @@ export async function exportExcel(data: ExportData, period: string) {
   const driverSummary: Record<string, unknown> = {};
   Object.keys(driverRows[0] ?? {}).forEach((k, i) => { driverSummary[k] = i === 0 ? `Total: ${driverRows.length}` : ""; });
   const wsDrivers = XLSX.utils.json_to_sheet(driverRows.length ? [...driverRows, driverSummary] : driverRows);
-  wsDrivers["!cols"] = [{ wch: 16 }, { wch: 24 }, { wch: 18 }, { wch: 16 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
+  wsDrivers["!cols"] = [{ wch: 16 }, { wch: 24 }, { wch: 18 }, { wch: 16 }, { wch: 10 }, { wch: 14 }, { wch: 18 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
   XLSX.utils.book_append_sheet(wb, wsDrivers, "Drivers");
 
   /* ── Bikes Sheet ── */
@@ -142,13 +143,14 @@ export async function exportPDF(data: ExportData, period: string) {
   sectionTitle("Driver Performance");
   autoTable(doc, {
     startY: y,
-    head: [["ID", "Driver", "App ID", "Status", "Bike", "Orders", "Hours", "Sessions", "Avg. Rating"]],
+    head: [["ID", "Driver", "App ID", "Status", "Bike", "Delivery Category", "Orders", "Hours", "Sessions", "Avg. Rating"]],
     body: data.driverStats.map((d) => [
       d.id,
       d.name,
       d.appId ?? "—",
       d.isActive ? "Active" : "Offline",
       d.bike?.plateNumber ?? "—",
+      d.deliveryCategoryId ? (data.deliveryCategoryMap?.[d.deliveryCategoryId] ?? d.deliveryCategoryId) : "—",
       String(d.orders),
       fmtHours(d.hours),
       String(d.sessions),
@@ -158,7 +160,7 @@ export async function exportPDF(data: ExportData, period: string) {
     headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: "bold" },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 14, right: 14 },
-    foot: [[`Total: ${data.driverStats.length}`, "", "", "", "", "", "", "", ""]],
+    foot: [[`Total: ${data.driverStats.length}`, "", "", "", "", "", "", "", "", ""]],
     footStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold", fontSize: 8 },
     showFoot: "lastPage",
   });

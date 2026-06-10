@@ -1,24 +1,29 @@
 "use client";
 
-import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home } from "lucide-react";
+import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home, Package } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { Bike } from "@/types/bike";
+import type { DeliveryCategory } from "@/types/delivery-category";
 import { useAttendance } from "@/contexts/attendance-context";
-import { useGarages } from "@/contexts/control-panel-context";
+import { useDeliveryCategories } from "@/contexts/control-panel-context";
+import { DELIVERY_CATEGORIES } from "@/types/delivery-category";
 
 type DriverCardProps = {
   driver: Driver;
   bike?: Bike;
   onProfile: () => void;
   viewMode?: "grid" | "list";
+  deliveryCategories?: DeliveryCategory[];
 };
 
-export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: DriverCardProps) {
+export function DriverCard({ driver, bike, onProfile, viewMode = "grid", deliveryCategories = [] }: DriverCardProps) {
   const { getLatestRecord } = useAttendance();
-  const { garages } = useGarages();
-  const garageMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
   const latestRecord = getLatestRecord(driver.id);
   const isOutside = latestRecord && !latestRecord.clockOut;
+
+  // Get delivery category info
+  const deliveryCategory = deliveryCategories.find(cat => cat.id === driver.deliveryCategoryId) ||
+    DELIVERY_CATEGORIES.find(cat => cat.id === driver.deliveryCategoryId);
 
   const initials = driver.name
     .split(" ")
@@ -41,6 +46,20 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: Drive
       Inside
     </span>
   );
+
+  const deliveryCategoryBadge = deliveryCategory ? (
+    <span 
+      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium ring-1"
+      style={{ 
+        backgroundColor: `${deliveryCategory.color}15`, 
+        color: deliveryCategory.color, 
+        borderColor: `${deliveryCategory.color}40` 
+      }}
+    >
+      <Package className="h-3 w-3" />
+      {deliveryCategory.name}
+    </span>
+  ) : null;
 
   if (viewMode === "list") {
     return (
@@ -75,6 +94,7 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: Drive
             )}
           </div>
           <div className="flex items-center gap-2 justify-end">
+            {deliveryCategoryBadge}
             {latestRecord && latestRecord.rating > 0 && (
               <span className={`hidden sm:inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold ring-1 ${latestRecord.rating >= 80 ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-rose-200"}`}>
                 <Star className={`h-3 w-3 fill-current ${latestRecord.rating >= 80 ? "text-emerald-500" : "text-rose-500"}`} />
@@ -119,6 +139,7 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: Drive
 
         {/* Info chips */}
         <div className="flex flex-wrap items-center gap-1.5">
+          {deliveryCategoryBadge}
           <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 text-xs ring-1 ring-surface-200">
             <Calendar className="h-3 w-3 text-slate-400" />
             <span className="text-slate-600">{driver.joinDate}</span>
@@ -127,9 +148,6 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: Drive
             <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-1 text-xs ring-1 ring-brand-200">
               <BikeIcon className="h-3 w-3 text-brand-500" />
               <span className="font-medium text-brand-700">{bike.plateNumber}</span>
-              {bike.garageId && (
-                <span className="text-[10px] text-brand-600">· {garageMap[bike.garageId] ?? bike.garageId}</span>
-              )}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-xs ring-1 ring-amber-200">

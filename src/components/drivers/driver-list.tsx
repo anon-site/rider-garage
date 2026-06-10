@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pencil, Trash2, Phone, Calendar, Bike as BikeIcon, User as UserIcon } from "lucide-react";
 import type { Driver } from "@/types/driver";
+import type { DeliveryCategory } from "@/types/delivery-category";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
 import { ConfirmDeleteModal } from "@/components/shared/confirm-delete-modal";
@@ -15,9 +16,10 @@ type DriverListProps = {
   onDelete: (id: string) => void;
   readOnly?: boolean;
   viewMode?: ViewMode;
+  deliveryCategories?: DeliveryCategory[];
 };
 
-export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid" }: DriverListProps) {
+export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid", deliveryCategories = [] }: DriverListProps) {
   const { bikes } = useBikes();
   const bikeMap = Object.fromEntries(bikes.map((b) => [b.id, b.plateNumber]));
   const [deletingId, setDeletingId] = useState<string | null>(null);

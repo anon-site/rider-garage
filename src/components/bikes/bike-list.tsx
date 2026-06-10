@@ -5,7 +5,6 @@ import { Pencil, Trash2, Bike as BikeIcon, Calendar, AlertCircle, FileText, User
 import type { Bike } from "@/types/bike";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
-import { useGarages } from "@/contexts/control-panel-context";
 import { ConfirmDeleteModal } from "@/components/shared/confirm-delete-modal";
 
 type BikeListProps = {
@@ -45,9 +44,7 @@ function StripeColor(status: Bike["status"]) {
 
 export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = false, viewMode = "grid" }: BikeListProps) {
   const { drivers } = useDrivers();
-  const { garages } = useGarages();
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
-  const garageMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   function handleDeleteClick(id: string) {
@@ -175,9 +172,6 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
                 <span className="truncate text-slate-600">
                   {bike.driverId ? (driverMap[bike.driverId] ?? "Unknown") : "No Driver"}
                 </span>
-                {bike.garageId && (
-                  <span className="text-[10px] text-slate-400">· {garageMap[bike.garageId] ?? bike.garageId}</span>
-                )}
               </span>
             </div>
 

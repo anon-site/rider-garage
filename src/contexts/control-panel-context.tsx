@@ -20,6 +20,8 @@ import {
 import { db } from "@/lib/firebase";
 import type { User } from "@/types/user";
 import type { Garage } from "@/types/garage";
+import type { DeliveryCategory } from "@/types/delivery-category";
+import { DELIVERY_CATEGORIES } from "@/types/delivery-category";
 
 /* ── seed admin on first run ────────────────────────────────────── */
 const SEED_ADMIN: Omit<User, "id"> = {
@@ -60,9 +62,21 @@ function generateGarageId(existingIds: string[]): string {
   return newId;
 }
 
+function generateDeliveryCategoryId(existingIds: string[]): string {
+  const prefix = "DC-";
+  let counter = 1;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  while (existingIds.includes(newId)) {
+    counter++;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  }
+  return newId;
+}
+
 type ControlPanelContextValue = {
   users: User[];
   garages: Garage[];
+  deliveryCategories: DeliveryCategory[];
   loading: boolean;
   addUser: (user: Omit<User, "id">, customId?: string) => Promise<string>;
   updateUser: (id: string, changes: Partial<Omit<User, "id">>) => Promise<void>;
@@ -72,6 +86,10 @@ type ControlPanelContextValue = {
   updateGarage: (id: string, changes: Partial<Omit<Garage, "id">>) => Promise<void>;
   changeGarageId: (oldId: string, newId: string) => Promise<void>;
   deleteGarage: (id: string) => Promise<void>;
+  addDeliveryCategory: (category: Omit<DeliveryCategory, "id">, customId?: string) => Promise<string>;
+  updateDeliveryCategory: (id: string, changes: Partial<Omit<DeliveryCategory, "id">>) => Promise<void>;
+  changeDeliveryCategoryId: (oldId: string, newId: string) => Promise<void>;
+  deleteDeliveryCategory: (id: string) => Promise<void>;
 };
 
 const ControlPanelContext = createContext<ControlPanelContextValue | null>(null);
@@ -79,15 +97,17 @@ const ControlPanelContext = createContext<ControlPanelContextValue | null>(null)
 export function ControlPanelProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
   const [garages, setGarages] = useState<Garage[]>([]);
+  const [deliveryCategories, setDeliveryCategories] = useState<DeliveryCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   /* ── Real-time listeners ── */
   useEffect(() => {
     let usersReady = false;
     let garagesReady = false;
+    let deliveryCategoriesReady = false;
 
     const checkDone = () => {
-      if (usersReady && garagesReady) setLoading(false);
+      if (usersReady && garagesReady && deliveryCategoriesReady) setLoading(false);
     };
 
     const usersRef = ref(db, "users");
@@ -113,9 +133,31 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
       checkDone();
     });
 
+    const deliveryCategoriesRef = ref(db, "deliveryCategories");
+    const unsubDeliveryCategories = onValue(deliveryCategoriesRef, (snap) => {
+      const data = snap.val() as Record<string, Omit<DeliveryCategory, "id">> | null;
+      if (data) {
+        setDeliveryCategories(Object.entries(data).map(([id, c]) => ({ ...c, id })));
+      } else {
+        // Seed default delivery categories on first run
+        const seedCategories = DELIVERY_CATEGORIES;
+        const promises = seedCategories.map(async (cat) => {
+          const catRef = push(ref(db, "deliveryCategories"));
+          await set(catRef, cat);
+          return { ...cat, id: catRef.key! };
+        });
+        Promise.all(promises).then((seeded) => {
+          setDeliveryCategories(seeded);
+        });
+      }
+      deliveryCategoriesReady = true;
+      checkDone();
+    });
+
     return () => {
       unsubUsers();
       unsubGarages();
+      unsubDeliveryCategories();
     };
   }, []);
 
@@ -218,12 +260,49 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
     await remove(ref(db, `garages/${id}`));
   }, [garages]);
 
+  /* ── Delivery Categories CRUD ── */
+  const addDeliveryCategory = useCallback(async (category: Omit<DeliveryCategory, "id">, customId?: string): Promise<string> => {
+    const categoryId = customId || generateDeliveryCategoryId(deliveryCategories.map(c => c.id));
+    const categoryRef = ref(db, `deliveryCategories/${categoryId}`);
+    await set(categoryRef, stripUndefined(category));
+    return categoryId;
+  }, [deliveryCategories]);
+
+  const updateDeliveryCategory = useCallback(async (id: string, changes: Partial<Omit<DeliveryCategory, "id">>) => {
+    await update(ref(db, `deliveryCategories/${id}`), stripUndefined(changes));
+  }, []);
+
+  const changeDeliveryCategoryId = useCallback(async (oldId: string, newId: string) => {
+    const oldRef = ref(db, `deliveryCategories/${oldId}`);
+    const newRef = ref(db, `deliveryCategories/${newId}`);
+    const snapshot = await get(oldRef);
+    if (!snapshot.exists()) throw new Error("Delivery category not found");
+    const data = snapshot.val();
+    await set(newRef, data);
+    await remove(oldRef);
+  }, []);
+
+  const deleteDeliveryCategory = useCallback(async (id: string) => {
+    // Check if any drivers are using this category
+    const driversRef = ref(db, "drivers");
+    const driversSnap = await get(driversRef);
+    if (driversSnap.exists()) {
+      const drivers = driversSnap.val() as Record<string, any>;
+      const driversUsingCategory = Object.entries(drivers).filter(([, driver]) => driver.deliveryCategoryId === id);
+      if (driversUsingCategory.length > 0) {
+        throw new Error(`Cannot delete delivery category: ${driversUsingCategory.length} driver(s) are using it`);
+      }
+    }
+    await remove(ref(db, `deliveryCategories/${id}`));
+  }, []);
+
   return (
     <ControlPanelContext.Provider
       value={{
-        users, garages, loading,
+        users, garages, deliveryCategories, loading,
         addUser, updateUser, changeUserId, deleteUser,
         addGarage, updateGarage, changeGarageId, deleteGarage,
+        addDeliveryCategory, updateDeliveryCategory, changeDeliveryCategoryId, deleteDeliveryCategory,
       }}
     >
       {children}
@@ -243,4 +322,11 @@ export function useGarages() {
   if (!ctx) throw new Error("useGarages must be used within ControlPanelProvider");
   const { garages, loading, addGarage, updateGarage, changeGarageId, deleteGarage } = ctx;
   return { garages, loading, addGarage, updateGarage, changeGarageId, deleteGarage };
+}
+
+export function useDeliveryCategories() {
+  const ctx = useContext(ControlPanelContext);
+  if (!ctx) throw new Error("useDeliveryCategories must be used within ControlPanelProvider");
+  const { deliveryCategories, loading, addDeliveryCategory, updateDeliveryCategory, changeDeliveryCategoryId, deleteDeliveryCategory } = ctx;
+  return { deliveryCategories, loading, addDeliveryCategory, updateDeliveryCategory, changeDeliveryCategoryId, deleteDeliveryCategory };
 }

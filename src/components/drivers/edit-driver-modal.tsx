@@ -6,7 +6,7 @@ import type { Driver } from "@/types/driver";
 import type { BikeTypeId } from "@/types/bike";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
-import { useGarages } from "@/contexts/control-panel-context";
+import { useGarages, useDeliveryCategories } from "@/contexts/control-panel-context";
 import { useModalBehavior } from "@/hooks/use-modal";
 import { driverEditSchema, type DriverEditFormData } from "@/lib/schemas";
 
@@ -22,6 +22,7 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
   useModalBehavior(true, onClose);
   const { bikes } = useBikes();
   const { garages } = useGarages();
+  const { deliveryCategories } = useDeliveryCategories();
 
   // Show unassigned bikes plus the driver's current bike
   const availableBikes = useMemo(() => {
@@ -42,6 +43,7 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
   const [garageId, setGarageId] = useState("");
   const [preferredBikeType, setPreferredBikeType] = useState<BikeTypeId>("electric_motorcycle");
   const [bikeId, setBikeId] = useState("");
+  const [deliveryCategoryId, setDeliveryCategoryId] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
       setGarageId(driver.garageId ?? "");
       setPreferredBikeType(driver.preferredBikeType ?? "electric_motorcycle");
       setBikeId(driver.bikeId ?? "");
+      setDeliveryCategoryId(driver.deliveryCategoryId ?? "");
     }
   }, [driver]);
 
@@ -112,6 +115,7 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
     if (joinDate) changes.joinDate = joinDate;
     if (garageId) changes.garageId = garageId;
     if (bikeId) changes.bikeId = bikeId;
+    if (deliveryCategoryId) changes.deliveryCategoryId = deliveryCategoryId;
     // Always use original driver.id - ID change is handled separately by onChangeId
     onSave(driver.id, changes);
     onClose();
@@ -273,6 +277,25 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">Delivery Category</label>
+            <select
+              value={deliveryCategoryId}
+              onChange={(e) => setDeliveryCategoryId(e.target.value)}
+              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+            >
+              <option value="">No Category</option>
+              {deliveryCategories
+                .filter(cat => cat.isActive !== false)
+                .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
+                .map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+            </select>
           </div>
 
           <div className="flex justify-end gap-3 pt-3">

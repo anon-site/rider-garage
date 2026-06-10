@@ -1,4 +1,5 @@
 import type { BikeTypeId } from "./bike";
+import type { DeliveryCategoryId } from "./delivery-category";
 
 export type Driver = {
   id: string;
@@ -9,4 +10,5 @@ export type Driver = {
   garageId?: string;
   bikeId?: string;
   preferredBikeType?: BikeTypeId;
+  deliveryCategoryId?: DeliveryCategoryId;
 };

@@ -5,6 +5,7 @@ import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
+import { useDeliveryCategories } from "@/contexts/control-panel-context";
 import { DriverCard } from "./driver-card";
 import { DriverProfileModal } from "./driver-profile-modal";
 import type { Driver } from "@/types/driver";
@@ -50,6 +51,7 @@ export function DashboardSection() {
   const { drivers } = useDrivers();
   const { bikes } = useBikes();
   const { records } = useAttendance();
+  const { deliveryCategories } = useDeliveryCategories();
   const bikeMap = useMemo(() => Object.fromEntries(bikes.map((b) => [b.id, b])), [bikes]);
 
   const hasOpenExit = useCallback(
@@ -186,6 +188,7 @@ export function DashboardSection() {
               bike={driver.bikeId ? bikeMap[driver.bikeId] : undefined}
               onProfile={() => setProfileDriver(driver)}
               viewMode={viewMode}
+              deliveryCategories={deliveryCategories}
             />
           ))}
         </div>
