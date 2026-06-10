@@ -50,7 +50,9 @@ export function DashboardSection() {
   const { drivers } = useDrivers();
   const { bikes } = useBikes();
   const { records } = useAttendance();
+  const { garages } = useGarages();
   const bikeMap = useMemo(() => Object.fromEntries(bikes.map((b) => [b.id, b])), [bikes]);
+  const garageMap = useMemo(() => Object.fromEntries(garages.map((g) => [g.id, g])), [garages]);
 
   const hasOpenExit = useCallback(
     (driverId: string) => records.some((r) => r.driverId === driverId && r.clockIn && !r.clockOut),
@@ -184,6 +186,7 @@ export function DashboardSection() {
               key={driver.id}
               driver={driver}
               bike={driver.bikeId ? bikeMap[driver.bikeId] : undefined}
+              garage={driver.garageId ? garageMap[driver.garageId] : undefined}
               onProfile={() => setProfileDriver(driver)}
               viewMode={viewMode}
             />

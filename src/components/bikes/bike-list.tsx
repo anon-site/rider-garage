@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Bike as BikeIcon, Calendar, AlertCircle, FileText, User } from "lucide-react";
+import { Pencil, Trash2, Bike as BikeIcon, Calendar, AlertCircle, FileText, User, Warehouse } from "lucide-react";
 import type { Bike } from "@/types/bike";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
+import { useGarages } from "@/contexts/control-panel-context";
 import { ConfirmDeleteModal } from "@/components/shared/confirm-delete-modal";
 
 type BikeListProps = {
@@ -44,7 +45,9 @@ function StripeColor(status: Bike["status"]) {
 
 export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = false, viewMode = "grid" }: BikeListProps) {
   const { drivers } = useDrivers();
+  const { garages } = useGarages();
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
+  const garageMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   function handleDeleteClick(id: string) {
@@ -67,6 +70,7 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
         {bikes.map((bike) => {
           const typeName = BIKE_TYPES.find((t) => t.id === bike.bikeType)?.label ?? bike.bikeType;
           const driverName = bike.driverId ? (driverMap[bike.driverId] ?? "Unknown") : null;
+          const garageName = bike.garageId ? (garageMap[bike.garageId] ?? "Unknown") : null;
           return (
             <div
               key={bike.id}
@@ -87,9 +91,17 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
                 <div className="hidden sm:block">
                   <StatusBadge status={bike.status} />
                 </div>
-                <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
-                  <User className="h-3 w-3 shrink-0 text-slate-400" />
-                  <span className="truncate">{driverName ?? "No Driver"}</span>
+                <div className="hidden sm:flex flex-col items-start gap-0.5 text-xs text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <User className="h-3 w-3 shrink-0 text-slate-400" />
+                    <span className="truncate">{driverName ?? "No Driver"}</span>
+                  </div>
+                  {garageName && (
+                    <div className="flex items-center gap-1.5">
+                      <Warehouse className="h-3 w-3 shrink-0 text-slate-400" />
+                      <span className="truncate">{garageName}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 justify-end">
                   <span className="sm:hidden"><StatusBadge status={bike.status} /></span>

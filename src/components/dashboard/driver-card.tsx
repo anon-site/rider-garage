@@ -1,6 +1,6 @@
 "use client";
 
-import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home } from "lucide-react";
+import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home, Warehouse } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { Bike } from "@/types/bike";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -10,9 +10,10 @@ type DriverCardProps = {
   bike?: Bike;
   onProfile: () => void;
   viewMode?: "grid" | "list";
+  garage?: { id: string; name: string } | undefined;
 };
 
-export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: DriverCardProps) {
+export function DriverCard({ driver, bike, onProfile, viewMode = "grid", garage }: DriverCardProps) {
   const { getLatestRecord } = useAttendance();
   const latestRecord = getLatestRecord(driver.id);
   const isOutside = latestRecord && !latestRecord.clockOut;
@@ -58,7 +59,7 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: Drive
             <Calendar className="h-3 w-3 shrink-0 text-slate-400" />
             <span>{driver.joinDate ?? "—"}</span>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-xs">
+          <div className="hidden sm:flex flex-col items-start gap-0.5 text-xs">
             {bike ? (
               <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-1 ring-1 ring-brand-200">
                 <BikeIcon className="h-3 w-3 text-brand-500" />
@@ -68,6 +69,12 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: Drive
               <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 ring-1 ring-amber-200">
                 <BikeIcon className="h-3 w-3 text-amber-500" />
                 <span className="font-medium text-amber-700">No Bike</span>
+              </span>
+            )}
+            {garage && (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 ring-1 ring-surface-200">
+                <Warehouse className="h-3 w-3 text-slate-400" />
+                <span className="text-slate-600">{garage.name}</span>
               </span>
             )}
           </div>
@@ -121,10 +128,18 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid" }: Drive
             <span className="text-slate-600">{driver.joinDate}</span>
           </span>
           {bike ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-1 text-xs ring-1 ring-brand-200">
-              <BikeIcon className="h-3 w-3 text-brand-500" />
-              <span className="font-medium text-brand-700">{bike.plateNumber}</span>
-            </span>
+            <>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-1 text-xs ring-1 ring-brand-200">
+                <BikeIcon className="h-3 w-3 text-brand-500" />
+                <span className="font-medium text-brand-700">{bike.plateNumber}</span>
+              </span>
+              {garage && (
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 text-xs ring-1 ring-surface-200">
+                  <Warehouse className="h-3 w-3 text-slate-400" />
+                  <span className="text-slate-600">{garage.name}</span>
+                </span>
+              )}
+            </>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-xs ring-1 ring-amber-200">
               <BikeIcon className="h-3 w-3 text-amber-500" />
