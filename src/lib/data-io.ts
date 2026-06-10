@@ -53,7 +53,9 @@ function driversToRows(drivers: Driver[], bikeMap?: Record<string, string>, deli
       "Join Date": d.joinDate ?? "",
       "Bike Plate": d.bikeId ? (bikeMap?.[d.bikeId] ?? d.bikeId) : "",
       "Preferred Bike Type": d.preferredBikeType ?? "",
-      "Delivery Category": d.deliveryCategoryId ? (deliveryCategoryMap?.[d.deliveryCategoryId] ?? d.deliveryCategoryId) : "",
+      "Delivery Category": d.deliveryCategoryIds && d.deliveryCategoryIds.length > 0 
+        ? d.deliveryCategoryIds.map(id => deliveryCategoryMap?.[id] ?? id).join(", ") 
+        : "",
     }));
 }
 
