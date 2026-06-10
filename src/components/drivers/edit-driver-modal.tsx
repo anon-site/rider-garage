@@ -279,12 +279,12 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-sm font-medium text-surface-900">Delivery Category</label>
             <select
               value={deliveryCategoryId}
               onChange={(e) => setDeliveryCategoryId(e.target.value)}
-              className="w-full rounded-lg border border-surface-200 bg-white px-3 py-1.5 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100"
+              className="w-full rounded-md border border-surface-200 bg-white px-2.5 py-1 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100"
             >
               <option value="">No Category</option>
               {deliveryCategories
