@@ -35,7 +35,9 @@ export async function exportExcel(data: ExportData, period: string) {
     "App ID": d.appId ?? "—",
     Status: d.isActive ? "Active" : "Offline",
     Bike: d.bike?.plateNumber ?? "—",
-    "Delivery Category": d.deliveryCategoryId ? (data.deliveryCategoryMap?.[d.deliveryCategoryId] ?? d.deliveryCategoryId) : "—",
+    "Delivery Category": d.deliveryCategoryIds && d.deliveryCategoryIds.length > 0 
+      ? d.deliveryCategoryIds.map(id => data.deliveryCategoryMap?.[id] ?? id).join(", ") 
+      : "—",
     Orders: d.orders,
     Hours: fmtHours(d.hours),
     Sessions: d.sessions,
@@ -150,7 +152,9 @@ export async function exportPDF(data: ExportData, period: string) {
       d.appId ?? "—",
       d.isActive ? "Active" : "Offline",
       d.bike?.plateNumber ?? "—",
-      d.deliveryCategoryId ? (data.deliveryCategoryMap?.[d.deliveryCategoryId] ?? d.deliveryCategoryId) : "—",
+      d.deliveryCategoryIds && d.deliveryCategoryIds.length > 0 
+        ? d.deliveryCategoryIds.map(id => data.deliveryCategoryMap?.[id] ?? id).join(", ") 
+        : "—",
       String(d.orders),
       fmtHours(d.hours),
       String(d.sessions),

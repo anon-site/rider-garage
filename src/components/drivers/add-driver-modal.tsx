@@ -75,7 +75,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
   const [garageId, setGarageId] = useState("");
   const [preferredBikeType, setPreferredBikeType] = useState<BikeTypeId>("electric_motorcycle");
   const [bikeId, setBikeId] = useState("");
-  const [deliveryCategoryId, setDeliveryCategoryId] = useState("");
+  const [deliveryCategoryIds, setDeliveryCategoryIds] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
@@ -130,7 +130,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
     if (joinDate) payload.joinDate = joinDate;
     if (garageId) payload.garageId = garageId;
     if (bikeId) payload.bikeId = bikeId;
-    if (deliveryCategoryId) payload.deliveryCategoryId = deliveryCategoryId;
+    if (deliveryCategoryIds.length > 0) payload.deliveryCategoryIds = deliveryCategoryIds;
     onSubmit(payload, customId.trim() || undefined);
     onClose();
   }
@@ -271,22 +271,35 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">Delivery Category</label>
-            <select
-              value={deliveryCategoryId}
-              onChange={(e) => setDeliveryCategoryId(e.target.value)}
-              className="w-1/2 rounded-xl border bg-white px-3 py-2 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:ring-2 border-surface-200 focus:border-brand-400 focus:ring-brand-100"
-            >
-              <option value="">No Category</option>
+            <label className="text-sm font-medium text-surface-900">Delivery Categories</label>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
               {deliveryCategories
                 .filter(cat => cat.isActive !== false)
                 .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
                 .map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
+                  <label key={cat.id} className="flex items-center gap-2 cursor-pointer hover:bg-surface-50 p-2 rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={deliveryCategoryIds.includes(cat.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setDeliveryCategoryIds([...deliveryCategoryIds, cat.id]);
+                        } else {
+                          setDeliveryCategoryIds(deliveryCategoryIds.filter(id => id !== cat.id));
+                        }
+                      }}
+                      className="h-4 w-4 text-brand-600 border-surface-300 rounded focus:ring-brand-500"
+                    />
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span className="text-sm text-surface-900">{cat.name}</span>
+                    </div>
+                  </label>
                 ))}
-            </select>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

@@ -87,20 +87,25 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                     {BIKE_TYPES.find((t) => t.id === driver.preferredBikeType)?.label ?? driver.preferredBikeType}
                   </span>
                 )}
-                {driver.deliveryCategoryId && deliveryCategories.length > 0 && (() => {
-                  const category = deliveryCategories.find(c => c.id === driver.deliveryCategoryId);
-                  return category ? (
-                    <span 
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold ring-1"
-                      style={{ 
-                        backgroundColor: `${category.color}20`, 
-                        color: category.color,
-                        borderColor: category.color 
-                      }}
-                    >
-                      <Package className="h-3 w-3" />
-                      {category.name}
-                    </span>
+                {driver.deliveryCategoryIds && driver.deliveryCategoryIds.length > 0 && deliveryCategories.length > 0 && (() => {
+                  const categories = driver.deliveryCategoryIds.map(id => deliveryCategories.find(c => c.id === id)).filter(Boolean);
+                  return categories.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {categories.map((category) => (
+                        <span 
+                          key={category!.id}
+                          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold ring-1"
+                          style={{ 
+                            backgroundColor: `${category!.color}20`, 
+                            color: category!.color,
+                            borderColor: category!.color 
+                          }}
+                        >
+                          <Package className="h-3 w-3" />
+                          {category!.name}
+                        </span>
+                      ))}
+                    </div>
                   ) : null;
                 })()}
               </div>
@@ -198,20 +203,25 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                   {BIKE_TYPES.find((t) => t.id === driver.preferredBikeType)?.label ?? driver.preferredBikeType}
                 </span>
               )}
-              {driver.deliveryCategoryId && deliveryCategories.length > 0 && (() => {
-                const category = deliveryCategories.find(c => c.id === driver.deliveryCategoryId);
-                return category ? (
-                  <span 
-                    className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold ring-1"
-                    style={{ 
-                      backgroundColor: `${category.color}20`, 
-                      color: category.color,
-                      borderColor: category.color 
-                    }}
-                  >
-                    <Package className="h-3 w-3" />
-                    {category.name}
-                  </span>
+              {driver.deliveryCategoryIds && driver.deliveryCategoryIds.length > 0 && deliveryCategories.length > 0 && (() => {
+                const categories = driver.deliveryCategoryIds.map(id => deliveryCategories.find(c => c.id === id)).filter(Boolean);
+                return categories.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {categories.map((category) => (
+                      <span 
+                        key={category!.id}
+                        className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold ring-1"
+                        style={{ 
+                          backgroundColor: `${category!.color}20`, 
+                          color: category!.color,
+                          borderColor: category!.color 
+                        }}
+                      >
+                        <Package className="h-3 w-3" />
+                        {category!.name}
+                      </span>
+                    ))}
+                  </div>
                 ) : null;
               })()}
             </div>

@@ -10,5 +10,5 @@ export type Driver = {
   garageId?: string;
   bikeId?: string;
   preferredBikeType?: BikeTypeId;
-  deliveryCategoryId?: DeliveryCategoryId;
+  deliveryCategoryIds?: DeliveryCategoryId[];
 };
