@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Bike as BikeIcon, Calendar, AlertCircle, FileText, User, Warehouse } from "lucide-react";
+import { Pencil, Trash2, Bike as BikeIcon, Calendar, AlertCircle, FileText, User } from "lucide-react";
 import type { Bike } from "@/types/bike";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
@@ -70,7 +70,6 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
         {bikes.map((bike) => {
           const typeName = BIKE_TYPES.find((t) => t.id === bike.bikeType)?.label ?? bike.bikeType;
           const driverName = bike.driverId ? (driverMap[bike.driverId] ?? "Unknown") : null;
-          const garageName = bike.garageId ? (garageMap[bike.garageId] ?? "Unknown") : null;
           return (
             <div
               key={bike.id}
@@ -91,17 +90,9 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
                 <div className="hidden sm:block">
                   <StatusBadge status={bike.status} />
                 </div>
-                <div className="hidden sm:flex flex-col items-start gap-0.5 text-xs text-slate-500">
-                  <div className="flex items-center gap-1.5">
-                    <User className="h-3 w-3 shrink-0 text-slate-400" />
-                    <span className="truncate">{driverName ?? "No Driver"}</span>
-                  </div>
-                  {garageName && (
-                    <div className="flex items-center gap-1.5">
-                      <Warehouse className="h-3 w-3 shrink-0 text-slate-400" />
-                      <span className="truncate">{garageName}</span>
-                    </div>
-                  )}
+                <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
+                  <User className="h-3 w-3 shrink-0 text-slate-400" />
+                  <span className="truncate">{driverName ?? "No Driver"}</span>
                 </div>
                 <div className="flex items-center gap-2 justify-end">
                   <span className="sm:hidden"><StatusBadge status={bike.status} /></span>
@@ -184,6 +175,9 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
                 <span className="truncate text-slate-600">
                   {bike.driverId ? (driverMap[bike.driverId] ?? "Unknown") : "No Driver"}
                 </span>
+                {bike.garageId && (
+                  <span className="text-[10px] text-slate-400">· {garageMap[bike.garageId] ?? bike.garageId}</span>
+                )}
               </span>
             </div>
 
