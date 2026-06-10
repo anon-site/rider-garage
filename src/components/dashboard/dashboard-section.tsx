@@ -5,6 +5,7 @@ import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
+import { useGarages } from "@/contexts/control-panel-context";
 import { DriverCard } from "./driver-card";
 import { DriverProfileModal } from "./driver-profile-modal";
 import type { Driver } from "@/types/driver";
