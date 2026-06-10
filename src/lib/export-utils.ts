@@ -265,5 +265,6 @@ export type ExportData = {
     ordersDelivered: number; rating: number; notes?: string;
   }[];
   driverMap: Record<string, string>;
+  deliveryCategoryMap?: Record<string, string>;
   garageMap?: Record<string, string>;
 };
