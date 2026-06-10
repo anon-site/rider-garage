@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Phone, Calendar, Bike as BikeIcon, User as UserIcon } from "lucide-react";
+import { Pencil, Trash2, Phone, Calendar, Bike as BikeIcon, User as UserIcon, Package } from "lucide-react";
 import type { Driver } from "@/types/driver";
+import type { DeliveryCategory } from "@/types/delivery-category";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
 import { ConfirmDeleteModal } from "@/components/shared/confirm-delete-modal";
@@ -15,9 +16,10 @@ type DriverListProps = {
   onDelete: (id: string) => void;
   readOnly?: boolean;
   viewMode?: ViewMode;
+  deliveryCategories?: DeliveryCategory[];
 };
 
-export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid" }: DriverListProps) {
+export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid", deliveryCategories = [] }: DriverListProps) {
   const { bikes } = useBikes();
   const bikeMap = Object.fromEntries(bikes.map((b) => [b.id, b.plateNumber]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -85,6 +87,22 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                     {BIKE_TYPES.find((t) => t.id === driver.preferredBikeType)?.label ?? driver.preferredBikeType}
                   </span>
                 )}
+                {driver.deliveryCategoryId && deliveryCategories.length > 0 && (() => {
+                  const category = deliveryCategories.find(c => c.id === driver.deliveryCategoryId);
+                  return category ? (
+                    <span 
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold ring-1"
+                      style={{ 
+                        backgroundColor: `${category.color}20`, 
+                        color: category.color,
+                        borderColor: category.color 
+                      }}
+                    >
+                      <Package className="h-3 w-3" />
+                      {category.name}
+                    </span>
+                  ) : null;
+                })()}
               </div>
             </div>
 
@@ -180,6 +198,22 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                   {BIKE_TYPES.find((t) => t.id === driver.preferredBikeType)?.label ?? driver.preferredBikeType}
                 </span>
               )}
+              {driver.deliveryCategoryId && deliveryCategories.length > 0 && (() => {
+                const category = deliveryCategories.find(c => c.id === driver.deliveryCategoryId);
+                return category ? (
+                  <span 
+                    className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold ring-1"
+                    style={{ 
+                      backgroundColor: `${category.color}20`, 
+                      color: category.color,
+                      borderColor: category.color 
+                    }}
+                  >
+                    <Package className="h-3 w-3" />
+                    {category.name}
+                  </span>
+                ) : null;
+              })()}
             </div>
 
             {/* Actions */}

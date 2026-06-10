@@ -270,25 +270,26 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
             </div>
           </div>
 
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">Delivery Category</label>
+            <select
+              value={deliveryCategoryId}
+              onChange={(e) => setDeliveryCategoryId(e.target.value)}
+              className="w-full rounded-lg border border-surface-200 bg-white px-3 py-1.5 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100"
+            >
+              <option value="">No Category</option>
+              {deliveryCategories
+                .filter(cat => cat.isActive !== false)
+                .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
+                .map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-surface-900">Delivery Category</label>
-              <select
-                value={deliveryCategoryId}
-                onChange={(e) => setDeliveryCategoryId(e.target.value)}
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-              >
-                <option value="">No Category</option>
-                {deliveryCategories
-                  .filter(cat => cat.isActive !== false)
-                  .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
-                  .map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Preferred Bike Type</label>
               <select
