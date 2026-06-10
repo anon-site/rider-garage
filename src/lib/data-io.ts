@@ -17,6 +17,10 @@ export type SiteData = {
   attendance: AttendanceRecord[];
 };
 
+export type ExtendedSiteData = SiteData & {
+  deliveryCategories?: Array<{ id: string; name: string }>;
+};
+
 /* ───────────────────────────────────────────
    Helpers
 ─────────────────────────────────────────── */
@@ -144,8 +148,9 @@ export async function exportExcel(data: SiteData, scope: DataScope) {
   const driverMap = Object.fromEntries(data.drivers.map((d) => [d.id, d.name]));
   
   // Create delivery category map for drivers export
-  const deliveryCategories = (data as any).deliveryCategories || [];
-  const deliveryCategoryMap = Object.fromEntries(deliveryCategories.map((cat: any) => [cat.id, cat.name]));
+  const extendedData = data as ExtendedSiteData;
+  const deliveryCategories = extendedData.deliveryCategories || [];
+  const deliveryCategoryMap = Object.fromEntries(deliveryCategories.map((cat) => [cat.id, cat.name]));
 
   function addSheet(name: string, rows: Record<string, unknown>[]) {
     if (rows.length === 0) return;
@@ -182,8 +187,9 @@ export async function exportPDF(data: SiteData, scope: DataScope) {
   let isFirst = true;
 
   // Create delivery category map for drivers export
-  const deliveryCategories = (data as any).deliveryCategories || [];
-  const deliveryCategoryMap = Object.fromEntries(deliveryCategories.map((cat: any) => [cat.id, cat.name]));
+  const extendedData = data as ExtendedSiteData;
+  const deliveryCategories = extendedData.deliveryCategories || [];
+  const deliveryCategoryMap = Object.fromEntries(deliveryCategories.map((cat) => [cat.id, cat.name]));
 
   function addTable(title: string, rows: Record<string, unknown>[]) {
     if (rows.length === 0) return;

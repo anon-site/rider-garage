@@ -287,7 +287,7 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
     const driversRef = ref(db, "drivers");
     const driversSnap = await get(driversRef);
     if (driversSnap.exists()) {
-      const drivers = driversSnap.val() as Record<string, any>;
+      const drivers = driversSnap.val() as Record<string, { deliveryCategoryId?: string }>;
       const driversUsingCategory = Object.entries(drivers).filter(([, driver]) => driver.deliveryCategoryId === id);
       if (driversUsingCategory.length > 0) {
         throw new Error(`Cannot delete delivery category: ${driversUsingCategory.length} driver(s) are using it`);

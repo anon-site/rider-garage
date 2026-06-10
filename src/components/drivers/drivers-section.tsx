@@ -467,7 +467,7 @@ export function DriversSection() {
         </div>
       </div>
 
-      <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} viewMode={viewMode} deliveryCategories={deliveryCategories} />
+      <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} viewMode={viewMode} />
 
       {!readOnly && showAdd && (
         <AddDriverModal onSubmit={addDriver} onClose={() => setShowAdd(false)} existingIds={drivers.map(d => d.id)} />

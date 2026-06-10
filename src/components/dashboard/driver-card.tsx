@@ -5,7 +5,6 @@ import type { Driver } from "@/types/driver";
 import type { Bike } from "@/types/bike";
 import type { DeliveryCategory } from "@/types/delivery-category";
 import { useAttendance } from "@/contexts/attendance-context";
-import { useDeliveryCategories } from "@/contexts/control-panel-context";
 import { DELIVERY_CATEGORIES } from "@/types/delivery-category";
 
 type DriverCardProps = {
