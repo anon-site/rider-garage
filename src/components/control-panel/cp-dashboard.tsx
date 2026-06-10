@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Users,
   Bike,
@@ -29,6 +29,7 @@ import { useAttendance } from "@/contexts/attendance-context";
 import { useAuth } from "@/contexts/auth-context";
 import { ROLES } from "@/types/user";
 import { cn } from "@/lib/utils";
+import { DeliveryCategoriesTab } from "./delivery-categories-tab";
 
 /* ── helpers ── */
 function calcHours(clockIn: string, clockOut?: string) {
@@ -239,9 +240,15 @@ export function CpDashboard() {
   const { bikes } = useBikes();
   const { records } = useAttendance();
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Hide garages section for garage managers
   const isGarageManager = user?.role === "garage";
+
+  const tabs = [
+    { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "delivery-categories", label: "Delivery Categories", icon: Package },
+  ];
 
   /* ── computed stats ── */
   const stats = useMemo(() => {
@@ -308,10 +315,35 @@ export function CpDashboard() {
   }, [drivers, records, bikes]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Tab Navigation */}
+      <div className="flex overflow-hidden rounded-xl border border-surface-200 bg-white p-1 shadow-sm">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                activeTab === tab.id
+                  ? "bg-brand-600 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-surface-100"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      {/* ── KPI Grid ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+      {/* Tab Content */}
+      {activeTab === "delivery-categories" ? (
+        <DeliveryCategoriesTab />
+      ) : (
+        <div className="space-y-8">
+          {/* ── KPI Grid ── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <StatCard icon={Users} label="System Users" value={stats.totalUsers} sub={`${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
         <StatCard icon={UserCheck} label="Total Drivers" value={stats.totalDrivers} sub={`${stats.activeDrivers} active`} tone="emerald" />
         <StatCard icon={Warehouse} label="Garages" value={stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
@@ -673,6 +705,8 @@ export function CpDashboard() {
             })}
         </div>
       </div>
+        </div>
+      )}
     </div>
   );
 }
