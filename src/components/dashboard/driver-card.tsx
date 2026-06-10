@@ -21,8 +21,9 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid", deliver
   const isOutside = latestRecord && !latestRecord.clockOut;
 
   // Get delivery category info
-  const deliveryCategory = deliveryCategories.find(cat => cat.id === driver.deliveryCategoryId) ||
-    DELIVERY_CATEGORIES.find(cat => cat.id === driver.deliveryCategoryId);
+  const driverCategories = driver.deliveryCategoryIds?.map(id => 
+    deliveryCategories.find(cat => cat.id === id) || DELIVERY_CATEGORIES.find(cat => cat.id === id)
+  ).filter(Boolean) || [];
 
   const initials = driver.name
     .split(" ")
@@ -46,18 +47,23 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid", deliver
     </span>
   );
 
-  const deliveryCategoryBadge = deliveryCategory ? (
-    <span 
-      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium ring-1"
-      style={{ 
-        backgroundColor: `${deliveryCategory.color}15`, 
-        color: deliveryCategory.color, 
-        borderColor: `${deliveryCategory.color}40` 
-      }}
-    >
-      <Package className="h-3 w-3" />
-      {deliveryCategory.name}
-    </span>
+  const deliveryCategoryBadges = driverCategories.length > 0 ? (
+    <div className="flex flex-wrap gap-1">
+      {driverCategories.map((category) => (
+        <span 
+          key={category!.id}
+          className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium ring-1"
+          style={{ 
+            backgroundColor: `${category!.color}15`, 
+            color: category!.color, 
+            borderColor: `${category!.color}40` 
+          }}
+        >
+          <Package className="h-3 w-3" />
+          {category!.name}
+        </span>
+      ))}
+    </div>
   ) : null;
 
   if (viewMode === "list") {
@@ -93,7 +99,7 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid", deliver
             )}
           </div>
           <div className="flex items-center gap-2 justify-end">
-            {deliveryCategoryBadge}
+            {deliveryCategoryBadges}
             {latestRecord && latestRecord.rating > 0 && (
               <span className={`hidden sm:inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold ring-1 ${latestRecord.rating >= 80 ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-rose-200"}`}>
                 <Star className={`h-3 w-3 fill-current ${latestRecord.rating >= 80 ? "text-emerald-500" : "text-rose-500"}`} />
@@ -138,7 +144,7 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid", deliver
 
         {/* Info chips */}
         <div className="flex flex-wrap items-center gap-1.5">
-          {deliveryCategoryBadge}
+          {deliveryCategoryBadges}
           <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 text-xs ring-1 ring-surface-200">
             <Calendar className="h-3 w-3 text-slate-400" />
             <span className="text-slate-600">{driver.joinDate}</span>
