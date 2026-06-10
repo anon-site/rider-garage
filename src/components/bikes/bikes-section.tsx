@@ -15,23 +15,25 @@ import { AddBikeModal } from "./add-bike-modal";
 import { EditBikeModal } from "./edit-bike-modal";
 import type { Bike } from "@/types/bike";
 
-type BikeFilter = "all" | "good" | "defective" | "assigned";
+type BikeFilter = "all" | "good" | "defective" | "assigned" | "unassigned";
 
 function FilterCard({ icon: Icon, label, value, tone, active, onClick }: {
   icon: React.ElementType; label: string; value: number;
-  tone?: "brand" | "emerald" | "amber" | "rose"; active: boolean; onClick: () => void;
+  tone?: "brand" | "emerald" | "amber" | "rose" | "slate"; active: boolean; onClick: () => void;
 }) {
   const toneClasses = {
     brand: "from-brand-500/15 to-brand-500/5 text-brand-600",
     emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-600",
     amber: "from-amber-500/15 to-amber-500/5 text-amber-600",
     rose: "from-rose-500/15 to-rose-500/5 text-rose-600",
+    slate: "from-slate-500/15 to-slate-500/5 text-slate-600",
   };
   const activeRing = {
     brand: "ring-2 ring-brand-400 shadow-lg shadow-brand-200/40",
     emerald: "ring-2 ring-emerald-400 shadow-lg shadow-emerald-200/40",
     amber: "ring-2 ring-amber-400 shadow-lg shadow-amber-200/40",
     rose: "ring-2 ring-rose-400 shadow-lg shadow-rose-200/40",
+    slate: "ring-2 ring-slate-400 shadow-lg shadow-slate-200/40",
   };
   const t = tone ?? "brand";
   return (
@@ -95,7 +97,8 @@ export function BikesSection() {
     const good = scopedBikes.filter((b) => b.status === "good").length;
     const defective = scopedBikes.filter((b) => b.status === "defective").length;
     const assigned = scopedBikes.filter((b) => b.driverId).length;
-    return { total, good, defective, assigned };
+    const unassigned = scopedBikes.filter((b) => !b.driverId).length;
+    return { total, good, defective, assigned, unassigned };
   }, [scopedBikes]);
 
   const { drivers } = useDrivers();
@@ -106,6 +109,7 @@ export function BikesSection() {
       case "good":       return scopedBikes.filter((b) => b.status === "good");
       case "defective":  return scopedBikes.filter((b) => b.status === "defective");
       case "assigned":   return scopedBikes.filter((b) => b.driverId);
+      case "unassigned": return scopedBikes.filter((b) => !b.driverId);
       default:           return scopedBikes;
     }
   }, [scopedBikes, filter]);
@@ -288,11 +292,12 @@ export function BikesSection() {
       </div>
 
       {/* Filter Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4">
         <FilterCard icon={BikeIcon} label="Total Bikes" value={stats.total} tone="brand" active={filter === "all"} onClick={() => setFilter("all")} />
         <FilterCard icon={CheckCircle2} label="Good Condition" value={stats.good} tone="emerald" active={filter === "good"} onClick={() => setFilter("good")} />
         <FilterCard icon={AlertTriangle} label="Need Repair" value={stats.defective} tone="rose" active={filter === "defective"} onClick={() => setFilter("defective")} />
         <FilterCard icon={UserCheck} label="Assigned" value={stats.assigned} tone="amber" active={filter === "assigned"} onClick={() => setFilter("assigned")} />
+        <FilterCard icon={X} label="Unassigned" value={stats.unassigned} tone="slate" active={filter === "unassigned"} onClick={() => setFilter("unassigned")} />
       </div>
 
       {/* Section header */}
@@ -318,6 +323,7 @@ export function BikesSection() {
             {filter === "good" && "Bikes in good condition"}
             {filter === "defective" && "Bikes needing maintenance"}
             {filter === "assigned" && "Bikes assigned to drivers"}
+            {filter === "unassigned" && "Bikes without drivers"}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
