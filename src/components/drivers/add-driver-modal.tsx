@@ -115,16 +115,52 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
     
     if (isDuplicateId) return;
     
-    // Check for duplicates
+    // Check for duplicates and show all existing conflicts
     const errors: Record<string, string> = {};
+    
+    // Find drivers with conflicting data
+    const conflictingDrivers = [];
+    if (isDuplicateName || isDuplicatePhone || isDuplicateAppId) {
+      for (let i = 0; i < existingNames.length; i++) {
+        const hasNameConflict = isDuplicateName && normalizeName(existingNames[i]) === normalizeName(name);
+        const hasPhoneConflict = isDuplicatePhone && existingPhones[i] === phone.trim();
+        const hasAppIdConflict = isDuplicateAppId && existingAppIds[i]?.toLowerCase() === appId.trim().toLowerCase();
+        
+        if (hasNameConflict || hasPhoneConflict || hasAppIdConflict) {
+          conflictingDrivers.push({
+            name: existingNames[i],
+            phone: existingPhones[i],
+            appId: existingAppIds[i],
+            conflicts: {
+              name: hasNameConflict,
+              phone: hasPhoneConflict,
+              appId: hasAppIdConflict
+            }
+          });
+        }
+      }
+    }
+    
     if (isDuplicateName) {
       errors.name = "Driver name already exists";
     }
     if (isDuplicatePhone) {
-      errors.phone = "Phone number already exists";
+      const phoneConflicts = conflictingDrivers.filter(d => d.conflicts.phone);
+      if (phoneConflicts.length > 0) {
+        const conflictNames = phoneConflicts.map(d => d.name).join(', ');
+        errors.phone = `Phone number already exists (used by: ${conflictNames})`;
+      } else {
+        errors.phone = "Phone number already exists";
+      }
     }
     if (isDuplicateAppId) {
-      errors.appId = "App ID already exists";
+      const appIdConflicts = conflictingDrivers.filter(d => d.conflicts.appId);
+      if (appIdConflicts.length > 0) {
+        const conflictNames = appIdConflicts.map(d => d.name).join(', ');
+        errors.appId = `App ID already exists (used by: ${conflictNames})`;
+      } else {
+        errors.appId = "App ID already exists";
+      }
     }
     
     if (Object.keys(errors).length > 0) {
