@@ -313,6 +313,10 @@ export function CpDashboard() {
       totalHours: fmtHours(totalHours),
       totalSessions: filteredRecords.length,
       roleCount: isGarageManager ? { garage: 1 } : roleCount, // Garage manager sees only garage role
+      // Additional garage-specific stats for display
+      garageDrivers: filteredDrivers.length,
+      garageBikes: filteredBikes.length,
+      garageActiveDrivers: activeDrivers.length,
     };
   }, [users, garageList, filteredDrivers, filteredBikes, filteredRecords, isGarageManager, user?.garageId]);
 
@@ -367,10 +371,10 @@ export function CpDashboard() {
         <div className="space-y-8">
           {/* ── KPI Grid ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <StatCard icon={Users} label="System Users" value={stats.totalUsers} sub={`${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
-        <StatCard icon={UserCheck} label="Total Drivers" value={stats.totalDrivers} sub={`${stats.activeDrivers} active`} tone="emerald" />
-        <StatCard icon={Warehouse} label="Garages" value={stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
-        <StatCard icon={BikeIcon} label="Fleet Bikes" value={stats.totalBikes} sub={`${stats.bikesGood} good · ${stats.bikesIssue} issue`} tone={stats.bikesIssue > 0 ? "amber" : "emerald"} />
+        <StatCard icon={Users} label={isGarageManager ? "Users" : "System Users"} value={stats.totalUsers} sub={isGarageManager ? "You only" : `${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
+        <StatCard icon={UserCheck} label="Total Drivers" value={stats.garageDrivers} sub={`${stats.garageActiveDrivers} active`} tone="emerald" />
+        <StatCard icon={Warehouse} label={isGarageManager ? "My Garage" : "Garages"} value={stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
+        <StatCard icon={BikeIcon} label="Fleet Bikes" value={stats.garageBikes} sub={`${stats.bikesGood} good · ${stats.bikesIssue} issue`} tone={stats.bikesIssue > 0 ? "amber" : "emerald"} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
