@@ -300,10 +300,10 @@ export function CpDashboard() {
     );
 
     return {
-      totalUsers: users.length,
+      totalUsers: isGarageManager ? 1 : users.length, // Garage manager sees only themselves
       totalDrivers: filteredDrivers.length,
       activeDrivers: activeDrivers.length,
-      totalGarages: garageList.length,
+      totalGarages: isGarageManager ? 1 : garageList.length, // Garage manager sees only their garage
       totalCapacity,
       totalBikes: filteredBikes.length,
       bikesGood,
@@ -312,7 +312,7 @@ export function CpDashboard() {
       avgRating: avgRating.toFixed(1),
       totalHours: fmtHours(totalHours),
       totalSessions: filteredRecords.length,
-      roleCount,
+      roleCount: isGarageManager ? { garage: 1 } : roleCount, // Garage manager sees only garage role
     };
   }, [users, garageList, filteredDrivers, filteredBikes, filteredRecords, isGarageManager, user?.garageId]);
 

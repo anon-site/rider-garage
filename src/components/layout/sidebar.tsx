@@ -82,46 +82,7 @@ export const Sidebar = memo(function Sidebar() {
 
         {/* Nav */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {/* Garage manager: single link to their garage */}
-          {isGarageManager && user?.garageId && (() => {
-            const href = `/garages/${user.garageId}`;
-            const isActive = pathname.startsWith("/garages/");
-            return (
-              <Link
-                href={href}
-                onClick={isMobile ? close : undefined}
-                title={!isOpen ? "My Garage" : undefined}
-                className={cn(
-                  "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-brand-500/20 text-brand-300"
-                    : "text-slate-400 hover:bg-white/5 hover:text-white",
-                )}
-              >
-                <span className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
-                  isActive
-                    ? "bg-brand-500 text-white brand-glow"
-                    : "bg-white/5 text-slate-300 group-hover:bg-white/10 group-hover:text-white",
-                )}>
-                  <Warehouse className="h-5 w-5" strokeWidth={1.75} />
-                </span>
-                <span className={cn(
-                  "min-w-0 flex-1 overflow-hidden transition-all duration-300",
-                  isOpen ? "opacity-100" : "w-0 opacity-0",
-                )}>
-                  <span className="block truncate">My Garage</span>
-                  <span className="block truncate text-xs font-normal text-slate-500 group-hover:text-slate-400">
-                    Bikes &amp; drivers
-                  </span>
-                </span>
-                {isActive && isOpen && (
-                  <span className="absolute right-3 h-2 w-2 rounded-full bg-brand-400" />
-                )}
-              </Link>
-            );
-          })()}
-
+          
           {/* Regular nav items for all roles */}
           {visibleItems.map((item) => {
             const isActive =

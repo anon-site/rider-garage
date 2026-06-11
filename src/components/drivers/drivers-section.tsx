@@ -508,7 +508,7 @@ export function DriversSection() {
           .filter(cat => cat.isActive !== false)
           .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
           .map((category) => {
-            const count = drivers.filter(d => d.deliveryCategoryIds?.includes(category.id)).length;
+            const count = scopedDrivers.filter(d => d.deliveryCategoryIds?.includes(category.id)).length;
             return (
               <button
                 key={category.id}
