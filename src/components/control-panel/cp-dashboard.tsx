@@ -268,11 +268,6 @@ export function CpDashboard() {
     [bikes, isGarageManager, user?.garageId]
   );
   
-  const filteredRecords = useMemo(() => {
-    const filteredDriverIds = new Set(filteredDrivers.map(d => d.id));
-    return records.filter((r) => filteredDriverIds.has(r.driverId));
-  }, [records, filteredDrivers]);
-
   // Apply delivery category filter to drivers and records
   const categoryFilteredDrivers = useMemo(() => {
     if (!selectedDeliveryCategoryId) return filteredDrivers;
@@ -327,7 +322,7 @@ export function CpDashboard() {
       totalSessions: categoryFilteredRecords.length,
       roleCount: isGarageManager ? { garage: 1 } : roleCount, // Garage manager sees only garage role
     };
-  }, [users, garageList, filteredDrivers, filteredBikes, categoryFilteredDrivers, categoryFilteredRecords, isGarageManager, user?.garageId]);
+  }, [users, garageList, filteredBikes, categoryFilteredDrivers, categoryFilteredRecords, isGarageManager, user?.garageId]);
 
   /* ── per-driver attendance summary ── */
   const driverSummaries = useMemo(() => {

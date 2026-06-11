@@ -3,7 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, LogOut, Warehouse } from "lucide-react";
+import { Zap, LogOut } from "lucide-react";
 import { navItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
