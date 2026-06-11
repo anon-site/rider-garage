@@ -417,10 +417,10 @@ export function CpDashboard() {
         <div className="space-y-8">
           {/* ── KPI Grid ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <StatCard icon={Users} label={isGarageManager ? "Users" : "System Users"} value={stats.totalUsers} sub={isGarageManager ? "You only" : `${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
-        <StatCard icon={UserCheck} label="Total Drivers" value={stats.garageDrivers} sub={`${stats.garageActiveDrivers} active`} tone="emerald" />
-        <StatCard icon={Warehouse} label={isGarageManager ? "My Garage" : "Garages"} value={stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
-        <StatCard icon={BikeIcon} label="Fleet Bikes" value={stats.garageBikes} sub={`${stats.bikesGood} good · ${stats.bikesIssue} issue`} tone={stats.bikesIssue > 0 ? "amber" : "emerald"} />
+        <StatCard icon={Users} label={isGarageManager ? "Users" : "System Users"} value={isGarageManager ? 1 : stats.totalUsers} sub={isGarageManager ? "You only" : `${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
+        <StatCard icon={UserCheck} label="Total Drivers" value={isGarageManager ? filteredDrivers.length : stats.totalDrivers} sub={`${isGarageManager ? filteredDrivers.filter(d => filteredRecords.some(r => r.driverId === d.id && r.clockIn && !r.clockOut)).length : stats.activeDrivers} active`} tone="emerald" />
+        <StatCard icon={Warehouse} label={isGarageManager ? "My Garage" : "Garages"} value={isGarageManager ? 1 : stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
+        <StatCard icon={BikeIcon} label="Fleet Bikes" value={isGarageManager ? filteredBikes.length : stats.totalBikes} sub={`${isGarageManager ? filteredBikes.filter(b => b.status === "good").length : stats.bikesGood} good · ${isGarageManager ? filteredBikes.filter(b => b.status !== "good").length : stats.bikesIssue} issue`} tone={isGarageManager ? (filteredBikes.filter(b => b.status !== "good").length > 0 ? "amber" : "emerald") : (stats.bikesIssue > 0 ? "amber" : "emerald")} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
