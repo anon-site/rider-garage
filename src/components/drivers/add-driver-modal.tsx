@@ -82,7 +82,19 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
-  const isDuplicateName = name.trim() !== "" && existingNames.some(n => n.toLowerCase() === name.trim().toLowerCase());
+  // Enhanced name normalization for better duplicate detection
+  const normalizeName = (name: string) => {
+    return name.trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/[^\w\s]/g, ''); // Remove special characters except spaces
+  };
+  
+  const isDuplicateName = name.trim() !== "" && existingNames.some(n => {
+    const existingNormalized = normalizeName(n);
+    const newNormalized = normalizeName(name);
+    return existingNormalized === newNormalized;
+  });
   const isDuplicatePhone = phone.trim() !== "" && existingPhones.includes(phone.trim());
   const isDuplicateAppId = appId.trim() !== "" && existingAppIds.some(a => a.toLowerCase() === appId.trim().toLowerCase());
 

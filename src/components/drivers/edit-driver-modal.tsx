@@ -72,7 +72,19 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
   const otherPhones = driver ? existingPhones.filter(p => p !== driver.phone) : existingPhones;
   const otherAppIds = driver ? existingAppIds.filter(a => a.toLowerCase() !== driver.appId?.toLowerCase()) : existingAppIds;
   
-  const isDuplicateName = name.trim() !== "" && otherNames.some(n => n.toLowerCase() === name.trim().toLowerCase());
+  // Enhanced name normalization for better duplicate detection
+  const normalizeName = (name: string) => {
+    return name.trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/[^\w\s]/g, ''); // Remove special characters except spaces
+  };
+  
+  const isDuplicateName = name.trim() !== "" && otherNames.some(n => {
+    const existingNormalized = normalizeName(n);
+    const newNormalized = normalizeName(name);
+    return existingNormalized === newNormalized;
+  });
   const isDuplicatePhone = phone.trim() !== "" && otherPhones.includes(phone.trim());
   const isDuplicateAppId = appId.trim() !== "" && otherAppIds.some(a => a.toLowerCase() === appId.trim().toLowerCase());
 
