@@ -15,6 +15,7 @@ const PERM_LABELS: Record<keyof CustomPermissions, string> = {
   canViewAll:     "View All",
   canClockDriver: "Clock",
   canViewReports: "Reports",
+  allowedPages:   "Page Access",
 };
 
 const PERM_ICONS: Record<keyof CustomPermissions, typeof Eye> = {
@@ -23,6 +24,7 @@ const PERM_ICONS: Record<keyof CustomPermissions, typeof Eye> = {
   canViewAll:     Eye,
   canClockDriver: ShieldCheck,
   canViewReports: ShieldCheck,
+  allowedPages:   ShieldCheck,
 };
 
 type ViewMode = "list" | "grid";
