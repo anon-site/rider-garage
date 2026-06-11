@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   Users,
-  Bike,
+  Bike as BikeIcon,
   Warehouse,
   ShieldCheck,
   TrendingUp,
@@ -370,7 +370,7 @@ export function CpDashboard() {
         <StatCard icon={Users} label="System Users" value={stats.totalUsers} sub={`${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
         <StatCard icon={UserCheck} label="Total Drivers" value={stats.totalDrivers} sub={`${stats.activeDrivers} active`} tone="emerald" />
         <StatCard icon={Warehouse} label="Garages" value={stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
-        <StatCard icon={Bike} label="Fleet Bikes" value={stats.totalBikes} sub={`${stats.bikesGood} good · ${stats.bikesIssue} issue`} tone={stats.bikesIssue > 0 ? "amber" : "emerald"} />
+        <StatCard icon={BikeIcon} label="Fleet Bikes" value={stats.totalBikes} sub={`${stats.bikesGood} good · ${stats.bikesIssue} issue`} tone={stats.bikesIssue > 0 ? "amber" : "emerald"} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
@@ -511,7 +511,7 @@ export function CpDashboard() {
       {/* ── Fleet Bikes ── */}
       <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
         <div className="mb-5 flex items-center justify-between">
-          <SectionTitle icon={Bike} title="Fleet Bikes" badge={filteredBikes.length} />
+          <SectionTitle icon={BikeIcon} title="Fleet Bikes" badge={filteredBikes.length} />
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 text-xs text-slate-500">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
