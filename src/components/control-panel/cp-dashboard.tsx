@@ -252,19 +252,35 @@ export function CpDashboard() {
   ];
 
   /* ── Filter data for garage managers ── */
-  const filteredDrivers = useMemo(() => 
-    isGarageManager && user?.garageId 
-      ? drivers.filter((d) => d.garageId === user.garageId)
-      : drivers,
-    [drivers, isGarageManager, user?.garageId]
-  );
+  const filteredDrivers = useMemo(() => {
+    if (isGarageManager && user?.garageId) {
+      const garageDrivers = drivers.filter((d) => d.garageId === user.garageId);
+      console.log('Garage Manager Debug:', {
+        isGarageManager,
+        userGarageId: user.garageId,
+        totalDrivers: drivers.length,
+        garageDrivers: garageDrivers.length,
+        garageDriversList: garageDrivers.map(d => ({ id: d.id, name: d.name, garageId: d.garageId }))
+      });
+      return garageDrivers;
+    }
+    return drivers;
+  }, [drivers, isGarageManager, user?.garageId]);
   
-  const filteredBikes = useMemo(() => 
-    isGarageManager && user?.garageId 
-      ? bikes.filter((b) => b.garageId === user.garageId)
-      : bikes,
-    [bikes, isGarageManager, user?.garageId]
-  );
+  const filteredBikes = useMemo(() => {
+    if (isGarageManager && user?.garageId) {
+      const garageBikes = bikes.filter((b) => b.garageId === user.garageId);
+      console.log('Garage Bikes Debug:', {
+        isGarageManager,
+        userGarageId: user.garageId,
+        totalBikes: bikes.length,
+        garageBikes: garageBikes.length,
+        garageBikesList: garageBikes.map(b => ({ id: b.id, plateNumber: b.plateNumber, garageId: b.garageId }))
+      });
+      return garageBikes;
+    }
+    return bikes;
+  }, [bikes, isGarageManager, user?.garageId]);
   
   const filteredRecords = useMemo(() => {
     const filteredDriverIds = new Set(filteredDrivers.map(d => d.id));
@@ -299,6 +315,36 @@ export function CpDashboard() {
       {} as Record<string, number>
     );
 
+    return {
+      totalUsers: isGarageManager ? 1 : users.length, // Garage manager sees only themselves
+      totalDrivers: filteredDrivers.length,
+      activeDrivers: activeDrivers.length,
+      totalGarages: isGarageManager ? 1 : garageList.length, // Garage manager sees only their garage
+      totalCapacity,
+      totalBikes: filteredBikes.length,
+      bikesGood,
+      bikesIssue,
+      totalOrders,
+      avgRating: avgRating.toFixed(1),
+      totalHours: fmtHours(totalHours),
+      totalSessions: filteredRecords.length,
+      roleCount: isGarageManager ? { garage: 1 } : roleCount, // Garage manager sees only garage role
+      // Additional garage-specific stats for display
+      garageDrivers: filteredDrivers.length,
+      garageBikes: filteredBikes.length,
+      garageActiveDrivers: activeDrivers.length,
+    };
+    
+    // Debug logging for stats
+    console.log('Stats Debug:', {
+      isGarageManager,
+      garageDrivers: filteredDrivers.length,
+      garageBikes: filteredBikes.length,
+      garageActiveDrivers: activeDrivers.length,
+      totalDrivers: filteredDrivers.length,
+      totalBikes: filteredBikes.length,
+    });
+    
     return {
       totalUsers: isGarageManager ? 1 : users.length, // Garage manager sees only themselves
       totalDrivers: filteredDrivers.length,
