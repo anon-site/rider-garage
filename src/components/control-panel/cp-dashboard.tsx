@@ -309,7 +309,12 @@ export function CpDashboard() {
 
   /* ── per-driver attendance summary ── */
   const driverSummaries = useMemo(() => {
-    return drivers.map((d) => {
+    // Filter drivers for garage managers
+    const filteredDrivers = isGarageManager && user?.garageId 
+      ? drivers.filter((d) => d.garageId === user.garageId)
+      : drivers;
+    
+    return filteredDrivers.map((d) => {
       const dRecords = records
         .filter((r) => r.driverId === d.id)
         .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime());
@@ -326,7 +331,7 @@ export function CpDashboard() {
       const assignedBike = d.bikeId ? bikes.find((b) => b.id === d.bikeId) : undefined;
       return { ...d, dRecords, totalOrders, avgRating, totalHours, isActive, assignedBike };
     });
-  }, [drivers, records, bikes]);
+  }, [drivers, records, bikes, isGarageManager, user?.garageId]);
 
   return (
     <div className="space-y-6">
@@ -502,7 +507,7 @@ export function CpDashboard() {
       {/* ── Fleet Bikes ── */}
       <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
         <div className="mb-5 flex items-center justify-between">
-          <SectionTitle icon={Bike} title="Fleet Bikes" badge={bikes.length} />
+          <SectionTitle icon={Bike} title="Fleet Bikes" badge={filteredBikes.length} />
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 text-xs text-slate-500">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -515,7 +520,7 @@ export function CpDashboard() {
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {bikes.map((bike) => {
+          {filteredBikes.map((bike) => {
             const driver = bike.driverId
               ? drivers.find((d) => d.id === bike.driverId)
               : undefined;
@@ -578,7 +583,7 @@ export function CpDashboard() {
       {/* ── Driver Performance ── */}
       <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
         <div className="mb-5 flex items-center justify-between">
-          <SectionTitle icon={TrendingUp} title="Driver Performance" badge={drivers.length} />
+          <SectionTitle icon={TrendingUp} title="Driver Performance" badge={driverSummaries.length} />
           <span className="text-xs text-slate-400">All-time attendance summary</span>
         </div>
         <div className="overflow-x-auto">
@@ -652,11 +657,11 @@ export function CpDashboard() {
       {/* ── Attendance Log ── */}
       <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
         <div className="mb-5 flex items-center justify-between">
-          <SectionTitle icon={BarChart3} title="Attendance Log" badge={records.length} />
+          <SectionTitle icon={BarChart3} title="Attendance Log" badge={filteredRecords.length} />
           <span className="text-xs text-slate-400">Recent sessions</span>
         </div>
         <div className="space-y-3">
-          {[...records]
+          {[...filteredRecords]
             .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime())
             .map((r) => {
               const driver = drivers.find((d) => d.id === r.driverId);
