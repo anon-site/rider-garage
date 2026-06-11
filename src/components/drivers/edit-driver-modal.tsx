@@ -358,12 +358,12 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-surface-900">Delivery Categories</label>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
+            <div className="flex flex-wrap gap-3">
               {deliveryCategories
                 .filter(cat => cat.isActive !== false)
                 .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
                 .map((cat) => (
-                  <label key={cat.id} className="flex items-center gap-2 cursor-pointer hover:bg-surface-50 p-2 rounded-lg">
+                  <label key={cat.id} className="flex items-center gap-2 cursor-pointer hover:bg-surface-50 px-3 py-2 rounded-lg border border-surface-200 transition-colors">
                     <input
                       type="checkbox"
                       checked={deliveryCategoryIds.includes(cat.id)}
