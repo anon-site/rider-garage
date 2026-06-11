@@ -252,27 +252,19 @@ export function CpDashboard() {
   ];
 
   /* ── Filter data for garage managers ── */
-  const filteredDrivers = useMemo(() => {
-    let filtered = drivers;
-    
-    // Garage Manager can only see drivers from their own garage
-    if (isGarageManager && user?.garageId) {
-      filtered = filtered.filter((d) => d.garageId === user.garageId);
-    }
-    
-    return filtered;
-  }, [drivers, isGarageManager, user?.garageId]);
+  const filteredDrivers = useMemo(() => 
+    isGarageManager && user?.garageId 
+      ? drivers.filter((d) => d.garageId === user.garageId)
+      : drivers,
+    [drivers, isGarageManager, user?.garageId]
+  );
   
-  const filteredBikes = useMemo(() => {
-    let filtered = bikes;
-    
-    // Garage Manager can only see bikes from their own garage
-    if (isGarageManager && user?.garageId) {
-      filtered = filtered.filter((b) => b.garageId === user.garageId);
-    }
-    
-    return filtered;
-  }, [bikes, isGarageManager, user?.garageId]);
+  const filteredBikes = useMemo(() => 
+    isGarageManager && user?.garageId 
+      ? bikes.filter((b) => b.garageId === user.garageId)
+      : bikes,
+    [bikes, isGarageManager, user?.garageId]
+  );
   
   const filteredRecords = useMemo(() => {
     const filteredDriverIds = new Set(filteredDrivers.map(d => d.id));
@@ -321,40 +313,6 @@ export function CpDashboard() {
       totalHours: fmtHours(totalHours),
       totalSessions: filteredRecords.length,
       roleCount: isGarageManager ? { garage: 1 } : roleCount, // Garage manager sees only garage role
-      // Additional garage-specific stats for display
-      garageDrivers: filteredDrivers.length,
-      garageBikes: filteredBikes.length,
-      garageActiveDrivers: activeDrivers.length,
-    };
-    
-    // Debug logging for stats
-    console.log('Stats Debug:', {
-      isGarageManager,
-      garageDrivers: filteredDrivers.length,
-      garageBikes: filteredBikes.length,
-      garageActiveDrivers: activeDrivers.length,
-      totalDrivers: filteredDrivers.length,
-      totalBikes: filteredBikes.length,
-    });
-    
-    return {
-      totalUsers: isGarageManager ? 1 : users.length, // Garage manager sees only themselves
-      totalDrivers: filteredDrivers.length,
-      activeDrivers: activeDrivers.length,
-      totalGarages: isGarageManager ? 1 : garageList.length, // Garage manager sees only their garage
-      totalCapacity,
-      totalBikes: filteredBikes.length,
-      bikesGood,
-      bikesIssue,
-      totalOrders,
-      avgRating: avgRating.toFixed(1),
-      totalHours: fmtHours(totalHours),
-      totalSessions: filteredRecords.length,
-      roleCount: isGarageManager ? { garage: 1 } : roleCount, // Garage manager sees only garage role
-      // Additional garage-specific stats for display
-      garageDrivers: filteredDrivers.length,
-      garageBikes: filteredBikes.length,
-      garageActiveDrivers: activeDrivers.length,
     };
   }, [users, garageList, filteredDrivers, filteredBikes, filteredRecords, isGarageManager, user?.garageId]);
 
@@ -409,10 +367,10 @@ export function CpDashboard() {
         <div className="space-y-8">
           {/* ── KPI Grid ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <StatCard icon={Users} label={isGarageManager ? "Users" : "System Users"} value={isGarageManager ? 1 : stats.totalUsers} sub={isGarageManager ? "You only" : `${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
-        <StatCard icon={UserCheck} label="Total Drivers" value={isGarageManager ? filteredDrivers.length : stats.totalDrivers} sub={`${isGarageManager ? filteredDrivers.filter(d => filteredRecords.some(r => r.driverId === d.id && r.clockIn && !r.clockOut)).length : stats.activeDrivers} active`} tone="emerald" />
-        <StatCard icon={Warehouse} label={isGarageManager ? "My Garage" : "Garages"} value={isGarageManager ? 1 : stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
-        <StatCard icon={BikeIcon} label="Fleet Bikes" value={isGarageManager ? filteredBikes.length : stats.totalBikes} sub={`${isGarageManager ? filteredBikes.filter(b => b.status === "good").length : stats.bikesGood} good · ${isGarageManager ? filteredBikes.filter(b => b.status !== "good").length : stats.bikesIssue} issue`} tone={isGarageManager ? (filteredBikes.filter(b => b.status !== "good").length > 0 ? "amber" : "emerald") : (stats.bikesIssue > 0 ? "amber" : "emerald")} />
+        <StatCard icon={Users} label="System Users" value={stats.totalUsers} sub={`${stats.roleCount["admin"] ?? 0} admins · ${stats.roleCount["supervisor"] ?? 0} supervisors`} tone="brand" />
+        <StatCard icon={UserCheck} label="Total Drivers" value={stats.totalDrivers} sub={`${stats.activeDrivers} active`} tone="emerald" />
+        <StatCard icon={Warehouse} label="Garages" value={stats.totalGarages} sub={`${stats.totalCapacity} capacity`} tone="sky" />
+        <StatCard icon={BikeIcon} label="Fleet Bikes" value={stats.totalBikes} sub={`${stats.bikesGood} good · ${stats.bikesIssue} issue`} tone={stats.bikesIssue > 0 ? "amber" : "emerald"} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
