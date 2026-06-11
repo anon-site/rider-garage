@@ -337,7 +337,7 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
               )}
             </div>
             <div className="space-y-2">
-              {PERM_LABELS.map(({ key, label, desc }) => {
+              {PERM_LABELS.filter(({ key }) => key !== 'allowedPages').map(({ key, label, desc }) => {
                 const base = ROLE_PERMISSIONS[role][key];
                 const effective = customPerms[key] ?? base;
                 const isOverridden = customPerms[key] !== undefined;
