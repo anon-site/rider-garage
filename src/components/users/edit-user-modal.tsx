@@ -472,7 +472,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
               </div>
               {allowedPages.length === 0 && (
                 <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-                  ⚠️ No pages selected - user will not have access to any pages unless "View All Pages" permission is granted
+                  ⚠️ No pages selected - user will not have access to any pages unless &quot;View All Pages&quot; permission is granted
                 </p>
               )}
             </div>
