@@ -341,38 +341,6 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-900">Delivery Categories</label>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {deliveryCategories
-                .filter(cat => cat.isActive !== false)
-                .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
-                .map((cat) => (
-                  <label key={cat.id} className="flex items-center gap-2 cursor-pointer hover:bg-surface-50 p-2 rounded-lg">
-                    <input
-                      type="checkbox"
-                      checked={deliveryCategoryIds.includes(cat.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setDeliveryCategoryIds([...deliveryCategoryIds, cat.id]);
-                        } else {
-                          setDeliveryCategoryIds(deliveryCategoryIds.filter(id => id !== cat.id));
-                        }
-                      }}
-                      className="h-4 w-4 text-brand-600 border-surface-300 rounded focus:ring-brand-500"
-                    />
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: cat.color }}
-                      />
-                      <span className="text-sm text-surface-900">{cat.name}</span>
-                    </div>
-                  </label>
-                ))}
-            </div>
-          </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Preferred Bike Type</label>
@@ -404,6 +372,38 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-900">Delivery Categories</label>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {deliveryCategories
+                .filter(cat => cat.isActive !== false)
+                .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
+                .map((cat) => (
+                  <label key={cat.id} className="flex items-center gap-2 cursor-pointer hover:bg-surface-50 p-2 rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={deliveryCategoryIds.includes(cat.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setDeliveryCategoryIds([...deliveryCategoryIds, cat.id]);
+                        } else {
+                          setDeliveryCategoryIds(deliveryCategoryIds.filter(id => id !== cat.id));
+                        }
+                      }}
+                      className="h-4 w-4 text-brand-600 border-surface-300 rounded focus:ring-brand-500"
+                    />
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span className="text-sm text-surface-900">{cat.name}</span>
+                    </div>
+                  </label>
+                ))}
             </div>
           </div>
 
