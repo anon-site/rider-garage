@@ -75,6 +75,7 @@ export function DriversSection() {
   const isAdmin = permissions.canManageUsers;
 
   const [selectedGarageId, setSelectedGarageId] = useState<string | null>(null);
+  const [selectedDeliveryCategoryId, setSelectedDeliveryCategoryId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
@@ -101,12 +102,28 @@ export function DriversSection() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* drivers scoped to selected garage */
+  /* drivers scoped to selected garage and delivery category */
   const scopedDrivers = useMemo(() => {
-    if (!selectedGarageId) return drivers;
-    if (selectedGarageId === "__none__") return drivers.filter((d) => !d.garageId);
-    return drivers.filter((d) => d.garageId === selectedGarageId);
-  }, [drivers, selectedGarageId]);
+    let filtered = drivers;
+    
+    // Filter by garage
+    if (selectedGarageId) {
+      if (selectedGarageId === "__none__") {
+        filtered = filtered.filter((d) => !d.garageId);
+      } else {
+        filtered = filtered.filter((d) => d.garageId === selectedGarageId);
+      }
+    }
+    
+    // Filter by delivery category
+    if (selectedDeliveryCategoryId) {
+      filtered = filtered.filter((d) => 
+        d.deliveryCategoryIds?.includes(selectedDeliveryCategoryId)
+      );
+    }
+    
+    return filtered;
+  }, [drivers, selectedGarageId, selectedDeliveryCategoryId]);
 
   const stats = useMemo(() => {
     const total = scopedDrivers.length;
@@ -465,6 +482,49 @@ export function DriversSection() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Delivery Category Filter */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-slate-500">Filter by:</span>
+        <button
+          type="button"
+          onClick={() => setSelectedDeliveryCategoryId(null)}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            !selectedDeliveryCategoryId
+              ? "bg-brand-100 text-brand-700 ring-2 ring-brand-200"
+              : "bg-surface-100 text-slate-600 ring-1 ring-surface-200 hover:bg-surface-200"
+          }`}
+        >
+          All
+        </button>
+        {deliveryCategories
+          .filter(cat => cat.isActive !== false)
+          .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
+          .map((category) => {
+            const count = drivers.filter(d => d.deliveryCategoryIds?.includes(category.id)).length;
+            return (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => setSelectedDeliveryCategoryId(category.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  selectedDeliveryCategoryId === category.id
+                    ? "bg-brand-100 text-brand-700 ring-2 ring-brand-200"
+                    : "bg-surface-100 text-slate-600 ring-1 ring-surface-200 hover:bg-surface-200"
+                }`}
+              >
+                <div 
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: category.color }}
+                />
+                {category.name}
+                <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-bold">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
       </div>
 
       <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} viewMode={viewMode} deliveryCategories={deliveryCategories} />
