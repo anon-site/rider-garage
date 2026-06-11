@@ -3,7 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, LogOut } from "lucide-react";
+import { Zap, LogOut, Warehouse } from "lucide-react";
 import { navItems } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
@@ -26,15 +26,11 @@ const ROLE_COLORS: Record<string, string> = {
 export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname();
   const { isOpen, isMobile, close } = useSidebar();
-  const { user, permissions, logout, canAccessPage } = useAuth();
+  const { user, permissions, logout } = useAuth();
 
-  /* Filter nav items by role, permissions, and page access */
+  /* Filter nav items by role and permissions */
   const isGarageManager = user?.role === "garage";
   const visibleItems = navItems.filter((item) => {
-    // First check if user can access this specific page
-    if (!canAccessPage(item.href)) return false;
-    
-    // Then apply existing role-based restrictions
     if (item.href === "/control-panel") return permissions.canManageUsers;
     if (item.href === "/settings") return permissions.canManageUsers;
     if (item.href === "/reports") return permissions.canViewReports;

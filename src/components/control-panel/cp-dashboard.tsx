@@ -22,7 +22,7 @@ import {
   Eye,
   Settings2,
 } from "lucide-react";
-import { useUsers, useGarages } from "@/contexts/control-panel-context";
+import { useUsers, useGarages, useDeliveryCategories } from "@/contexts/control-panel-context";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -241,7 +241,9 @@ export function CpDashboard() {
   const { bikes } = useBikes();
   const { records } = useAttendance();
   const { user } = useAuth();
+  const { deliveryCategories } = useDeliveryCategories();
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedDeliveryCategoryId, setSelectedDeliveryCategoryId] = useState<string | null>(null);
 
   // Hide garages section for garage managers
   const isGarageManager = user?.role === "garage";
@@ -271,17 +273,28 @@ export function CpDashboard() {
     return records.filter((r) => filteredDriverIds.has(r.driverId));
   }, [records, filteredDrivers]);
 
+  // Apply delivery category filter to drivers and records
+  const categoryFilteredDrivers = useMemo(() => {
+    if (!selectedDeliveryCategoryId) return filteredDrivers;
+    return filteredDrivers.filter(d => d.deliveryCategoryIds?.includes(selectedDeliveryCategoryId));
+  }, [filteredDrivers, selectedDeliveryCategoryId]);
+
+  const categoryFilteredRecords = useMemo(() => {
+    const categoryFilteredDriverIds = new Set(categoryFilteredDrivers.map(d => d.id));
+    return records.filter((r) => categoryFilteredDriverIds.has(r.driverId));
+  }, [records, categoryFilteredDrivers]);
+
   /* ── computed stats ── */
   const stats = useMemo(() => {
-    const activeDrivers = filteredDrivers.filter((d) =>
-      filteredRecords.some((r) => r.driverId === d.id && r.clockIn && !r.clockOut)
+    const activeDrivers = categoryFilteredDrivers.filter((d) =>
+      categoryFilteredRecords.some((r) => r.driverId === d.id && r.clockIn && !r.clockOut)
     );
-    const totalOrders = filteredRecords.reduce((s, r) => s + (r.ordersDelivered ?? 0), 0);
+    const totalOrders = categoryFilteredRecords.reduce((s, r) => s + (r.ordersDelivered ?? 0), 0);
     const avgRating =
-      filteredRecords.length > 0
-        ? filteredRecords.reduce((s, r) => s + r.rating, 0) / filteredRecords.length
+      categoryFilteredRecords.length > 0
+        ? categoryFilteredRecords.reduce((s, r) => s + r.rating, 0) / categoryFilteredRecords.length
         : 0;
-    const totalHours = filteredRecords.reduce(
+    const totalHours = categoryFilteredRecords.reduce(
       (s, r) => s + calcHours(r.clockIn, r.clockOut),
       0
     );
@@ -301,7 +314,7 @@ export function CpDashboard() {
 
     return {
       totalUsers: isGarageManager ? 1 : users.length, // Garage manager sees only themselves
-      totalDrivers: filteredDrivers.length,
+      totalDrivers: categoryFilteredDrivers.length,
       activeDrivers: activeDrivers.length,
       totalGarages: isGarageManager ? 1 : garageList.length, // Garage manager sees only their garage
       totalCapacity,
@@ -311,15 +324,15 @@ export function CpDashboard() {
       totalOrders,
       avgRating: avgRating.toFixed(1),
       totalHours: fmtHours(totalHours),
-      totalSessions: filteredRecords.length,
+      totalSessions: categoryFilteredRecords.length,
       roleCount: isGarageManager ? { garage: 1 } : roleCount, // Garage manager sees only garage role
     };
-  }, [users, garageList, filteredDrivers, filteredBikes, filteredRecords, isGarageManager, user?.garageId]);
+  }, [users, garageList, filteredDrivers, filteredBikes, categoryFilteredDrivers, categoryFilteredRecords, isGarageManager, user?.garageId]);
 
   /* ── per-driver attendance summary ── */
   const driverSummaries = useMemo(() => {
-    return filteredDrivers.map((d) => {
-      const dRecords = filteredRecords
+    return categoryFilteredDrivers.map((d) => {
+      const dRecords = categoryFilteredRecords
         .filter((r) => r.driverId === d.id)
         .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime());
       const totalOrders = dRecords.reduce((s, r) => s + r.ordersDelivered, 0);
@@ -335,7 +348,7 @@ export function CpDashboard() {
       const assignedBike = d.bikeId ? filteredBikes.find((b) => b.id === d.bikeId) : undefined;
       return { ...d, dRecords, totalOrders, avgRating, totalHours, isActive, assignedBike };
     });
-  }, [filteredDrivers, filteredRecords, filteredBikes]);
+  }, [categoryFilteredDrivers, categoryFilteredRecords, filteredBikes]);
 
   return (
     <div className="space-y-6">
@@ -380,17 +393,60 @@ export function CpDashboard() {
         <StatCard icon={Activity} label="Active Now" value={stats.activeDrivers} sub="on shift" tone={stats.activeDrivers > 0 ? "emerald" : "rose"} />
       </div>
 
+      {/* Delivery Category Filter */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-slate-500">Filter by:</span>
+        <button
+          type="button"
+          onClick={() => setSelectedDeliveryCategoryId(null)}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            !selectedDeliveryCategoryId
+              ? "bg-brand-100 text-brand-700 ring-2 ring-brand-200"
+              : "bg-surface-100 text-slate-600 ring-1 ring-surface-200 hover:bg-surface-200"
+          }`}
+        >
+          All
+        </button>
+        {deliveryCategories
+          .filter(cat => cat.isActive !== false)
+          .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
+          .map((category) => {
+            const count = categoryFilteredDrivers.filter(d => d.deliveryCategoryIds?.includes(category.id)).length;
+            return (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => setSelectedDeliveryCategoryId(category.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  selectedDeliveryCategoryId === category.id
+                    ? "bg-brand-100 text-brand-700 ring-2 ring-brand-200"
+                    : "bg-surface-100 text-slate-600 ring-1 ring-surface-200 hover:bg-surface-200"
+                }`}
+              >
+                <div 
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: category.color }}
+                />
+                {category.name}
+                <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-bold">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+      </div>
+
       {/* ── Two-column middle row ── */}
       <div className="grid gap-6 lg:grid-cols-2">
 
         {/* Users breakdown */}
         <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
           <div className="mb-5 flex items-center justify-between">
-            <SectionTitle icon={Users} title="System Users" badge={users.length} />
+            <SectionTitle icon={Users} title="System Users" badge={isGarageManager ? 1 : users.length} />
             <span className="text-xs text-slate-400">Roles distribution</span>
           </div>
           <div className="space-y-3">
-            {users.map((u) => {
+            {(isGarageManager && user ? [user] : users).map((u) => {
               const garage = u.garageId ? garageList.find((g) => g.id === u.garageId) : undefined;
               return (
                 <div
@@ -526,7 +582,7 @@ export function CpDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredBikes.map((bike: Bike) => {
             const driver = bike.driverId
-              ? drivers.find((d) => d.id === bike.driverId)
+              ? filteredDrivers.find((d) => d.id === bike.driverId)
               : undefined;
             return (
               <div
@@ -661,14 +717,14 @@ export function CpDashboard() {
       {/* ── Attendance Log ── */}
       <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
         <div className="mb-5 flex items-center justify-between">
-          <SectionTitle icon={BarChart3} title="Attendance Log" badge={filteredRecords.length} />
+          <SectionTitle icon={BarChart3} title="Attendance Log" badge={categoryFilteredRecords.length} />
           <span className="text-xs text-slate-400">Recent sessions</span>
         </div>
         <div className="space-y-3">
-          {[...filteredRecords]
+          {[...categoryFilteredRecords]
             .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime())
             .map((r) => {
-              const driver = drivers.find((d) => d.id === r.driverId);
+              const driver = categoryFilteredDrivers.find((d) => d.id === r.driverId);
               const hours = calcHours(r.clockIn, r.clockOut);
               const isOpen = !r.clockOut;
               return (

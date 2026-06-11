@@ -7,23 +7,12 @@ export const ROLES = [
 
 export type RoleId = (typeof ROLES)[number]["id"];
 
-export const AVAILABLE_PAGES = [
-  { id: "/dashboard", label: "Dashboard", icon: "📊" },
-  { id: "/drivers", label: "Drivers", icon: "👥" },
-  { id: "/bikes", label: "Bikes", icon: "🏍️" },
-  { id: "/garages", label: "Garages", icon: "🏢" },
-  { id: "/reports", label: "Reports", icon: "📈" },
-  { id: "/control-panel", label: "Control Panel", icon: "⚙️" },
-  { id: "/settings", label: "Settings", icon: "🔧" },
-] as const;
-
 export type CustomPermissions = {
   canEdit?: boolean;
   canManageUsers?: boolean;
   canViewAll?: boolean;
   canClockDriver?: boolean;
   canViewReports?: boolean;
-  allowedPages?: string[];
 };
 
 export type User = {
