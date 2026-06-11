@@ -71,6 +71,11 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
   }
 
   function togglePerm(key: keyof CustomPermissions) {
+    // Handle allowedPages separately since it's not in ROLE_PERMISSIONS
+    if (key === 'allowedPages') {
+      return; // This is handled by the page selection UI
+    }
+    
     const base = ROLE_PERMISSIONS[role][key];
     const current = customPerms[key] ?? base;
     /* If toggling back to default, remove override */
