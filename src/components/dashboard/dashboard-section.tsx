@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List } from "lucide-react";
+import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List, Store, MapPin } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
-import { useDeliveryCategories } from "@/contexts/control-panel-context";
+import { useDeliveryCategories, useGarages } from "@/contexts/control-panel-context";
+import { useAuth } from "@/contexts/auth-context";
 import { DriverCard } from "./driver-card";
 import { DriverProfileModal } from "./driver-profile-modal";
 import type { Driver } from "@/types/driver";
@@ -48,10 +49,34 @@ function FilterCard({ icon: Icon, label, value, tone, active, onClick }: { icon:
 }
 
 export function DashboardSection() {
-  const { drivers } = useDrivers();
-  const { bikes } = useBikes();
+  const { user } = useAuth();
+  const { garages } = useGarages();
+  const { drivers: allDrivers } = useDrivers();
+  const { bikes: allBikes } = useBikes();
   const { records } = useAttendance();
   const { deliveryCategories } = useDeliveryCategories();
+
+  const managedGarage = useMemo(() => {
+    if (user?.role === "garage" && user.garageId) {
+      return garages.find((g) => g.id === user.garageId);
+    }
+    return null;
+  }, [garages, user]);
+
+  const drivers = useMemo(() => {
+    if (user?.role === "garage" && user.garageId) {
+      return allDrivers.filter((d) => d.garageId === user.garageId);
+    }
+    return allDrivers;
+  }, [allDrivers, user]);
+
+  const bikes = useMemo(() => {
+    if (user?.role === "garage" && user.garageId) {
+      return allBikes.filter((b) => b.garageId === user.garageId);
+    }
+    return allBikes;
+  }, [allBikes, user]);
+
   const bikeMap = useMemo(() => Object.fromEntries(bikes.map((b) => [b.id, b])), [bikes]);
 
   const hasOpenExit = useCallback(
@@ -89,6 +114,30 @@ export function DashboardSection() {
 
   return (
     <div className="space-y-6">
+      {/* Manager's Garage Info Bar */}
+      {managedGarage && (
+        <div className="relative overflow-hidden rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 to-brand-100/30 p-4 sm:p-5 shadow-sm">
+          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/5 blur-2xl" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-md shadow-brand-200">
+                <Store className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600">Assigned Garage</span>
+                <h2 className="text-lg font-extrabold text-surface-900 leading-tight">{managedGarage.name}</h2>
+              </div>
+            </div>
+            {managedGarage.location && (
+              <div className="flex items-center gap-2 rounded-xl bg-white/85 px-3.5 py-2 ring-1 ring-brand-100/50 text-sm text-slate-600 sm:self-center">
+                <MapPin className="h-4 w-4 text-brand-500 shrink-0" />
+                <span className="font-medium truncate">{managedGarage.location}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Filter Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <FilterCard icon={Users} label="Total Drivers" value={stats.total} tone="brand" active={filter === "all"} onClick={() => setFilter("all")} />

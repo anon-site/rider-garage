@@ -6,7 +6,7 @@ import { RouteGuard } from "@/components/auth/route-guard";
 export default function GaragesPage() {
   return (
     <AppShell title="Garages" description="Manage garage locations and assignments">
-      <RouteGuard require="canManageUsers">
+      <RouteGuard require="canViewGarages">
         <GaragesSection />
       </RouteGuard>
     </AppShell>

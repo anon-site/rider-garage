@@ -29,13 +29,14 @@ export const Sidebar = memo(function Sidebar() {
   const { user, permissions, logout } = useAuth();
 
   /* Filter nav items by role and permissions */
-  const isGarageManager = user?.role === "garage";
   const visibleItems = navItems.filter((item) => {
-    if (item.href === "/control-panel") return permissions.canManageUsers;
-    if (item.href === "/settings") return permissions.canManageUsers;
+    if (item.href === "/dashboard") return permissions.canViewDashboard;
+    if (item.href === "/garages") return permissions.canViewGarages;
+    if (item.href === "/bikes") return permissions.canViewBikes;
+    if (item.href === "/drivers") return permissions.canViewDrivers;
     if (item.href === "/reports") return permissions.canViewReports;
-    if (item.href === "/garages") return permissions.canManageUsers && !isGarageManager;
-    if (item.adminOnly) return permissions.canManageUsers;
+    if (item.href === "/settings") return permissions.canViewSettings;
+    if (item.href === "/control-panel") return permissions.canManageUsers;
     return true;
   });
 

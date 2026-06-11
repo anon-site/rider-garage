@@ -16,12 +16,19 @@ type AddUserModalProps = {
   existingIds?: string[];
 };
 
-const PERM_LABELS: { key: keyof CustomPermissions; label: string; desc: string }[] = [
+const CORE_PERMS: { key: keyof CustomPermissions; label: string; desc: string }[] = [
   { key: "canEdit",         label: "Edit Records",    desc: "Add / edit / delete bikes and drivers" },
-  { key: "canManageUsers",  label: "Control Panel",   desc: "Manage users, garages and settings" },
-  { key: "canViewAll",      label: "View All Pages",  desc: "Access Bikes, Drivers and Dashboard" },
   { key: "canClockDriver",  label: "Clock Drivers",   desc: "Clock drivers in/out from Dashboard" },
-  { key: "canViewReports",  label: "View Reports",    desc: "Access the analytics and reports page" },
+];
+
+const PAGE_PERMS: { key: keyof CustomPermissions; label: string; desc: string }[] = [
+  { key: "canViewDashboard", label: "Dashboard Page", desc: "Access the dashboard and fleet overview" },
+  { key: "canViewGarages",   label: "Garages Page",   desc: "Access the list of all garages and locations" },
+  { key: "canViewBikes",     label: "Bikes Page",     desc: "Access fleet bikes and maintenance" },
+  { key: "canViewDrivers",   label: "Drivers Page",   desc: "Access driver profiles and check shifts" },
+  { key: "canViewReports",   label: "Reports Page",   desc: "Access the analytics and reports page" },
+  { key: "canViewSettings",  label: "Settings Page",  desc: "Access the system configuration page" },
+  { key: "canManageUsers",   label: "Control Panel",  desc: "Access operations and manage users" },
 ];
 
 export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existingIds = [] }: AddUserModalProps) {
@@ -317,41 +324,84 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
                 </button>
               )}
             </div>
-            <div className="space-y-2">
-              {PERM_LABELS.map(({ key, label, desc }) => {
-                const base = ROLE_PERMISSIONS[role][key];
-                const effective = customPerms[key] ?? base;
-                const isOverridden = customPerms[key] !== undefined;
-                return (
-                  <button key={key} type="button" onClick={() => togglePerm(key)}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
-                      effective ? "bg-white ring-1 ring-violet-200 shadow-sm" : "bg-white/50 ring-1 ring-surface-200"
-                    }`}
-                  >
-                    <div className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-                      effective ? "bg-violet-600" : "bg-surface-300"
-                    }`}>
-                      <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                        effective ? "translate-x-4" : "translate-x-0.5"
-                      }`} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-sm font-semibold ${
-                          effective ? "text-surface-900" : "text-slate-400"
-                        }`}>{label}</span>
-                        {isOverridden && (
-                          <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                            effective !== base ? "bg-amber-100 text-amber-700" : "bg-surface-100 text-slate-400"
-                          }`}>{effective ? "granted" : "revoked"}</span>
-                        )}
+            <div className="space-y-4">
+              {/* Actions & Operations */}
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-violet-500 px-1">Actions & Operations</p>
+                {CORE_PERMS.map(({ key, label, desc }) => {
+                  const base = ROLE_PERMISSIONS[role][key];
+                  const effective = customPerms[key] ?? base;
+                  const isOverridden = customPerms[key] !== undefined;
+                  return (
+                    <button key={key} type="button" onClick={() => togglePerm(key)}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-all ${
+                        effective ? "bg-white ring-1 ring-violet-200 shadow-sm" : "bg-white/50 ring-1 ring-surface-200"
+                      }`}
+                    >
+                      <div className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+                        effective ? "bg-violet-600" : "bg-surface-300"
+                      }`}>
+                        <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                          effective ? "translate-x-4" : "translate-x-0.5"
+                        }`} />
                       </div>
-                      <p className="text-[11px] text-slate-400">{desc}</p>
-                    </div>
-                    {!isOverridden && <span className="shrink-0 text-[10px] font-medium text-slate-400">default</span>}
-                  </button>
-                );
-              })}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-sm font-semibold ${
+                            effective ? "text-surface-900" : "text-slate-400"
+                          }`}>{label}</span>
+                          {isOverridden && (
+                            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                              effective !== base ? "bg-amber-100 text-amber-700" : "bg-surface-100 text-slate-400"
+                            }`}>{effective ? "granted" : "revoked"}</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400">{desc}</p>
+                      </div>
+                      {!isOverridden && <span className="shrink-0 text-[10px] font-medium text-slate-400">default</span>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Page Visibility */}
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-violet-500 px-1">Page Visibility</p>
+                {PAGE_PERMS.map(({ key, label, desc }) => {
+                  const base = ROLE_PERMISSIONS[role][key];
+                  const effective = customPerms[key] ?? base;
+                  const isOverridden = customPerms[key] !== undefined;
+                  return (
+                    <button key={key} type="button" onClick={() => togglePerm(key)}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-all ${
+                        effective ? "bg-white ring-1 ring-violet-200 shadow-sm" : "bg-white/50 ring-1 ring-surface-200"
+                      }`}
+                    >
+                      <div className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+                        effective ? "bg-violet-600" : "bg-surface-300"
+                      }`}>
+                        <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                          effective ? "translate-x-4" : "translate-x-0.5"
+                        }`} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-sm font-semibold ${
+                            effective ? "text-surface-900" : "text-slate-400"
+                          }`}>{label}</span>
+                          {isOverridden && (
+                            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                              effective !== base ? "bg-amber-100 text-amber-700" : "bg-surface-100 text-slate-400"
+                            }`}>{effective ? "granted" : "revoked"}</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400">{desc}</p>
+                      </div>
+                      {!isOverridden && <span className="shrink-0 text-[10px] font-medium text-slate-400">default</span>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

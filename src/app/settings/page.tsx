@@ -6,7 +6,7 @@ import { RouteGuard } from "@/components/auth/route-guard";
 export default function SettingsPage() {
   return (
     <AppShell title="Settings" description="System configuration and preferences">
-      <RouteGuard require="canManageUsers">
+      <RouteGuard require="canViewSettings">
         <SettingsClientPage />
       </RouteGuard>
     </AppShell>

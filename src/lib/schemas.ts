@@ -12,9 +12,13 @@ export const userSchema = z.object({
   customPermissions: z.object({
     canEdit: z.boolean().optional(),
     canManageUsers: z.boolean().optional(),
-    canViewAll: z.boolean().optional(),
     canClockDriver: z.boolean().optional(),
     canViewReports: z.boolean().optional(),
+    canViewDashboard: z.boolean().optional(),
+    canViewGarages: z.boolean().optional(),
+    canViewBikes: z.boolean().optional(),
+    canViewDrivers: z.boolean().optional(),
+    canViewSettings: z.boolean().optional(),
   }).optional(),
 });
 

@@ -23,39 +23,59 @@ import { recordFailedAttempt, recordSuccessfulLogin, getRemainingLockoutTime } f
 export type Permissions = {
   canEdit: boolean;
   canManageUsers: boolean;
-  canViewAll: boolean;
   canClockDriver: boolean;
   canViewReports: boolean;
+  canViewDashboard: boolean;
+  canViewGarages: boolean;
+  canViewBikes: boolean;
+  canViewDrivers: boolean;
+  canViewSettings: boolean;
 };
 
 const ROLE_PERMISSIONS: Record<RoleId, Permissions> = {
   admin: {
     canEdit: true,
     canManageUsers: true,
-    canViewAll: true,
     canClockDriver: true,
     canViewReports: true,
+    canViewDashboard: true,
+    canViewGarages: true,
+    canViewBikes: true,
+    canViewDrivers: true,
+    canViewSettings: true,
   },
   supervisor: {
     canEdit: false,
     canManageUsers: false,
-    canViewAll: true,
     canClockDriver: false,
     canViewReports: true,
+    canViewDashboard: true,
+    canViewGarages: true,
+    canViewBikes: true,
+    canViewDrivers: true,
+    canViewSettings: false,
   },
   observer: {
     canEdit: false,
     canManageUsers: false,
-    canViewAll: true,
     canClockDriver: false,
     canViewReports: false,
+    canViewDashboard: true,
+    canViewGarages: false,
+    canViewBikes: true,
+    canViewDrivers: true,
+    canViewSettings: false,
   },
   garage: {
     canEdit: false,
     canManageUsers: false,
-    canViewAll: false,
     canClockDriver: true,
     canViewReports: false,
+    canViewDashboard: true,
+    canViewGarages: false,
+    canViewBikes: false,
+    canViewDrivers: false,
+    canViewSettings: false,
   },
 };
 
@@ -73,9 +93,13 @@ export type AuthContextValue = {
 const DEFAULT_PERMISSIONS: Permissions = {
   canEdit: false,
   canManageUsers: false,
-  canViewAll: false,
   canClockDriver: false,
   canViewReports: false,
+  canViewDashboard: false,
+  canViewGarages: false,
+  canViewBikes: false,
+  canViewDrivers: false,
+  canViewSettings: false,
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -105,11 +129,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user.customPermissions) return base;
     const cp = user.customPermissions as CustomPermissions;
     return {
-      canEdit:        cp.canEdit        ?? base.canEdit,
-      canManageUsers: cp.canManageUsers ?? base.canManageUsers,
-      canViewAll:     cp.canViewAll     ?? base.canViewAll,
-      canClockDriver: cp.canClockDriver ?? base.canClockDriver,
-      canViewReports: cp.canViewReports ?? base.canViewReports,
+      canEdit:          cp.canEdit          ?? base.canEdit,
+      canManageUsers:   cp.canManageUsers   ?? base.canManageUsers,
+      canClockDriver:   cp.canClockDriver   ?? base.canClockDriver,
+      canViewReports:   cp.canViewReports   ?? base.canViewReports,
+      canViewDashboard: cp.canViewDashboard ?? base.canViewDashboard,
+      canViewGarages:   cp.canViewGarages   ?? base.canViewGarages,
+      canViewBikes:     cp.canViewBikes     ?? base.canViewBikes,
+      canViewDrivers:   cp.canViewDrivers   ?? base.canViewDrivers,
+      canViewSettings:  cp.canViewSettings  ?? base.canViewSettings,
     };
   }, [user]);
 

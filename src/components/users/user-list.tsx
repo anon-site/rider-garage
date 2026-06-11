@@ -1,28 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, ShieldCheck, Fingerprint, Crown, Eye, Wrench } from "lucide-react";
+import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, ShieldCheck, Fingerprint, Crown, Eye, Wrench, MapPin, Bike as BikeIcon, Users } from "lucide-react";
 import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
+import { useBikes } from "@/contexts/bikes-context";
+import { useDrivers } from "@/contexts/drivers-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 import { ConfirmDeleteModal } from "@/components/shared/confirm-delete-modal";
 
 const PERM_LABELS: Record<keyof CustomPermissions, string> = {
-  canEdit:        "Edit",
-  canManageUsers: "Control Panel",
-  canViewAll:     "View All",
-  canClockDriver: "Clock",
-  canViewReports: "Reports",
+  canEdit:          "Edit",
+  canManageUsers:   "Control Panel",
+  canClockDriver:   "Clock",
+  canViewReports:   "Reports",
+  canViewDashboard: "Dashboard",
+  canViewGarages:   "Garages",
+  canViewBikes:     "Bikes",
+  canViewDrivers:   "Drivers",
+  canViewSettings:  "Settings",
 };
 
 const PERM_ICONS: Record<keyof CustomPermissions, typeof Eye> = {
-  canEdit:        Wrench,
-  canManageUsers: Crown,
-  canViewAll:     Eye,
-  canClockDriver: ShieldCheck,
-  canViewReports: ShieldCheck,
+  canEdit:          Wrench,
+  canManageUsers:   Crown,
+  canClockDriver:   ShieldCheck,
+  canViewReports:   ShieldCheck,
+  canViewDashboard: Eye,
+  canViewGarages:   Store,
+  canViewBikes:     Wrench,
+  canViewDrivers:   UserIcon,
+  canViewSettings:  Wrench,
 };
 
 type ViewMode = "list" | "grid";
@@ -119,8 +129,11 @@ function InfoChip({ icon: Icon, children, className }: { icon: typeof Mail; chil
 
 export function UserList({ users, onEdit, onDelete, viewMode = "grid" }: UserListProps) {
   const { garages } = useGarages();
+  const { bikes } = useBikes();
+  const { drivers } = useDrivers();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const isGrid = viewMode === "grid";
+  const garageMap = Object.fromEntries(garages.map((g) => [g.id, g]));
   const garageNameMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
 
   function handleDeleteClick(id: string) {
@@ -170,17 +183,32 @@ export function UserList({ users, onEdit, onDelete, viewMode = "grid" }: UserLis
                     <InfoChip icon={AtSign} className="font-medium text-brand-600">
                       {user.username}
                     </InfoChip>
-                    {user.email && (
-                      <InfoChip icon={Mail}>{user.email}</InfoChip>
-                    )}
                     {user.phone && (
                       <InfoChip icon={Phone}>{user.phone}</InfoChip>
                     )}
-                    {user.role === "garage" && user.garageId && (
-                      <InfoChip icon={Store} className="text-amber-600">
-                        {garageNameMap[user.garageId] ?? "Unknown Garage"}
-                      </InfoChip>
-                    )}
+                    {user.role === "garage" && user.garageId && (() => {
+                      const garage = garageMap[user.garageId];
+                      const garageBikesCount = bikes.filter((b) => b.garageId === user.garageId).length;
+                      const garageDriversCount = drivers.filter((d) => d.garageId === user.garageId).length;
+                      return (
+                        <>
+                          <InfoChip icon={Store} className="text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
+                            {garage?.name ?? "Unknown Garage"}
+                          </InfoChip>
+                          {garage?.location && (
+                            <InfoChip icon={MapPin} className="text-slate-500">
+                              {garage.location}
+                            </InfoChip>
+                          )}
+                          <InfoChip icon={BikeIcon} className="text-brand-600">
+                            {garageBikesCount} Bikes
+                          </InfoChip>
+                          <InfoChip icon={Users} className="text-violet-600">
+                            {garageDriversCount} Drivers
+                          </InfoChip>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -288,24 +316,41 @@ export function UserList({ users, onEdit, onDelete, viewMode = "grid" }: UserLis
                 {user.username}
               </span>
             </div>
-            {user.email && (
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <Mail className="h-3.5 w-3.5" />
-                <span className="truncate">{user.email}</span>
-              </div>
-            )}
             {user.phone && (
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <Phone className="h-3.5 w-3.5" />
                 <span className="truncate">{user.phone}</span>
               </div>
             )}
-            {user.role === "garage" && user.garageId && (
-              <div className="flex items-center gap-2 text-xs text-amber-600">
-                <Store className="h-3.5 w-3.5" />
-                <span className="truncate">{garageNameMap[user.garageId] ?? "Unknown Garage"}</span>
-              </div>
-            )}
+            {user.role === "garage" && user.garageId && (() => {
+              const garage = garageMap[user.garageId];
+              const garageBikesCount = bikes.filter((b) => b.garageId === user.garageId).length;
+              const garageDriversCount = drivers.filter((d) => d.garageId === user.garageId).length;
+              return (
+                <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3 space-y-2 text-xs">
+                  <div className="flex items-center gap-2 font-semibold text-amber-800">
+                    <Store className="h-4 w-4 text-amber-500 shrink-0" />
+                    <span className="truncate">{garage?.name ?? "Unknown Garage"}</span>
+                  </div>
+                  {garage?.location && (
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">{garage.location}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-4 text-slate-600">
+                    <span className="inline-flex items-center gap-1">
+                      <BikeIcon className="h-3.5 w-3.5 text-brand-500 shrink-0" />
+                      <strong>{garageBikesCount}</strong> Bikes
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                      <strong>{garageDriversCount}</strong> Drivers
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* ID & Permissions */}

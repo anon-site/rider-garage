@@ -10,9 +10,13 @@ export type RoleId = (typeof ROLES)[number]["id"];
 export type CustomPermissions = {
   canEdit?: boolean;
   canManageUsers?: boolean;
-  canViewAll?: boolean;
   canClockDriver?: boolean;
   canViewReports?: boolean;
+  canViewDashboard?: boolean;
+  canViewGarages?: boolean;
+  canViewBikes?: boolean;
+  canViewDrivers?: boolean;
+  canViewSettings?: boolean;
 };
 
 export type User = {
