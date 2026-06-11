@@ -28,6 +28,7 @@ import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
 import { useAuth } from "@/contexts/auth-context";
 import { ROLES } from "@/types/user";
+import type { Bike } from "@/types/bike";
 import { cn } from "@/lib/utils";
 import { DeliveryCategoriesTab } from "./delivery-categories-tab";
 
@@ -250,20 +251,28 @@ export function CpDashboard() {
     { id: "delivery-categories", label: "Delivery Categories", icon: Package },
   ];
 
+  /* ── Filter data for garage managers ── */
+  const filteredDrivers = useMemo(() => 
+    isGarageManager && user?.garageId 
+      ? drivers.filter((d) => d.garageId === user.garageId)
+      : drivers,
+    [drivers, isGarageManager, user?.garageId]
+  );
+  
+  const filteredBikes = useMemo(() => 
+    isGarageManager && user?.garageId 
+      ? bikes.filter((b) => b.garageId === user.garageId)
+      : bikes,
+    [bikes, isGarageManager, user?.garageId]
+  );
+  
+  const filteredRecords = useMemo(() => {
+    const filteredDriverIds = new Set(filteredDrivers.map(d => d.id));
+    return records.filter((r) => filteredDriverIds.has(r.driverId));
+  }, [records, filteredDrivers]);
+
   /* ── computed stats ── */
   const stats = useMemo(() => {
-    // Filter data for garage managers
-    const filteredDrivers = isGarageManager && user?.garageId 
-      ? drivers.filter((d) => d.garageId === user.garageId)
-      : drivers;
-    
-    const filteredBikes = isGarageManager && user?.garageId 
-      ? bikes.filter((b) => b.garageId === user.garageId)
-      : bikes;
-    
-    const filteredDriverIds = new Set(filteredDrivers.map(d => d.id));
-    const filteredRecords = records.filter((r) => filteredDriverIds.has(r.driverId));
-    
     const activeDrivers = filteredDrivers.filter((d) =>
       filteredRecords.some((r) => r.driverId === d.id && r.clockIn && !r.clockOut)
     );
@@ -292,30 +301,25 @@ export function CpDashboard() {
 
     return {
       totalUsers: users.length,
-      totalDrivers: drivers.length,
+      totalDrivers: filteredDrivers.length,
       activeDrivers: activeDrivers.length,
       totalGarages: garageList.length,
       totalCapacity,
-      totalBikes: bikes.length,
+      totalBikes: filteredBikes.length,
       bikesGood,
       bikesIssue,
       totalOrders,
       avgRating: avgRating.toFixed(1),
       totalHours: fmtHours(totalHours),
-      totalSessions: records.length,
+      totalSessions: filteredRecords.length,
       roleCount,
     };
-  }, [users, garageList, drivers, bikes, records]);
+  }, [users, garageList, filteredDrivers, filteredBikes, filteredRecords, isGarageManager, user?.garageId]);
 
   /* ── per-driver attendance summary ── */
   const driverSummaries = useMemo(() => {
-    // Filter drivers for garage managers
-    const filteredDrivers = isGarageManager && user?.garageId 
-      ? drivers.filter((d) => d.garageId === user.garageId)
-      : drivers;
-    
     return filteredDrivers.map((d) => {
-      const dRecords = records
+      const dRecords = filteredRecords
         .filter((r) => r.driverId === d.id)
         .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime());
       const totalOrders = dRecords.reduce((s, r) => s + r.ordersDelivered, 0);
@@ -328,10 +332,10 @@ export function CpDashboard() {
         0
       );
       const isActive = dRecords.some((r) => r.clockIn && !r.clockOut);
-      const assignedBike = d.bikeId ? bikes.find((b) => b.id === d.bikeId) : undefined;
+      const assignedBike = d.bikeId ? filteredBikes.find((b) => b.id === d.bikeId) : undefined;
       return { ...d, dRecords, totalOrders, avgRating, totalHours, isActive, assignedBike };
     });
-  }, [drivers, records, bikes, isGarageManager, user?.garageId]);
+  }, [filteredDrivers, filteredRecords, filteredBikes]);
 
   return (
     <div className="space-y-6">
@@ -520,7 +524,7 @@ export function CpDashboard() {
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredBikes.map((bike) => {
+          {filteredBikes.map((bike: Bike) => {
             const driver = bike.driverId
               ? drivers.find((d) => d.id === bike.driverId)
               : undefined;
