@@ -253,33 +253,25 @@ export function CpDashboard() {
 
   /* ── Filter data for garage managers ── */
   const filteredDrivers = useMemo(() => {
+    let filtered = drivers;
+    
+    // Garage Manager can only see drivers from their own garage
     if (isGarageManager && user?.garageId) {
-      const garageDrivers = drivers.filter((d) => d.garageId === user.garageId);
-      console.log('Garage Manager Debug:', {
-        isGarageManager,
-        userGarageId: user.garageId,
-        totalDrivers: drivers.length,
-        garageDrivers: garageDrivers.length,
-        garageDriversList: garageDrivers.map(d => ({ id: d.id, name: d.name, garageId: d.garageId }))
-      });
-      return garageDrivers;
+      filtered = filtered.filter((d) => d.garageId === user.garageId);
     }
-    return drivers;
+    
+    return filtered;
   }, [drivers, isGarageManager, user?.garageId]);
   
   const filteredBikes = useMemo(() => {
+    let filtered = bikes;
+    
+    // Garage Manager can only see bikes from their own garage
     if (isGarageManager && user?.garageId) {
-      const garageBikes = bikes.filter((b) => b.garageId === user.garageId);
-      console.log('Garage Bikes Debug:', {
-        isGarageManager,
-        userGarageId: user.garageId,
-        totalBikes: bikes.length,
-        garageBikes: garageBikes.length,
-        garageBikesList: garageBikes.map(b => ({ id: b.id, plateNumber: b.plateNumber, garageId: b.garageId }))
-      });
-      return garageBikes;
+      filtered = filtered.filter((b) => b.garageId === user.garageId);
     }
-    return bikes;
+    
+    return filtered;
   }, [bikes, isGarageManager, user?.garageId]);
   
   const filteredRecords = useMemo(() => {
