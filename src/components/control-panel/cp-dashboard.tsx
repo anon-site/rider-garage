@@ -252,21 +252,35 @@ export function CpDashboard() {
 
   /* ── computed stats ── */
   const stats = useMemo(() => {
-    const activeDrivers = drivers.filter((d) =>
-      records.some((r) => r.driverId === d.id && r.clockIn && !r.clockOut)
+    // Filter data for garage managers
+    const filteredDrivers = isGarageManager && user?.garageId 
+      ? drivers.filter((d) => d.garageId === user.garageId)
+      : drivers;
+    
+    const filteredBikes = isGarageManager && user?.garageId 
+      ? bikes.filter((b) => b.garageId === user.garageId)
+      : bikes;
+    
+    const filteredDriverIds = new Set(filteredDrivers.map(d => d.id));
+    const filteredRecords = records.filter((r) => filteredDriverIds.has(r.driverId));
+    
+    const activeDrivers = filteredDrivers.filter((d) =>
+      filteredRecords.some((r) => r.driverId === d.id && r.clockIn && !r.clockOut)
     );
-    const totalOrders = records.reduce((s, r) => s + (r.ordersDelivered ?? 0), 0);
+    const totalOrders = filteredRecords.reduce((s, r) => s + (r.ordersDelivered ?? 0), 0);
     const avgRating =
-      records.length > 0
-        ? records.reduce((s, r) => s + r.rating, 0) / records.length
+      filteredRecords.length > 0
+        ? filteredRecords.reduce((s, r) => s + r.rating, 0) / filteredRecords.length
         : 0;
-    const totalHours = records.reduce(
+    const totalHours = filteredRecords.reduce(
       (s, r) => s + calcHours(r.clockIn, r.clockOut),
       0
     );
-    const totalCapacity = garageList.reduce((s, g) => s + g.capacity, 0);
-    const bikesGood = bikes.filter((b) => b.status === "good").length;
-    const bikesIssue = bikes.filter((b) => b.status !== "good").length;
+    const totalCapacity = isGarageManager && user?.garageId
+      ? garageList.find(g => g.id === user.garageId)?.capacity ?? 0
+      : garageList.reduce((s, g) => s + g.capacity, 0);
+    const bikesGood = filteredBikes.filter((b) => b.status === "good").length;
+    const bikesIssue = filteredBikes.filter((b) => b.status !== "good").length;
 
     const roleCount = ROLES.reduce(
       (acc, r) => {

@@ -61,10 +61,11 @@ function FilterCard({ icon: Icon, label, value, tone, active, onClick }: {
 
 export function BikesSection() {
   const { bikes, addBike, updateBike, changeBikeId, deleteBike } = useBikes();
-  const { permissions } = useAuth();
+  const { permissions, user } = useAuth();
   const { garages } = useGarages();
   const readOnly = !permissions.canEdit;
   const isAdmin = permissions.canManageUsers;
+  const isGarageManager = user?.role === "garage";
 
   const [selectedGarageId, setSelectedGarageId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -87,10 +88,16 @@ export function BikesSection() {
 
   /* bikes scoped to selected garage (or all) */
   const scopedBikes = useMemo(() => {
+    // Garage Manager can only see bikes from their own garage
+    if (isGarageManager && user?.garageId) {
+      return bikes.filter((b) => b.garageId === user.garageId);
+    }
+    
+    // Filter by garage for other roles
     if (!selectedGarageId) return bikes;
     if (selectedGarageId === "__none__") return bikes.filter((b) => !b.garageId);
     return bikes.filter((b) => b.garageId === selectedGarageId);
-  }, [bikes, selectedGarageId]);
+  }, [bikes, selectedGarageId, isGarageManager, user?.garageId]);
 
   const stats = useMemo(() => {
     const total = scopedBikes.length;

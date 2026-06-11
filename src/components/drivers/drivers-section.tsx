@@ -68,11 +68,12 @@ function FilterCard({ icon: Icon, label, value, tone, active, onClick }: { icon:
 
 export function DriversSection() {
   const { drivers, addDriver, updateDriver, changeDriverId, deleteDriver } = useDrivers();
-  const { permissions } = useAuth();
+  const { permissions, user } = useAuth();
   const { garages } = useGarages();
   const { deliveryCategories } = useDeliveryCategories();
   const readOnly = !permissions.canEdit;
   const isAdmin = permissions.canManageUsers;
+  const isGarageManager = user?.role === "garage";
 
   const [selectedGarageId, setSelectedGarageId] = useState<string | null>(null);
   const [selectedDeliveryCategoryId, setSelectedDeliveryCategoryId] = useState<string | null>(null);
@@ -106,12 +107,17 @@ export function DriversSection() {
   const scopedDrivers = useMemo(() => {
     let filtered = drivers;
     
-    // Filter by garage
-    if (selectedGarageId) {
-      if (selectedGarageId === "__none__") {
-        filtered = filtered.filter((d) => !d.garageId);
-      } else {
-        filtered = filtered.filter((d) => d.garageId === selectedGarageId);
+    // Garage Manager can only see drivers from their own garage
+    if (isGarageManager && user?.garageId) {
+      filtered = filtered.filter((d) => d.garageId === user.garageId);
+    } else {
+      // Filter by garage for other roles
+      if (selectedGarageId) {
+        if (selectedGarageId === "__none__") {
+          filtered = filtered.filter((d) => !d.garageId);
+        } else {
+          filtered = filtered.filter((d) => d.garageId === selectedGarageId);
+        }
       }
     }
     
@@ -123,7 +129,7 @@ export function DriversSection() {
     }
     
     return filtered;
-  }, [drivers, selectedGarageId, selectedDeliveryCategoryId]);
+  }, [drivers, selectedGarageId, selectedDeliveryCategoryId, isGarageManager, user?.garageId]);
 
   const stats = useMemo(() => {
     const total = scopedDrivers.length;
@@ -312,8 +318,8 @@ export function DriversSection() {
         <FilterCard icon={Clock} label={<><span className="hidden sm:inline">Waiting</span><span className="sm:hidden">Wait</span></>} value={stats.waiting} tone="amber" active={filter === "waiting"} onClick={() => setFilter("waiting")} />
       </div>
 
-      {/* Mobile: Garage selector - only show on mobile */}
-      {isAdmin && (
+      {/* Mobile: Garage selector - only show on mobile and for admins */}
+      {isAdmin && !isGarageManager && (
         <div className="sm:hidden space-y-2">
           {/* Mobile dropdown trigger */}
           <button
