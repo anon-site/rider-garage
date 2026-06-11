@@ -350,7 +350,8 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
             </div>
             <div className="space-y-2">
               {PERM_LABELS.filter(({ key }) => key !== 'allowedPages').map(({ key, label, desc }) => {
-                const base = ROLE_PERMISSIONS[role][key];
+                const permissionKey = key as keyof typeof ROLE_PERMISSIONS.garage;
+                const base = ROLE_PERMISSIONS[role][permissionKey];
                 const effective = customPerms[key] ?? base;
                 const isOverridden = customPerms[key] !== undefined;
                 return (
