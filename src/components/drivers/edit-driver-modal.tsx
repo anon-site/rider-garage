@@ -16,9 +16,12 @@ type EditDriverModalProps = {
   onChangeId?: (oldId: string, newId: string) => Promise<void>;
   onClose: () => void;
   existingIds?: string[];
+  existingNames?: string[];
+  existingPhones?: string[];
+  existingAppIds?: string[];
 };
 
-export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingIds = [] }: EditDriverModalProps) {
+export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingIds = [], existingNames = [], existingPhones = [], existingAppIds = [] }: EditDriverModalProps) {
   useModalBehavior(true, onClose);
   const { bikes } = useBikes();
   const { garages } = useGarages();
@@ -63,6 +66,15 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
   const otherIds = driver ? existingIds.filter(id => id !== driver.id) : existingIds;
   const isDuplicateId = customId.trim() !== "" && otherIds.includes(customId.trim());
   const hasIdChanged = driver && customId.trim() !== driver.id;
+  
+  // Check for duplicates (exclude current driver)
+  const otherNames = driver ? existingNames.filter(n => n.toLowerCase() !== driver.name.toLowerCase()) : existingNames;
+  const otherPhones = driver ? existingPhones.filter(p => p !== driver.phone) : existingPhones;
+  const otherAppIds = driver ? existingAppIds.filter(a => a.toLowerCase() !== driver.appId?.toLowerCase()) : existingAppIds;
+  
+  const isDuplicateName = name.trim() !== "" && otherNames.some(n => n.toLowerCase() === name.trim().toLowerCase());
+  const isDuplicatePhone = phone.trim() !== "" && otherPhones.includes(phone.trim());
+  const isDuplicateAppId = appId.trim() !== "" && otherAppIds.some(a => a.toLowerCase() === appId.trim().toLowerCase());
 
   if (!driver) return null;
 
@@ -72,6 +84,23 @@ export function EditDriverModal({ driver, onSave, onChangeId, onClose, existingI
     
     if (!name.trim() || !appId.trim() || !driver) return;
     if (isDuplicateId) return;
+    
+    // Check for duplicates
+    const errors: Record<string, string> = {};
+    if (isDuplicateName) {
+      errors.name = "Driver name already exists";
+    }
+    if (isDuplicatePhone) {
+      errors.phone = "Phone number already exists";
+    }
+    if (isDuplicateAppId) {
+      errors.appId = "App ID already exists";
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
 
     // Validate with Zod
     const formData: DriverEditFormData = {

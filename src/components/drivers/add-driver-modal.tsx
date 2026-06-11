@@ -57,9 +57,12 @@ type AddDriverModalProps = {
   onSubmit: (driver: Omit<Driver, "id">, customId?: string) => void;
   onClose: () => void;
   existingIds?: string[];
+  existingNames?: string[];
+  existingPhones?: string[];
+  existingAppIds?: string[];
 };
 
-export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDriverModalProps) {
+export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNames = [], existingPhones = [], existingAppIds = [] }: AddDriverModalProps) {
   useModalBehavior(true, onClose);
   const { bikes } = useBikes();
   const { garages } = useGarages();
@@ -79,6 +82,9 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const isDuplicateId = customId.trim() !== "" && existingIds.includes(customId.trim());
+  const isDuplicateName = name.trim() !== "" && existingNames.some(n => n.toLowerCase() === name.trim().toLowerCase());
+  const isDuplicatePhone = phone.trim() !== "" && existingPhones.includes(phone.trim());
+  const isDuplicateAppId = appId.trim() !== "" && existingAppIds.some(a => a.toLowerCase() === appId.trim().toLowerCase());
 
   // Generate suggestion based on existing IDs
   const suggestedId = useMemo(() => generateNextIdSuggestion(existingIds), [existingIds]);
@@ -96,6 +102,23 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [] }: AddDrive
     setValidationErrors({});
     
     if (isDuplicateId) return;
+    
+    // Check for duplicates
+    const errors: Record<string, string> = {};
+    if (isDuplicateName) {
+      errors.name = "Driver name already exists";
+    }
+    if (isDuplicatePhone) {
+      errors.phone = "Phone number already exists";
+    }
+    if (isDuplicateAppId) {
+      errors.appId = "App ID already exists";
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
     
     // Validate with Zod
     const formData: DriverFormData = {

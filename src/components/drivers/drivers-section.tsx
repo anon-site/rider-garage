@@ -470,7 +470,14 @@ export function DriversSection() {
       <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} viewMode={viewMode} deliveryCategories={deliveryCategories} />
 
       {!readOnly && showAdd && (
-        <AddDriverModal onSubmit={addDriver} onClose={() => setShowAdd(false)} existingIds={drivers.map(d => d.id)} />
+        <AddDriverModal 
+          onSubmit={addDriver} 
+          onClose={() => setShowAdd(false)} 
+          existingIds={drivers.map(d => d.id)}
+          existingNames={drivers.map(d => d.name)}
+          existingPhones={drivers.map(d => d.phone)}
+          existingAppIds={drivers.map(d => d.appId).filter(Boolean)}
+        />
       )}
       {!readOnly && editingDriver && (
         <EditDriverModal
@@ -479,6 +486,9 @@ export function DriversSection() {
           onChangeId={changeDriverId}
           onClose={() => setEditingDriver(null)}
           existingIds={drivers.map(d => d.id)}
+          existingNames={drivers.map(d => d.name)}
+          existingPhones={drivers.map(d => d.phone)}
+          existingAppIds={drivers.map(d => d.appId).filter(Boolean)}
         />
       )}
     </div>
