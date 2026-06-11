@@ -68,6 +68,8 @@ export type AuthContextValue = {
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** Check if user can access a specific page */
+  canAccessPage: (pagePath: string) => boolean;
 };
 
 const DEFAULT_PERMISSIONS: Permissions = {
@@ -168,9 +170,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem("rider-garage-user");
   }, []);
 
+  const canAccessPage = useCallback((pagePath: string) => {
+    if (!user) return false;
+    
+    // If user has canViewAll permission, they can access all pages
+    if (permissions.canViewAll) return true;
+    
+    // Check if user has specific allowed pages
+    const allowedPages = user.customPermissions?.allowedPages;
+    if (!allowedPages || allowedPages.length === 0) return false;
+    
+    // Check exact match or prefix match for nested routes
+    return allowedPages.some(page => 
+      pagePath === page || pagePath.startsWith(page + "/")
+    );
+  }, [user, permissions]);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ user, permissions, login, logout, isAuthenticated: !!user, isLoading }),
-    [user, permissions, login, logout, isLoading]
+    () => ({ user, permissions, login, logout, isAuthenticated: !!user, isLoading, canAccessPage }),
+    [user, permissions, login, logout, isLoading, canAccessPage]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { X, Plus, ShieldCheck, RotateCcw, Eye, EyeOff } from "lucide-react";
 import type { User, RoleId, CustomPermissions } from "@/types/user";
-import { ROLES } from "@/types/user";
+import { ROLES, AVAILABLE_PAGES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
 import { hashPassword } from "@/lib/crypto";
@@ -35,6 +35,7 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
   const [role, setRole] = useState<RoleId>("observer");
   const [garageId, setGarageId] = useState("");
   const [customPerms, setCustomPerms] = useState<CustomPermissions>({});
+  const [allowedPages, setAllowedPages] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const [customId, setCustomId] = useState("");
@@ -80,6 +81,14 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
     }
   }
 
+  function togglePage(pageId: string) {
+    setAllowedPages(prev => 
+      prev.includes(pageId) 
+        ? prev.filter(p => p !== pageId)
+        : [...prev, pageId]
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setValidationErrors({});
@@ -115,7 +124,12 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
     
     const payload: Omit<User, "id"> = { name, username, password: hashedPassword, email, phone, role };
     if (role === "garage" && garageId) payload.garageId = garageId;
-    if (Object.keys(customPerms).length > 0) payload.customPermissions = customPerms;
+    
+    const finalCustomPerms = { ...customPerms };
+    if (allowedPages.length > 0) {
+      finalCustomPerms.allowedPages = allowedPages;
+    }
+    if (Object.keys(finalCustomPerms).length > 0) payload.customPermissions = finalCustomPerms;
     onSubmit(payload, customId.trim() || undefined);
     onClose();
   }
@@ -375,6 +389,63 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
               </select>
             </div>
           )}
+
+          {/* ── Page Access Control ───────────────────────────────────── */}
+          <div className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-sky-600" />
+                <p className="text-xs font-bold uppercase tracking-wider text-sky-700">Page Access</p>
+              </div>
+              {allowedPages.length > 0 && (
+                <button 
+                  type="button" 
+                  onClick={() => setAllowedPages([])} 
+                  className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Clear All
+                </button>
+              )}
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs text-slate-600">Select which pages this user can access:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {AVAILABLE_PAGES.map((page) => {
+                  const isSelected = allowedPages.includes(page.id);
+                  return (
+                    <button
+                      key={page.id}
+                      type="button"
+                      onClick={() => togglePage(page.id)}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-all ${
+                        isSelected 
+                          ? "bg-white ring-1 ring-sky-200 shadow-sm" 
+                          : "bg-white/50 ring-1 ring-surface-200"
+                      }`}
+                    >
+                      <span className="text-lg">{page.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <span className={`text-sm font-medium ${
+                          isSelected ? "text-surface-900" : "text-slate-400"
+                        }`}>{page.label}</span>
+                      </div>
+                      {isSelected && (
+                        <div className="h-4 w-4 rounded-full bg-sky-600 flex items-center justify-center">
+                          <div className="h-2 w-2 rounded-full bg-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {allowedPages.length === 0 && (
+                <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                  ⚠️ No pages selected - user will not have access to any pages unless "View All Pages" permission is granted
+                </p>
+              )}
+            </div>
+          </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-50">
