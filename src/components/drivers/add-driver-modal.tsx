@@ -98,6 +98,24 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
   const isDuplicatePhone = phone.trim() !== "" && existingPhones.includes(phone.trim());
   const isDuplicateAppId = appId.trim() !== "" && existingAppIds.some(a => a.toLowerCase() === appId.trim().toLowerCase());
 
+  const nameWarning = isDuplicateName ? "Warning: This name is already used by another driver." : "";
+
+  const phoneWarning = useMemo(() => {
+    if (isDuplicatePhone) {
+      const conflictNames = existingNames.filter((_, i) => existingPhones[i] === phone.trim()).join(', ');
+      return `Warning: Phone number is already used by: ${conflictNames || "another driver"}`;
+    }
+    return "";
+  }, [isDuplicatePhone, phone, existingPhones, existingNames]);
+
+  const appIdWarning = useMemo(() => {
+    if (isDuplicateAppId) {
+      const conflictNames = existingNames.filter((_, i) => existingAppIds[i]?.toLowerCase() === appId.trim().toLowerCase()).join(', ');
+      return `Warning: App ID is already used by: ${conflictNames || "another driver"}`;
+    }
+    return "";
+  }, [isDuplicateAppId, appId, existingAppIds, existingNames]);
+
   // Generate suggestion based on existing IDs
   const suggestedId = useMemo(() => generateNextIdSuggestion(existingIds), [existingIds]);
 
@@ -114,59 +132,6 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
     setValidationErrors({});
     
     if (isDuplicateId) return;
-    
-    // Check for duplicates and show all existing conflicts
-    const errors: Record<string, string> = {};
-    
-    // Find drivers with conflicting data
-    const conflictingDrivers = [];
-    if (isDuplicateName || isDuplicatePhone || isDuplicateAppId) {
-      for (let i = 0; i < existingNames.length; i++) {
-        const hasNameConflict = isDuplicateName && normalizeName(existingNames[i]) === normalizeName(name);
-        const hasPhoneConflict = isDuplicatePhone && existingPhones[i] === phone.trim();
-        const hasAppIdConflict = isDuplicateAppId && existingAppIds[i]?.toLowerCase() === appId.trim().toLowerCase();
-        
-        if (hasNameConflict || hasPhoneConflict || hasAppIdConflict) {
-          conflictingDrivers.push({
-            name: existingNames[i],
-            phone: existingPhones[i],
-            appId: existingAppIds[i],
-            conflicts: {
-              name: hasNameConflict,
-              phone: hasPhoneConflict,
-              appId: hasAppIdConflict
-            }
-          });
-        }
-      }
-    }
-    
-    if (isDuplicateName) {
-      errors.name = "Driver name already exists";
-    }
-    if (isDuplicatePhone) {
-      const phoneConflicts = conflictingDrivers.filter(d => d.conflicts.phone);
-      if (phoneConflicts.length > 0) {
-        const conflictNames = phoneConflicts.map(d => d.name).join(', ');
-        errors.phone = `Phone number already exists (used by: ${conflictNames})`;
-      } else {
-        errors.phone = "Phone number already exists";
-      }
-    }
-    if (isDuplicateAppId) {
-      const appIdConflicts = conflictingDrivers.filter(d => d.conflicts.appId);
-      if (appIdConflicts.length > 0) {
-        const conflictNames = appIdConflicts.map(d => d.name).join(', ');
-        errors.appId = `App ID already exists (used by: ${conflictNames})`;
-      } else {
-        errors.appId = "App ID already exists";
-      }
-    }
-    
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      return;
-    }
     
     // Validate with Zod
     const formData: DriverFormData = {
@@ -281,6 +246,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
                 }`}
               />
               {validationErrors.name && <p className="text-xs text-rose-500">{validationErrors.name}</p>}
+              {nameWarning && <p className="text-xs text-amber-600 font-medium flex items-center gap-1">⚠️ {nameWarning}</p>}
             </div>
           </div>
 
@@ -297,6 +263,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
                 }`}
               />
               {validationErrors.phone && <p className="text-xs text-rose-500">{validationErrors.phone}</p>}
+              {phoneWarning && <p className="text-xs text-amber-600 font-medium flex items-center gap-1">⚠️ {phoneWarning}</p>}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Join Date</label>
@@ -323,6 +290,7 @@ export function AddDriverModal({ onSubmit, onClose, existingIds = [], existingNa
                 }`}
               />
               {validationErrors.appId && <p className="text-xs text-rose-500">{validationErrors.appId}</p>}
+              {appIdWarning && <p className="text-xs text-amber-600 font-medium flex items-center gap-1">⚠️ {appIdWarning}</p>}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-surface-900">Garage</label>
