@@ -71,18 +71,18 @@ export function DriverCard({ driver, bike, garage, onProfile, viewMode = "grid",
 
   if (viewMode === "list") {
     return (
-      <div className="group flex items-center gap-4 rounded-xl border border-surface-200 bg-white px-4 py-3.5 shadow-sm transition-all hover:shadow-md hover:border-brand-200">
+      <div className="group flex items-center gap-4 rounded-xl border border-surface-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md hover:border-brand-200">
         <div className={`h-1 w-1 self-stretch rounded-full ${isOutside ? "bg-emerald-500" : "bg-surface-300"}`} />
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 text-white text-xs font-bold shadow-sm">
           {initials}
         </div>
-        <div className="min-w-0 flex-1 grid grid-cols-[1fr_auto] sm:grid-cols-[1.5fr_1fr_1fr_auto] items-center gap-x-5 gap-y-1">
+        <div className="min-w-0 flex-1 grid grid-cols-[1fr_auto] sm:grid-cols-[1.2fr_1fr_1fr_1fr_auto] items-center gap-x-4 gap-y-1">
           <div className="min-w-0">
             <p className="text-sm font-bold text-surface-900 truncate">{driver.name}</p>
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <p className="flex items-center gap-1">
-                <Phone className="h-3 w-3 shrink-0" />
-                <span className="truncate">{driver.phone}</span>
+                <Calendar className="h-3 w-3 shrink-0 text-slate-400" />
+                <span className="truncate">{driver.joinDate ?? "—"}</span>
               </p>
               {showGarage && garage && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 ring-1 ring-brand-100">
@@ -92,9 +92,9 @@ export function DriverCard({ driver, bike, garage, onProfile, viewMode = "grid",
               )}
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
-            <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span>{driver.joinDate ?? "—"}</span>
+          <div className="hidden sm:flex items-center gap-1.5 text-xs">
+            <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span className="text-slate-600">{driver.phone}</span>
           </div>
           <div className="hidden sm:flex items-center gap-1.5 text-xs">
             {bike ? (
@@ -109,14 +109,16 @@ export function DriverCard({ driver, bike, garage, onProfile, viewMode = "grid",
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 justify-end">
+          <div className="hidden sm:flex items-center gap-2">
             {deliveryCategoryBadges}
             {latestRecord && latestRecord.rating > 0 && (
-              <span className={`hidden sm:inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold ring-1 ${latestRecord.rating >= 80 ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-rose-200"}`}>
+              <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold ring-1 ${latestRecord.rating >= 80 ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-rose-200"}`}>
                 <Star className={`h-3.5 w-3.5 fill-current ${latestRecord.rating >= 80 ? "text-emerald-500" : "text-rose-500"}`} />
                 {latestRecord.rating}
               </span>
             )}
+          </div>
+          <div className="flex items-center gap-2 justify-end">
             {statusBadge}
             <button
               type="button"
