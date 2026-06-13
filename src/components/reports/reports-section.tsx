@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronUp, Filter, AlertTriangle,
   CheckCircle2, ArrowUpRight, ArrowDownRight, Minus,
   FileText, Activity, ShieldOff, FileSpreadsheet, Loader2,
+  X, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { exportPDF, exportExcel } from "@/lib/export-utils";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -29,6 +30,9 @@ function fmtHours(h: number) {
 }
 function fmtShortDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+}
+function fmtDisplayDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 }
 
 /* ── types ── */
@@ -134,22 +138,31 @@ export function ReportsSection() {
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
   const exportRef = useRef<HTMLDivElement>(null);
+  
+  // Date picker state
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const datePickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (exportRef.current && !exportRef.current.contains(e.target as Node)) setExportOpen(false);
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) setDatePickerOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  /* ── Filter records by period ── */
+  /* ── Filter records by period or selected date ── */
   const filteredRecords = useMemo(() => {
+    if (selectedDate) {
+      return records.filter((r) => r.clockIn.slice(0, 10) === selectedDate);
+    }
     if (period === "all") return records;
     const days = period === "7d" ? 7 : 30;
     const cutoff = new Date(Date.now() - days * 24 * 3600 * 1000);
     return records.filter((r) => new Date(r.clockIn) >= cutoff);
-  }, [records, period]);
+  }, [records, period, selectedDate]);
 
   /* ── KPI Aggregates ── */
   const kpi = useMemo(() => {
@@ -285,17 +298,17 @@ export function ReportsSection() {
           ))}
         </div>
 
-        {/* Period selector + Export hint */}
+        {/* Period selector + Date picker + Export hint */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="flex items-center gap-1 rounded-xl border border-surface-200 bg-white p-1 shadow-sm">
             {PERIODS.map(({ id, label }) => (
               <button
                 key={id}
                 type="button"
-                onClick={() => setPeriod(id)}
+                onClick={() => { setPeriod(id); setSelectedDate(null); }}
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
-                  period === id
+                  period === id && !selectedDate
                     ? "bg-brand-600 text-white shadow-sm"
                     : "text-slate-500 hover:text-surface-900"
                 )}
@@ -303,6 +316,138 @@ export function ReportsSection() {
                 {label}
               </button>
             ))}
+          </div>
+          
+          {/* Date Picker Button */}
+          <div ref={datePickerRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setDatePickerOpen((o) => !o)}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:bg-surface-50",
+                selectedDate ? "border-brand-300 text-brand-700 ring-2 ring-brand-100" : "text-slate-700 hover:border-brand-300 hover:text-brand-700"
+              )}
+            >
+              <Calendar className="h-4 w-4" />
+              {selectedDate ? fmtDisplayDate(selectedDate) : "Daily Report"}
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setSelectedDate(null); }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-brand-100"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+              <ChevronDown className={cn("h-3.5 w-3.5 text-slate-400 transition-transform", datePickerOpen && "rotate-180")} />
+            </button>
+
+            {datePickerOpen && (
+              <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-80 overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-2xl shadow-surface-900/10 ring-1 ring-black/5">
+                {/* Calendar Header */}
+                <div className="border-b border-surface-100 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentMonth = selectedDate ? new Date(selectedDate) : new Date();
+                        currentMonth.setMonth(currentMonth.getMonth() - 1);
+                        setSelectedDate(currentMonth.toISOString().slice(0, 10));
+                      }}
+                      className="rounded-lg p-1.5 hover:bg-surface-100 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4 text-slate-600" />
+                    </button>
+                    <span className="text-sm font-bold text-surface-900">
+                      {selectedDate 
+                        ? new Date(selectedDate).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+                        : new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+                      }
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentMonth = selectedDate ? new Date(selectedDate) : new Date();
+                        currentMonth.setMonth(currentMonth.getMonth() + 1);
+                        setSelectedDate(currentMonth.toISOString().slice(0, 10));
+                      }}
+                      className="rounded-lg p-1.5 hover:bg-surface-100 transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4 text-slate-600" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="p-4">
+                  <div className="grid grid-cols-7 gap-1 mb-2">
+                    {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+                      <div key={day} className="text-center text-[11px] font-semibold text-slate-400 py-1">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {(() => {
+                      const baseDate = selectedDate ? new Date(selectedDate) : new Date();
+                      const year = baseDate.getFullYear();
+                      const month = baseDate.getMonth();
+                      const firstDay = new Date(year, month, 1).getDay();
+                      const daysInMonth = new Date(year, month + 1, 0).getDate();
+                      const today = new Date().toISOString().slice(0, 10);
+                      
+                      const days = [];
+                      // Empty cells for days before the first day of the month
+                      for (let i = 0; i < firstDay; i++) {
+                        days.push(<div key={`empty-${i}`} className="h-8" />);
+                      }
+                      // Days of the month
+                      for (let day = 1; day <= daysInMonth; day++) {
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const isSelected = selectedDate === dateStr;
+                        const isToday = dateStr === today;
+                        days.push(
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => { setSelectedDate(dateStr); setDatePickerOpen(false); }}
+                            className={cn(
+                              "h-8 w-8 rounded-lg text-xs font-semibold transition-all",
+                              isSelected
+                                ? "bg-brand-600 text-white shadow-md"
+                                : isToday
+                                ? "bg-brand-50 text-brand-700 ring-1 ring-brand-200"
+                                : "hover:bg-surface-100 text-slate-700"
+                            )}
+                          >
+                            {day}
+                          </button>
+                        );
+                      }
+                      return days;
+                    })()}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="border-t border-surface-100 px-4 py-2.5 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedDate(new Date().toISOString().slice(0, 10)); setDatePickerOpen(false); }}
+                    className="text-xs font-semibold text-brand-600 hover:text-brand-700"
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedDate(null); setDatePickerOpen(false); }}
+                    className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {/* ── Export Dropdown ── */}
           <div ref={exportRef} className="relative">
