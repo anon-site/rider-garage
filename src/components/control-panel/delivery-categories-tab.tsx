@@ -24,8 +24,7 @@ export function DeliveryCategoriesTab() {
 
   const handleAdd = async () => {
     if (!formData.name) return;
-    const newCategory: DeliveryCategory = {
-      id: formData.id || `cat_${Date.now()}`,
+    const newCategory: Omit<DeliveryCategory, "id"> = {
       name: formData.name,
       description: formData.description || "",
       color: formData.color || "#6366f1",
@@ -33,7 +32,7 @@ export function DeliveryCategoriesTab() {
       priority: formData.priority ?? 999,
       isActive: formData.isActive !== false
     };
-    await addDeliveryCategory(newCategory);
+    await addDeliveryCategory(newCategory, formData.id);
     setFormData({});
   };
 
