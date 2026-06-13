@@ -1,21 +1,24 @@
 "use client";
 
-import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home, Package } from "lucide-react";
+import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home, Package, Store } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { Bike } from "@/types/bike";
 import type { DeliveryCategory } from "@/types/delivery-category";
+import type { Garage } from "@/types/garage";
 import { useAttendance } from "@/contexts/attendance-context";
 import { DELIVERY_CATEGORIES } from "@/types/delivery-category";
 
 type DriverCardProps = {
   driver: Driver;
   bike?: Bike;
+  garage?: Garage;
   onProfile: () => void;
   viewMode?: "grid" | "list";
   deliveryCategories?: DeliveryCategory[];
+  showGarage?: boolean;
 };
 
-export function DriverCard({ driver, bike, onProfile, viewMode = "grid", deliveryCategories = [] }: DriverCardProps) {
+export function DriverCard({ driver, bike, garage, onProfile, viewMode = "grid", deliveryCategories = [], showGarage = false }: DriverCardProps) {
   const { getLatestRecord } = useAttendance();
   const latestRecord = getLatestRecord(driver.id);
   const isOutside = latestRecord && !latestRecord.clockOut;
@@ -76,10 +79,18 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid", deliver
         <div className="min-w-0 flex-1 grid grid-cols-[1fr_auto] sm:grid-cols-[1.5fr_1fr_1fr_auto] items-center gap-x-4 gap-y-1">
           <div className="min-w-0">
             <p className="text-sm font-bold text-surface-900 truncate">{driver.name}</p>
-            <p className="flex items-center gap-1 text-xs text-slate-500">
-              <Phone className="h-3 w-3 shrink-0" />
-              <span className="truncate">{driver.phone}</span>
-            </p>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <p className="flex items-center gap-1">
+                <Phone className="h-3 w-3 shrink-0" />
+                <span className="truncate">{driver.phone}</span>
+              </p>
+              {showGarage && garage && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 ring-1 ring-brand-100">
+                  <Store className="h-2.5 w-2.5" />
+                  <span className="truncate">{garage.name}</span>
+                </span>
+              )}
+            </div>
           </div>
           <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
             <Calendar className="h-3 w-3 shrink-0 text-slate-400" />
@@ -134,10 +145,18 @@ export function DriverCard({ driver, bike, onProfile, viewMode = "grid", deliver
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="text-sm font-bold text-surface-900 truncate">{driver.name}</h4>
-            <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-              <Phone className="h-3 w-3" />
-              <span className="truncate">{driver.phone}</span>
-            </span>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span className="inline-flex items-center gap-1">
+                <Phone className="h-3 w-3" />
+                <span className="truncate">{driver.phone}</span>
+              </span>
+              {showGarage && garage && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 ring-1 ring-brand-100">
+                  <Store className="h-2.5 w-2.5" />
+                  <span className="truncate">{garage.name}</span>
+                </span>
+              )}
+            </div>
           </div>
           {statusBadge}
         </div>

@@ -158,6 +158,7 @@ export function DriversSection() {
 
   const selectedGarage = garages.find((g) => g.id === selectedGarageId);
   const unassignedCount = drivers.filter((d) => !d.garageId).length;
+  const garageMap = useMemo(() => Object.fromEntries(garages.map((g) => [g.id, g])), [garages]);
 
   const triggerLabel = !selectedGarageId
     ? "All Garages"
@@ -533,7 +534,7 @@ export function DriversSection() {
           })}
       </div>
 
-      <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} viewMode={viewMode} deliveryCategories={deliveryCategories} />
+      <DriverList drivers={filteredDrivers} onEdit={setEditingDriver} onDelete={deleteDriver} readOnly={readOnly} viewMode={viewMode} deliveryCategories={deliveryCategories} garageMap={garageMap} showGarage={isAdmin} />
 
       {!readOnly && showAdd && (
         <AddDriverModal 

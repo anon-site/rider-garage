@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Phone, Calendar, Bike as BikeIcon, User as UserIcon, Package } from "lucide-react";
+import { Pencil, Trash2, Phone, Calendar, Bike as BikeIcon, User as UserIcon, Package, Store } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { DeliveryCategory } from "@/types/delivery-category";
+import type { Garage } from "@/types/garage";
 import { BIKE_TYPES } from "@/types/bike";
 import { useBikes } from "@/contexts/bikes-context";
 import { ConfirmDeleteModal } from "@/components/shared/confirm-delete-modal";
@@ -17,9 +18,11 @@ type DriverListProps = {
   readOnly?: boolean;
   viewMode?: ViewMode;
   deliveryCategories?: DeliveryCategory[];
+  garageMap?: Record<string, Garage>;
+  showGarage?: boolean;
 };
 
-export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid", deliveryCategories = [] }: DriverListProps) {
+export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid", deliveryCategories = [], garageMap = {}, showGarage = false }: DriverListProps) {
   const { bikes } = useBikes();
   const bikeMap = Object.fromEntries(bikes.map((b) => [b.id, b.plateNumber]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -67,6 +70,12 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                     <Phone className="h-3 w-3 text-slate-400" />
                     {driver.phone}
                   </span>
+                  {showGarage && driver.garageId && garageMap[driver.garageId] && (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 ring-1 ring-brand-100">
+                      <Store className="h-2.5 w-2.5" />
+                      <span className="truncate">{garageMap[driver.garageId].name}</span>
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -179,10 +188,18 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                 <h4 className="text-[15px] font-bold text-surface-900 truncate">
                   {driver.name}
                 </h4>
-                <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-500">
-                  <Phone className="h-3.5 w-3.5" />
-                  <span className="truncate">{driver.phone}</span>
-                </span>
+                <div className="flex flex-wrap items-center gap-2 text-[13px] text-slate-500">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5" />
+                    <span className="truncate">{driver.phone}</span>
+                  </span>
+                  {showGarage && driver.garageId && garageMap[driver.garageId] && (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 ring-1 ring-brand-100">
+                      <Store className="h-2.5 w-2.5" />
+                      <span className="truncate">{garageMap[driver.garageId].name}</span>
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
