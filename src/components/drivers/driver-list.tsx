@@ -67,8 +67,8 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                 <h4 className="truncate text-sm font-bold text-surface-900">{driver.name}</h4>
                 <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                   <span className="inline-flex items-center gap-1">
-                    <Phone className="h-3 w-3 text-slate-400" />
-                    {driver.phone}
+                    <Calendar className="h-3 w-3 text-slate-400" />
+                    {driver.joinDate}
                   </span>
                   {showGarage && driver.garageId && garageMap[driver.garageId] && (
                     <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 ring-1 ring-brand-100">
@@ -82,8 +82,8 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
               {/* Info chips */}
               <div className="hidden sm:flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2 py-1 ring-1 ring-surface-200">
-                  <Calendar className="h-3 w-3 shrink-0 text-slate-400" />
-                  <span className="text-slate-600">{driver.joinDate}</span>
+                  <Phone className="h-3 w-3 shrink-0 text-slate-400" />
+                  <span className="text-slate-600">{driver.phone}</span>
                 </span>
                 <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 ring-1 ${driver.bikeId ? "bg-surface-50 ring-surface-200" : "bg-amber-50 ring-amber-200"}`}>
                   <BikeIcon className={`h-3 w-3 shrink-0 ${driver.bikeId ? "text-slate-400" : "text-amber-500"}`} />
@@ -190,8 +190,8 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
                 </h4>
                 <div className="flex flex-wrap items-center gap-2 text-[13px] text-slate-500">
                   <span className="inline-flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5" />
-                    <span className="truncate">{driver.phone}</span>
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span className="truncate">{driver.joinDate}</span>
                   </span>
                   {showGarage && driver.garageId && garageMap[driver.garageId] && (
                     <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 ring-1 ring-brand-100">
@@ -206,8 +206,8 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
             {/* Info row */}
             <div className="flex flex-wrap items-center gap-2 text-[13px]">
               <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-50 px-2.5 py-1 ring-1 ring-surface-200">
-                <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <span className="text-slate-600">{driver.joinDate}</span>
+                <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                <span className="text-slate-600">{driver.phone}</span>
               </span>
               <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 ring-1 ${driver.bikeId ? "bg-surface-50 ring-surface-200" : "bg-amber-50 ring-amber-200"}`}>
                 <BikeIcon className={`h-3.5 w-3.5 shrink-0 ${driver.bikeId ? "text-slate-400" : "text-amber-500"}`} />
