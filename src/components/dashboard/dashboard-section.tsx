@@ -98,12 +98,16 @@ export function DashboardSection() {
     }
     const q = query.trim().toLowerCase();
     if (!q) return result;
-    return result.filter((d) =>
-      d.name.toLowerCase().includes(q) ||
-      d.phone.toLowerCase().includes(q) ||
-      (d.appId?.toLowerCase().includes(q) ?? false)
-    );
-  }, [drivers, filter, hasOpenExit, query]);
+    return result.filter((d) => {
+      const bike = d.bikeId ? bikeMap[d.bikeId] : null;
+      return (
+        d.name.toLowerCase().includes(q) ||
+        d.phone.toLowerCase().includes(q) ||
+        (d.appId?.toLowerCase().includes(q) ?? false) ||
+        (bike?.plateNumber.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [drivers, filter, hasOpenExit, query, bikeMap]);
 
   const stats = useMemo(() => ({
     total: drivers.length,
@@ -153,7 +157,7 @@ export function DashboardSection() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name, phone or App ID…"
+          placeholder="Search by name, phone, App ID or bike plate…"
           className="w-full rounded-xl border border-surface-200 bg-white py-2.5 pl-9 pr-9 text-sm text-surface-900 placeholder:text-slate-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
         />
         {query && (
