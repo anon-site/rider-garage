@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Filter, AlertTriangle,
   CheckCircle2, ArrowUpRight, ArrowDownRight, Minus,
   FileText, Activity, ShieldOff, FileSpreadsheet, Loader2,
-  X, ChevronLeft, ChevronRight,
+  X, ChevronLeft, ChevronRight, Search, MapPin,
 } from "lucide-react";
 import { exportPDF, exportExcel } from "@/lib/export-utils";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -83,19 +83,33 @@ function KpiCard({ icon: Icon, label, value, sub, trend, tone = "brand" }: {
 }
 
 /* ── Mini Bar Chart ────────────────────────────────────────────────── */
-function MiniBarChart({ data, color = "bg-brand-500" }: { data: { label: string; value: number }[]; color?: string }) {
+function MiniBarChart({ data, color = "from-brand-400 to-brand-600" }: {
+  data: { label: string; shortLabel?: string; fullDate?: string; value: number }[];
+  color?: string;
+}) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
-    <div className="flex items-end gap-1.5 h-20">
-      {data.map((d) => (
-        <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
-          <div
-            className={cn("w-full rounded-t-md transition-all", color)}
-            style={{ height: `${Math.max((d.value / max) * 100, 4)}%` }}
-          />
-          <span className="text-[9px] font-medium text-slate-400 truncate w-full text-center">{d.label}</span>
-        </div>
-      ))}
+    <div className="w-full overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-end gap-1.5 sm:gap-2.5 h-28 pt-6 min-w-[300px] md:min-w-full">
+        {data.map((d) => (
+          <div key={d.label} className="group relative flex flex-1 flex-col items-center gap-1.5 h-full justify-end">
+            {/* Tooltip on hover */}
+            <div className="absolute -top-3 opacity-0 scale-95 group-hover:-top-6 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 pointer-events-none bg-surface-900 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-xl z-15 whitespace-nowrap border border-white/10">
+              <p className="text-slate-300 text-[9px] font-medium leading-none">{d.fullDate || d.label}</p>
+              <p className="mt-0.5 text-white text-xs font-bold leading-none">{d.value} orders</p>
+            </div>
+            
+            <div
+              className={cn("w-full rounded-t-md sm:rounded-t-lg bg-gradient-to-t transition-all duration-500 group-hover:brightness-110 group-hover:shadow-md shadow-sm transform group-hover:scale-y-[1.03] origin-bottom", color)}
+              style={{ height: `${Math.max((d.value / max) * 100, 6)}%` }}
+            />
+            
+            <span className="text-[10px] font-bold text-slate-400 group-hover:text-surface-800 transition-colors truncate w-full text-center">
+              {d.shortLabel || d.label}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -143,6 +157,11 @@ export function ReportsSection() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
+
+  // Search states for tabs
+  const [driverQuery, setDriverQuery] = useState("");
+  const [fleetQuery, setFleetQuery] = useState("");
+  const [garageQuery, setGarageQuery] = useState("");
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -194,6 +213,31 @@ export function ReportsSection() {
     });
   }, [drivers, filteredRecords, records, bikes, sortBy, sortDir]);
 
+  const filteredDriverStats = useMemo(() => {
+    const q = driverQuery.trim().toLowerCase();
+    if (!q) return driverStats;
+    return driverStats.filter((d) =>
+      d.name.toLowerCase().includes(q) ||
+      d.id.toLowerCase().includes(q) ||
+      d.phone.toLowerCase().includes(q)
+    );
+  }, [driverStats, driverQuery]);
+
+  const filteredBikes = useMemo(() => {
+    const q = fleetQuery.trim().toLowerCase();
+    if (!q) return bikes;
+    return bikes.filter((b) => {
+      const driver = b.driverId ? drivers.find((d) => d.id === b.driverId) : null;
+      const garage = b.garageId ? garages.find((g) => g.id === b.garageId) : null;
+      return (
+        b.plateNumber.toLowerCase().includes(q) ||
+        (b.color?.toLowerCase().includes(q) ?? false) ||
+        (driver?.name.toLowerCase().includes(q) ?? false) ||
+        (garage?.name.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [bikes, drivers, garages, fleetQuery]);
+
   /* ── Daily orders trend (last 7 or 30 days) ── */
   const dailyTrend = useMemo(() => {
     const days = period === "7d" ? 7 : period === "30d" ? 14 : 14;
@@ -201,7 +245,12 @@ export function ReportsSection() {
       const d = new Date(Date.now() - (days - 1 - i) * 24 * 3600 * 1000);
       const key = d.toISOString().slice(0, 10);
       const dayRec = filteredRecords.filter((r) => r.clockIn.slice(0, 10) === key);
-      return { label: fmtShortDate(d.toISOString()), value: dayRec.reduce((s, r) => s + r.ordersDelivered, 0) };
+      return {
+        label: fmtShortDate(d.toISOString()),
+        shortLabel: String(d.getDate()), // e.g. "14"
+        fullDate: d.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" }), // e.g. "Sun, 14 Jun"
+        value: dayRec.reduce((s, r) => s + r.ordersDelivered, 0)
+      };
     });
   }, [filteredRecords, period]);
 
@@ -216,6 +265,15 @@ export function ReportsSection() {
       return { ...g, driverCount: gDrivers.length, bikeCount: gBikes.length, orders, rating };
     });
   }, [garages, drivers, bikes, filteredRecords]);
+
+  const filteredGarageStats = useMemo(() => {
+    const q = garageQuery.trim().toLowerCase();
+    if (!q) return garageStats;
+    return garageStats.filter((g) =>
+      g.name.toLowerCase().includes(q) ||
+      g.location.toLowerCase().includes(q)
+    );
+  }, [garageStats, garageQuery]);
 
   /* ── Export handler ── */
   async function handleExport(type: "pdf" | "excel") {
@@ -279,23 +337,26 @@ export function ReportsSection() {
       {/* ── Page header bar ─────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
         {/* Tabs */}
-        <div className="flex w-full sm:w-auto items-center gap-1 rounded-2xl bg-surface-100 p-1 ring-1 ring-surface-200">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setActiveTab(id as "overview" | "drivers" | "fleet" | "garages")}
-              className={cn(
-                "flex flex-1 sm:flex-none items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-all",
-                activeTab === id
-                  ? "bg-white text-brand-600 shadow-sm ring-1 ring-surface-200"
-                  : "text-slate-500 hover:text-surface-900"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{label}</span>
-            </button>
-          ))}
+        <div className="flex w-full sm:w-auto items-center gap-1 rounded-2xl bg-surface-100 p-1.5 ring-1 ring-surface-200/80 shadow-inner">
+          {TABS.map(({ id, label, icon: Icon }) => {
+            const isActive = activeTab === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id as "overview" | "drivers" | "fleet" | "garages")}
+                className={cn(
+                  "flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-300",
+                  isActive
+                    ? "bg-white text-brand-600 shadow-md ring-1 ring-surface-200 scale-[1.02]"
+                    : "text-slate-500 hover:bg-white/40 hover:text-surface-900"
+                )}
+              >
+                <Icon className={cn("h-4 w-4 transition-transform duration-300", isActive && "scale-110 text-brand-500")} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Period selector + Date picker + Export hint */}
@@ -555,7 +616,10 @@ export function ReportsSection() {
                   {kpi.totalOrders} total
                 </span>
               </div>
-              <MiniBarChart data={dailyTrend} color="bg-brand-500" />
+              <MiniBarChart data={dailyTrend} />
+              <p className="mt-3.5 text-[11px] text-slate-400 font-medium text-center border-t border-surface-100/60 pt-2.5">
+                Labels show days of the month. Hover to see full date and metrics.
+              </p>
             </div>
 
             {/* Fleet health */}
@@ -650,81 +714,111 @@ export function ReportsSection() {
           DRIVERS TAB
       ════════════════════════════════════════════════════════ */}
       {activeTab === "drivers" && (
-        <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
-          <div className="mb-5 flex items-center justify-between">
+        <div className="glass-panel rounded-3xl p-6 ring-1 ring-white/60 shadow-xl shadow-surface-900/5">
+          {/* Header & Local Search */}
+          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-surface-100 pb-5">
             <div>
-              <h3 className="text-base font-bold text-surface-900">Driver Performance Report</h3>
-              <p className="text-xs text-slate-400">{driverStats.length} drivers · {period === "all" ? "All time" : period === "7d" ? "Last 7 days" : "Last 30 days"}</p>
+              <h3 className="text-lg font-bold text-surface-900">Driver Performance Report</h3>
+              <p className="text-xs text-slate-400">
+                {filteredDriverStats.length} of {driverStats.length} drivers displayed · {period === "all" ? "All time" : period === "7d" ? "Last 7 days" : "Last 30 days"}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-100 px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-surface-200">
-                <Filter className="h-3 w-3" />
-                Sort by
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Local Search Input */}
+              <div className="relative flex-1 sm:w-64">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search driver by name, ID or phone…"
+                  value={driverQuery}
+                  onChange={(e) => setDriverQuery(e.target.value)}
+                  className="w-full rounded-xl border border-surface-200 bg-white py-2.5 pl-10 pr-8 text-xs text-surface-900 placeholder-slate-400 outline-none transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:shadow-sm"
+                />
+                {driverQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setDriverQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-surface-100 hover:text-slate-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface-50 border border-surface-200 px-3.5 py-2 text-xs font-semibold text-slate-500">
+                <Filter className="h-3.5 w-3.5 text-slate-400" />
+                Click headers to sort
               </span>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px] text-sm">
+          <div className="overflow-x-auto rounded-2xl border border-surface-150/80 shadow-inner bg-white/40">
+            <table className="w-full min-w-[800px] text-sm text-left">
               <thead>
-                <tr className="border-b border-surface-200">
-                  <th className="pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">ID</th>
-                  <th className="pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">Driver</th>
-                  <th className="pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">Status</th>
-                  <th className="pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">Bike</th>
-                  <th className="pb-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    <button type="button" onClick={() => toggleSort("orders")} className="inline-flex items-center gap-1 hover:text-surface-900">
+                <tr className="border-b border-surface-200 bg-surface-50/50">
+                  <th className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">ID</th>
+                  <th className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Driver</th>
+                  <th className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Status</th>
+                  <th className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Bike</th>
+                  <th className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <button type="button" onClick={() => toggleSort("orders")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
                       Orders <SortIcon col="orders" />
                     </button>
                   </th>
-                  <th className="pb-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    <button type="button" onClick={() => toggleSort("hours")} className="inline-flex items-center gap-1 hover:text-surface-900">
+                  <th className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <button type="button" onClick={() => toggleSort("hours")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
                       Hours <SortIcon col="hours" />
                     </button>
                   </th>
-                  <th className="pb-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Sessions</th>
-                  <th className="pb-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    <button type="button" onClick={() => toggleSort("rating")} className="inline-flex items-center gap-1 hover:text-surface-900">
+                  <th className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">Sessions</th>
+                  <th className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <button type="button" onClick={() => toggleSort("rating")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
                       Rating <SortIcon col="rating" />
                     </button>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-100">
-                {driverStats.map((d) => (
-                  <tr key={d.id} className="group hover:bg-surface-50/50 transition-colors">
-                    <td className="py-3.5 pr-4">
-                      <span className="inline-flex items-center rounded-lg bg-surface-100 px-2 py-1 text-[11px] font-medium text-slate-600">
+              <tbody className="divide-y divide-surface-100 bg-white/35">
+                {filteredDriverStats.map((d) => (
+                  <tr key={d.id} className="group hover:bg-surface-50/80 transition-all duration-150">
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center rounded-lg bg-surface-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 border border-surface-200/50">
                         {d.id}
                       </span>
                     </td>
-                    <td className="py-3.5 pr-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-xs font-bold text-white">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-xs font-extrabold text-white shadow-sm ring-2 ring-white">
                           {d.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-semibold text-surface-900">{d.name}</p>
+                          <p className="font-semibold text-surface-900 text-sm">{d.name}</p>
                           <p className="text-[11px] text-slate-400">{d.phone}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 pr-4">
+                    <td className="px-5 py-4">
                       {d.isActive ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
                           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200">
                           Offline
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 pr-4">
+                    <td className="px-5 py-4">
                       {d.bike ? (
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-medium text-surface-800">{d.bike.plateNumber}</span>
-                          <span className={cn("text-[10px] font-semibold", d.bike.status === "good" ? "text-emerald-600" : d.bike.status === "maintenance" ? "text-amber-600" : "text-rose-600")}>
+                          <span className="font-semibold text-surface-800 text-xs">{d.bike.plateNumber}</span>
+                          <span className={cn(
+                            "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider w-fit mt-0.5",
+                            d.bike.status === "good" ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" :
+                            d.bike.status === "maintenance" ? "bg-amber-50 text-amber-600 ring-1 ring-amber-100" :
+                            "bg-rose-50 text-rose-600 ring-1 ring-rose-100"
+                          )}>
                             {d.bike.status}
                           </span>
                         </div>
@@ -732,16 +826,20 @@ export function ReportsSection() {
                         <span className="text-xs text-slate-400">— No bike</span>
                       )}
                     </td>
-                    <td className="py-3.5 pr-4 text-right">
-                      <span className="font-extrabold text-surface-900">{d.orders}</span>
+                    <td className="px-5 py-4 text-right">
+                      <span className="font-extrabold text-surface-900 text-sm">{d.orders}</span>
                     </td>
-                    <td className="py-3.5 pr-4 text-right text-slate-600">{fmtHours(d.hours)}</td>
-                    <td className="py-3.5 pr-4 text-right text-slate-600">{d.sessions}</td>
-                    <td className="py-3.5 text-right"><StarRating rating={Math.round(d.rating)} /></td>
+                    <td className="px-5 py-4 text-right text-slate-600 font-medium">{fmtHours(d.hours)}</td>
+                    <td className="px-5 py-4 text-right text-slate-500 font-medium">{d.sessions}</td>
+                    <td className="px-5 py-4 text-right"><StarRating rating={Math.round(d.rating)} /></td>
                   </tr>
                 ))}
-                {driverStats.length === 0 && (
-                  <tr><td colSpan={8} className="py-10 text-center text-sm text-slate-400">No driver records found.</td></tr>
+                {filteredDriverStats.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-sm text-slate-400 font-medium bg-white/10">
+                      No driver records found matching your query.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -761,53 +859,122 @@ export function ReportsSection() {
             <KpiCard icon={Users}          label="Assigned"          value={bikes.filter((b) => b.driverId).length}       sub="bikes with drivers"        tone="amber"   />
           </div>
 
-          <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
-            <div className="mb-5 flex items-center justify-between">
+          <div className="glass-panel rounded-3xl p-6 ring-1 ring-white/60 shadow-xl shadow-surface-900/5">
+            {/* Header with Search */}
+            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-surface-100 pb-5">
               <div>
-                <h3 className="text-base font-bold text-surface-900">Bike Status Report</h3>
-                <p className="text-xs text-slate-400">{bikes.length} bikes total</p>
+                <h3 className="text-lg font-bold text-surface-900">Bike Status Report</h3>
+                <p className="text-xs text-slate-400">
+                  Showing {filteredBikes.length} of {bikes.length} bikes total in system
+                </p>
+              </div>
+
+              {/* Local Search Input */}
+              <div className="relative w-full md:w-80">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search bike by plate, driver or garage…"
+                  value={fleetQuery}
+                  onChange={(e) => setFleetQuery(e.target.value)}
+                  className="w-full rounded-xl border border-surface-200 bg-white py-2.5 pl-10 pr-8 text-xs text-surface-900 placeholder-slate-400 outline-none transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:shadow-sm"
+                />
+                {fleetQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setFleetQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-surface-100 hover:text-slate-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {bikes.map((bike) => {
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredBikes.map((bike) => {
                 const driver = bike.driverId ? drivers.find((d) => d.id === bike.driverId) : undefined;
                 const garage = bike.garageId ? garages.find((g) => g.id === bike.garageId) : undefined;
+                
+                const statusStyles = {
+                  good: {
+                    border: "border-emerald-200/60 bg-emerald-50/20",
+                    badge: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+                    stripe: "bg-emerald-500"
+                  },
+                  maintenance: {
+                    border: "border-amber-200/60 bg-amber-50/20",
+                    badge: "bg-amber-50 text-amber-700 ring-amber-200",
+                    stripe: "bg-amber-500"
+                  },
+                  defective: {
+                    border: "border-rose-200/60 bg-rose-50/20",
+                    badge: "bg-rose-50 text-rose-700 ring-rose-200",
+                    stripe: "bg-rose-500"
+                  }
+                }[bike.status] || {
+                  border: "border-surface-200 bg-surface-50/20",
+                  badge: "bg-surface-100 text-slate-700 ring-surface-200",
+                  stripe: "bg-slate-500"
+                };
+
                 return (
                   <div key={bike.id} className={cn(
-                    "rounded-xl p-4 ring-1 transition-all",
-                    bike.status === "good" ? "bg-emerald-50/60 ring-emerald-100"
-                    : bike.status === "maintenance" ? "bg-amber-50/60 ring-amber-100"
-                    : "bg-rose-50/60 ring-rose-100"
+                    "relative overflow-hidden rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 flex flex-col justify-between",
+                    statusStyles.border
                   )}>
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div>
-                        <p className="font-bold text-surface-900">{bike.plateNumber}</p>
-                        <p className="text-xs text-slate-500 capitalize">{bike.bikeType.replace("_"," ")} · {bike.color}</p>
+                    {/* Top Accent Stripe */}
+                    <div className={cn("absolute inset-x-0 top-0 h-1.5", statusStyles.stripe)} />
+
+                    <div className="mb-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-extrabold text-surface-900 text-sm tracking-tight">{bike.plateNumber}</p>
+                          <p className="text-[11px] text-slate-400 font-semibold mt-0.5 capitalize">
+                            {bike.bikeType.replace("_", " ")} · <span className="font-bold" style={{ color: bike.color || "inherit" }}>{bike.color}</span>
+                          </p>
+                        </div>
+                        <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 shrink-0", statusStyles.badge)}>
+                          {bike.status}
+                        </span>
                       </div>
-                      <span className={cn(
-                        "rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1",
-                        bike.status === "good" ? "bg-emerald-100 text-emerald-700 ring-emerald-200"
-                        : bike.status === "maintenance" ? "bg-amber-100 text-amber-700 ring-amber-200"
-                        : "bg-rose-100 text-rose-700 ring-rose-200"
-                      )}>
-                        {bike.status}
-                      </span>
                     </div>
-                    <div className="space-y-1 text-xs text-slate-500">
+
+                    <div className="space-y-2 border-t border-surface-100/60 pt-3 text-xs">
                       {driver ? (
-                        <p className="flex items-center gap-1.5"><Users className="h-3 w-3 text-brand-500" /> {driver.name}</p>
+                        <div className="flex items-center gap-2 text-surface-800 bg-surface-50/70 border border-surface-100 rounded-lg px-2.5 py-1.5 font-medium">
+                          <Users className="h-3.5 w-3.5 text-brand-500 shrink-0" />
+                          <span className="truncate">{driver.name}</span>
+                        </div>
                       ) : (
-                        <p className="flex items-center gap-1.5 text-slate-400"><Users className="h-3 w-3" /> Unassigned</p>
+                        <div className="flex items-center gap-2 text-slate-400 border border-dashed border-surface-200 rounded-lg px-2.5 py-1.5 font-medium bg-slate-50/30">
+                          <Users className="h-3.5 w-3.5 text-slate-300 shrink-0" />
+                          <span>Unassigned</span>
+                        </div>
                       )}
-                      {garage && <p className="flex items-center gap-1.5"><Warehouse className="h-3 w-3 text-amber-500" /> {garage.name}</p>}
+
+                      {garage && (
+                        <div className="flex items-center gap-2 text-surface-700 font-medium px-1">
+                          <Warehouse className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                          <span className="truncate">{garage.name}</span>
+                        </div>
+                      )}
+
                       {bike.defectDescription && (
-                        <p className="flex items-center gap-1.5 text-rose-600"><AlertTriangle className="h-3 w-3" /> {bike.defectDescription}</p>
+                        <div className="flex items-start gap-1.5 text-rose-700 bg-rose-50/50 border border-rose-100/50 rounded-lg p-2 mt-1">
+                          <AlertTriangle className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
+                          <span className="leading-tight">{bike.defectDescription}</span>
+                        </div>
                       )}
                     </div>
                   </div>
                 );
               })}
-              {bikes.length === 0 && <p className="col-span-3 py-10 text-center text-sm text-slate-400">No bikes in fleet.</p>}
+              {filteredBikes.length === 0 && (
+                <div className="col-span-full py-16 text-center text-sm text-slate-400 font-semibold bg-white/10 rounded-2xl border border-dashed border-surface-200">
+                  No bikes found matching your query.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -824,59 +991,91 @@ export function ReportsSection() {
             <KpiCard icon={BikeIcon}  label="Total Capacity"    value={garages.reduce((s,g)=>s+g.capacity,0)}       sub="combined slots"      tone="amber" />
           </div>
 
-          <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
-            <div className="mb-5">
-              <h3 className="text-base font-bold text-surface-900">Garage Performance</h3>
-              <p className="text-xs text-slate-400">Breakdown per location</p>
+          <div className="glass-panel rounded-3xl p-6 ring-1 ring-white/60 shadow-xl shadow-surface-900/5">
+            {/* Header with Search */}
+            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-surface-100 pb-5">
+              <div>
+                <h3 className="text-lg font-bold text-surface-900">Garage Performance</h3>
+                <p className="text-xs text-slate-400">
+                  Showing {filteredGarageStats.length} of {garages.length} total garages
+                </p>
+              </div>
+
+              {/* Local Search Input */}
+              <div className="relative w-full md:w-80">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search garage by name or location…"
+                  value={garageQuery}
+                  onChange={(e) => setGarageQuery(e.target.value)}
+                  className="w-full rounded-xl border border-surface-200 bg-white py-2.5 pl-10 pr-8 text-xs text-surface-900 placeholder-slate-400 outline-none transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:shadow-sm"
+                />
+                {garageQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setGarageQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-surface-100 hover:text-slate-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="space-y-4">
-              {garageStats.map((g) => {
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {filteredGarageStats.map((g) => {
                 const maxOrders = Math.max(...garageStats.map((x) => x.orders), 1);
                 return (
-                  <div key={g.id} className="rounded-xl border border-surface-200 bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                  <div key={g.id} className="rounded-2xl border border-surface-150/80 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-brand-200/80 flex flex-col justify-between">
                     <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                       <div>
-                        <h4 className="text-base font-bold text-surface-900">{g.name}</h4>
-                        <p className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
-                          <Calendar className="h-3 w-3" /> {g.location}
+                        <h4 className="text-base font-bold text-surface-900 tracking-tight">{g.name}</h4>
+                        <p className="flex items-center gap-1 text-[11px] font-medium text-slate-400 mt-1">
+                          <MapPin className="h-3.5 w-3.5 text-slate-300" /> {g.location}
                         </p>
                       </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-bold text-brand-700 ring-1 ring-brand-200">
+                      <div className="flex gap-1.5 flex-wrap">
+                        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-extrabold text-brand-700 ring-1 ring-brand-100/50">
                           {g.driverCount} drivers
                         </span>
-                        <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 ring-1 ring-amber-200">
+                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-extrabold text-amber-700 ring-1 ring-amber-100/50">
                           {g.bikeCount} bikes
                         </span>
-                        <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-bold text-violet-700 ring-1 ring-violet-200">
-                          {g.capacity} capacity
+                        <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700 ring-1 ring-violet-100/50">
+                          {g.capacity} cap
                         </span>
                       </div>
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
+
+                    <div className="grid gap-4 sm:grid-cols-2 border-t border-surface-100/60 pt-4">
                       <div>
-                        <div className="mb-1 flex items-center justify-between text-xs">
-                          <span className="text-slate-400">Orders</span>
-                          <span className="font-bold text-surface-900">{g.orders}</span>
+                        <div className="mb-1.5 flex items-center justify-between text-[11px]">
+                          <span className="text-slate-400 font-semibold">Orders Delivered</span>
+                          <span className="font-extrabold text-surface-900">{g.orders}</span>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-surface-100">
-                          <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${(g.orders / maxOrders) * 100}%` }} />
+                        <div className="h-2 overflow-hidden rounded-full bg-surface-100 shadow-inner">
+                          <div className="h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all duration-500" style={{ width: `${(g.orders / maxOrders) * 100}%` }} />
                         </div>
                       </div>
                       <div>
-                        <div className="mb-1 flex items-center justify-between text-xs">
-                          <span className="text-slate-400">Avg. Rating</span>
-                          <span className="font-bold text-surface-900">{g.rating > 0 ? g.rating.toFixed(1) : "—"}</span>
+                        <div className="mb-1.5 flex items-center justify-between text-[11px]">
+                          <span className="text-slate-400 font-semibold">Avg. Rating</span>
+                          <span className="font-extrabold text-surface-900">{g.rating > 0 ? g.rating.toFixed(1) : "—"}</span>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-surface-100">
-                          <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${(g.rating / 5) * 100}%` }} />
+                        <div className="h-2 overflow-hidden rounded-full bg-surface-100 shadow-inner">
+                          <div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-500 transition-all duration-500" style={{ width: `${(g.rating / 5) * 100}%` }} />
                         </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
-              {garageStats.length === 0 && <p className="py-10 text-center text-sm text-slate-400">No garages found.</p>}
+              {filteredGarageStats.length === 0 && (
+                <div className="col-span-full py-16 text-center text-sm text-slate-400 font-semibold bg-white/10 rounded-2xl border border-dashed border-surface-200">
+                  No garages found matching your query.
+                </div>
+              )}
             </div>
           </div>
         </div>

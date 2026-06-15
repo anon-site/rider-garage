@@ -70,12 +70,14 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
 
   /* When role changes, reset custom perms so defaults apply */
   function handleRoleChange(newRole: RoleId) {
+    if (user?.role === "admin") return;
     setRole(newRole);
     if (newRole !== "garage") setGarageId("");
     setCustomPerms({});
   }
 
   function togglePerm(key: keyof CustomPermissions) {
+    if (user?.role === "admin") return;
     const base = ROLE_PERMISSIONS[role][key];
     const current = customPerms[key] ?? base;
     /* If toggling back to default, remove override */
@@ -309,12 +311,18 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
             <select
               value={role}
               onChange={(e) => handleRoleChange(e.target.value as RoleId)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              disabled={user?.role === "admin"}
+              className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:bg-surface-50 disabled:text-slate-500 disabled:cursor-not-allowed"
             >
               {ROLES.map((r) => (
                 <option key={r.id} value={r.id}>{r.label}</option>
               ))}
             </select>
+            {user?.role === "admin" && (
+              <p className="text-[11px] text-rose-500 font-semibold mt-1">
+                Admin roles and permissions are permanently locked and cannot be demoted or modified.
+              </p>
+            )}
           </div>
 
           {/* ── Permissions ──────────────────────────────────────── */}
@@ -324,7 +332,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                 <ShieldCheck className="h-4 w-4 text-violet-600" />
                 <p className="text-xs font-bold uppercase tracking-wider text-violet-700">Permissions</p>
               </div>
-              {hasOverrides && (
+              {hasOverrides && user?.role !== "admin" && (
                 <button
                   type="button"
                   onClick={() => setCustomPerms({})}
@@ -345,9 +353,10 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                   const isOverridden = customPerms[key] !== undefined;
                   return (
                     <button key={key} type="button" onClick={() => togglePerm(key)}
+                      disabled={user?.role === "admin"}
                       className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-all ${
                         effective ? "bg-white ring-1 ring-violet-200 shadow-sm" : "bg-white/50 ring-1 ring-surface-200"
-                      }`}
+                      } disabled:opacity-75 disabled:cursor-not-allowed`}
                     >
                       <div className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
                         effective ? "bg-violet-600" : "bg-surface-300"
@@ -384,9 +393,10 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                   const isOverridden = customPerms[key] !== undefined;
                   return (
                     <button key={key} type="button" onClick={() => togglePerm(key)}
+                      disabled={user?.role === "admin"}
                       className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-all ${
                         effective ? "bg-white ring-1 ring-violet-200 shadow-sm" : "bg-white/50 ring-1 ring-surface-200"
-                      }`}
+                      } disabled:opacity-75 disabled:cursor-not-allowed`}
                     >
                       <div className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
                         effective ? "bg-violet-600" : "bg-surface-300"

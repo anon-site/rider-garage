@@ -435,42 +435,49 @@ export function CpDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
 
         {/* Users breakdown */}
-        <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
-          <div className="mb-5 flex items-center justify-between">
-            <SectionTitle icon={Users} title="System Users" badge={isGarageManager ? 1 : users.length} />
-            <span className="text-xs text-slate-400">Roles distribution</span>
-          </div>
-          <div className="space-y-3">
-            {(isGarageManager && user ? [user] : users).map((u) => {
-              const garage = u.garageId ? garageList.find((g) => g.id === u.garageId) : undefined;
-              return (
-                <div
-                  key={u.id}
-                  className="flex items-center gap-3 rounded-xl bg-surface-50/80 px-4 py-3 ring-1 ring-surface-100"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-sm font-bold text-white">
-                    {u.name.charAt(0)}
+        <div className="glass-panel rounded-3xl p-6 ring-1 ring-white/60 shadow-xl shadow-surface-900/5 flex flex-col justify-between">
+          <div>
+            <div className="mb-5 flex items-center justify-between border-b border-surface-100 pb-4">
+              <SectionTitle icon={Users} title="System Users" badge={isGarageManager ? 1 : users.length} />
+              <span className="text-xs text-slate-400 font-medium">Roles distribution</span>
+            </div>
+            
+            {/* Scrollable list with fixed height to balance columns */}
+            <div className="max-h-[380px] overflow-y-auto pr-1.5 space-y-3 scrollbar-none">
+              {(isGarageManager && user ? [user] : users).map((u) => {
+                const garage = u.garageId ? garageList.find((g) => g.id === u.garageId) : undefined;
+                return (
+                  <div
+                    key={u.id}
+                    className="flex items-center gap-3.5 rounded-xl border border-surface-150 bg-white/70 hover:bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:border-brand-200/80 group"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-sm font-extrabold text-white ring-2 ring-white shadow-sm transition-transform duration-200 group-hover:scale-105">
+                      {u.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-surface-900 truncate leading-snug">{u.name}</p>
+                      <p className="text-xs text-slate-400 font-medium truncate mt-0.5">{u.email}</p>
+                      {garage && (
+                        <p className="mt-1.5 flex items-center gap-1.5 text-[10px] font-bold text-slate-400 bg-surface-50 border border-surface-100 px-2 py-0.5 rounded-md w-fit">
+                          <Warehouse className="h-3 w-3 text-slate-400 shrink-0" />
+                          {garage.name}
+                        </p>
+                      )}
+                    </div>
+                    <RoleBadge role={u.role} />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-surface-900">{u.name}</p>
-                    <p className="truncate text-xs text-slate-400">{u.email}</p>
-                    {garage && (
-                      <p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-400">
-                        <Warehouse className="h-3 w-3" />
-                        {garage.name}
-                      </p>
-                    )}
-                  </div>
-                  <RoleBadge role={u.role} />
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
           {/* Role distribution bar */}
-          <div className="mt-5 space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Role Distribution</p>
-            <div className="flex h-2.5 overflow-hidden rounded-full bg-surface-100">
+          <div className="mt-6 border-t border-surface-100/60 pt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Role Distribution</p>
+              <span className="text-[11px] font-semibold text-slate-400">Global Breakdown</span>
+            </div>
+            <div className="flex h-2.5 overflow-hidden rounded-full bg-surface-100 shadow-inner">
               {ROLES.map((r, i) => {
                 const count = stats.roleCount[r.id] ?? 0;
                 const pct = stats.totalUsers > 0 ? (count / stats.totalUsers) * 100 : 0;
@@ -478,20 +485,20 @@ export function CpDashboard() {
                 return pct > 0 ? (
                   <div
                     key={r.id}
-                    className={cn(colors[i], "transition-all")}
+                    className={cn(colors[i], "transition-all duration-500")}
                     style={{ width: `${pct}%` }}
                   />
                 ) : null;
               })}
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1">
               {ROLES.map((r, i) => {
                 const count = stats.roleCount[r.id] ?? 0;
                 const dotColors = ["bg-rose-400", "bg-violet-400", "bg-brand-400", "bg-sky-400"];
                 return (
-                  <span key={r.id} className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <span className={cn("h-2 w-2 rounded-full", dotColors[i])} />
-                    {r.label}: {count}
+                  <span key={r.id} className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+                    <span className={cn("h-2.5 w-2.5 rounded-full border border-white shadow-sm shrink-0", dotColors[i])} />
+                    {r.label}: <span className="font-extrabold text-surface-900">{count}</span>
                   </span>
                 );
               })}
@@ -501,12 +508,14 @@ export function CpDashboard() {
 
         {/* Garages breakdown - hidden for garage managers */}
         {!isGarageManager && (
-          <div className="glass-panel rounded-2xl p-6 ring-1 ring-white/60">
-            <div className="mb-5 flex items-center justify-between">
+          <div className="glass-panel rounded-3xl p-6 ring-1 ring-white/60 shadow-xl shadow-surface-900/5 flex flex-col">
+            <div className="mb-5 flex items-center justify-between border-b border-surface-100 pb-4">
               <SectionTitle icon={Warehouse} title="Garage Network" badge={garageList.length} />
-              <span className="text-xs text-slate-400">Capacity overview</span>
+              <span className="text-xs text-slate-400 font-medium">Capacity overview</span>
             </div>
-            <div className="space-y-4">
+            
+            {/* Scrollable list with fixed height to balance columns */}
+            <div className="max-h-[380px] overflow-y-auto pr-1.5 space-y-3 scrollbar-none">
               {garageList.map((g) => {
                 const manager = g.managerId ? users.find((u) => u.id === g.managerId) : undefined;
                 const maxCap = Math.max(...garageList.map((x) => x.capacity), 1);
@@ -514,42 +523,44 @@ export function CpDashboard() {
                 return (
                   <div
                     key={g.id}
-                    className="rounded-xl bg-surface-50/80 px-4 py-3 ring-1 ring-surface-100"
+                    className="rounded-xl border border-surface-150 bg-white/70 hover:bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:border-brand-200/80 group flex flex-col gap-2.5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-surface-900">{g.name}</p>
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
-                          <MapPin className="h-3 w-3 shrink-0" />
+                        <p className="font-bold text-surface-900 text-sm tracking-tight leading-snug">{g.name}</p>
+                        <p className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold">
+                          <MapPin className="h-3.5 w-3.5 text-slate-300 shrink-0" />
                           {g.location}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-200">
+                      <span className="shrink-0 rounded-full bg-brand-50 border border-brand-100 px-2.5 py-0.5 text-[11px] font-extrabold text-brand-700 shadow-inner">
                         {g.capacity} slots
                       </span>
                     </div>
-                    <div className="mt-3">
-                      <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
-                        <span>Capacity</span>
+                    
+                    <div>
+                      <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                        <span>Capacity Weight</span>
                         <span>{pct}% of fleet max</span>
                       </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-surface-200">
+                      <div className="h-2 overflow-hidden rounded-full bg-surface-100 border border-surface-100 shadow-inner">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all"
+                          className="h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all duration-500"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
                     </div>
+
                     {manager ? (
-                      <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
-                        <ShieldCheck className="h-3 w-3 text-brand-500" />
-                        Manager: <span className="font-medium text-surface-800">{manager.name}</span>
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 bg-brand-50/40 border border-brand-100/50 px-2.5 py-1 rounded-lg w-fit">
+                        <ShieldCheck className="h-3.5 w-3.5 text-brand-500 shrink-0" />
+                        <span>Manager: <span className="font-bold text-surface-800">{manager.name}</span></span>
+                      </div>
                     ) : (
-                      <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
-                        <UserX className="h-3 w-3 text-rose-400" />
-                        No manager assigned
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-rose-500 bg-rose-50/40 border border-rose-100/50 px-2.5 py-1 rounded-lg w-fit">
+                        <UserX className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                        <span>No manager assigned</span>
+                      </div>
                     )}
                   </div>
                 );

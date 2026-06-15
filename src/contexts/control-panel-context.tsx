@@ -173,6 +173,9 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
 
   const updateUser = useCallback(async (id: string, changes: Partial<Omit<User, "id">>) => {
     const oldUser = users.find((u) => u.id === id);
+    if (oldUser?.role === "admin" && changes.role && changes.role !== "admin") {
+      throw new Error("Cannot change the role of an Admin user.");
+    }
     await update(ref(db, `users/${id}`), stripUndefined(changes));
 
     const newGarageId = changes.garageId !== undefined ? changes.garageId : oldUser?.garageId;
@@ -189,6 +192,10 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
   }, [users]);
 
   const changeUserId = useCallback(async (oldId: string, newId: string) => {
+    const oldUser = users.find((u) => u.id === oldId);
+    if (oldUser?.role === "admin") {
+      throw new Error("Cannot change the ID of an Admin user.");
+    }
     const oldRef = ref(db, `users/${oldId}`);
     const newRef = ref(db, `users/${newId}`);
     const snapshot = await get(oldRef);
@@ -201,10 +208,13 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
     if (data.garageId) {
       await update(ref(db, `garages/${data.garageId}`), { managerId: newId });
     }
-  }, []);
+  }, [users]);
 
   const deleteUser = useCallback(async (id: string) => {
     const user = users.find((u) => u.id === id);
+    if (user?.role === "admin") {
+      throw new Error("Cannot delete an Admin user.");
+    }
     if (user?.garageId) {
       await update(ref(db, `garages/${user.garageId}`), { managerId: null });
     }

@@ -256,19 +256,30 @@ export function UserList({ users, onEdit, onDelete, viewMode = "grid" }: UserLis
                 >
                   <Pencil className="h-4 w-4" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteClick(user.id)}
-                  className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-xl transition-all",
-                    deletingId === user.id
-                      ? "bg-red-100 text-red-600 hover:bg-red-200"
-                      : "bg-surface-100 text-slate-600 hover:bg-rose-50 hover:text-rose-600"
-                  )}
-                  aria-label={deletingId === user.id ? "Confirm delete" : "Delete user"}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {user.role !== "admin" ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteClick(user.id)}
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-xl transition-all",
+                      deletingId === user.id
+                        ? "bg-red-100 text-red-600 hover:bg-red-200"
+                        : "bg-surface-100 text-slate-600 hover:bg-rose-50 hover:text-rose-600"
+                    )}
+                    aria-label={deletingId === user.id ? "Confirm delete" : "Delete user"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    title="Admin users cannot be deleted"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-50 text-slate-300 cursor-not-allowed opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -393,18 +404,30 @@ export function UserList({ users, onEdit, onDelete, viewMode = "grid" }: UserLis
               <Pencil className="h-4 w-4" />
               Edit
             </button>
-            <button
-              type="button"
-              onClick={() => handleDeleteClick(user.id)}
-              className={cn(
-                "flex items-center justify-center rounded-xl px-4 transition-all",
-                deletingId === user.id
-                  ? "bg-red-100 text-red-600 hover:bg-red-200"
-                  : "bg-rose-50 text-rose-600 hover:bg-rose-100"
-              )}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {user.role !== "admin" ? (
+              <button
+                type="button"
+                onClick={() => handleDeleteClick(user.id)}
+                className={cn(
+                  "flex items-center justify-center rounded-xl px-4 transition-all",
+                  deletingId === user.id
+                    ? "bg-red-100 text-red-600 hover:bg-red-200"
+                    : "bg-rose-50 text-rose-600 hover:bg-rose-100"
+                )}
+                aria-label={deletingId === user.id ? "Confirm delete" : "Delete user"}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                title="Admin users cannot be deleted"
+                className="flex items-center justify-center rounded-xl px-4 bg-surface-50 text-slate-300 cursor-not-allowed opacity-50 border-none"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       ))}
