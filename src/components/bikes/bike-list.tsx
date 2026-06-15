@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Pencil, Trash2, Bike as BikeIcon, Calendar, AlertCircle, FileText, User, Store } from "lucide-react";
 import type { Bike } from "@/types/bike";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
@@ -17,7 +17,7 @@ type BikeListProps = {
   viewMode?: "grid" | "list";
 };
 
-function StatusBadge({ status }: { status: Bike["status"] }) {
+const StatusBadge = memo(function StatusBadge({ status }: { status: Bike["status"] }) {
   const label = BIKE_STATUSES.find((s) => s.id === status)?.label ?? status;
   const styles: Record<Bike["status"], string> = {
     good: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -32,7 +32,7 @@ function StatusBadge({ status }: { status: Bike["status"] }) {
       {label}
     </span>
   );
-}
+});
 
 function StripeColor(status: Bike["status"]) {
   const map: Record<Bike["status"], string> = {
@@ -43,7 +43,7 @@ function StripeColor(status: Bike["status"]) {
   return map[status];
 }
 
-export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = false, viewMode = "grid" }: BikeListProps) {
+const BikeListComponent = function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = false, viewMode = "grid" }: BikeListProps) {
   const { drivers } = useDrivers();
   const { garages } = useGarages();
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
@@ -246,3 +246,5 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
     </div>
   );
 }
+
+export const BikeList = memo(BikeListComponent);

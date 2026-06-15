@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Pencil, Trash2, Phone, Calendar, Bike as BikeIcon, User as UserIcon, Package, Store } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { DeliveryCategory } from "@/types/delivery-category";
@@ -22,7 +22,7 @@ type DriverListProps = {
   showGarage?: boolean;
 };
 
-export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid", deliveryCategories = [], garageMap = {}, showGarage = false }: DriverListProps) {
+const DriverListComponent = function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMode = "grid", deliveryCategories = [], garageMap = {}, showGarage = false }: DriverListProps) {
   const { bikes } = useBikes();
   const bikeMap = Object.fromEntries(bikes.map((b) => [b.id, b.plateNumber]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -279,3 +279,5 @@ export function DriverList({ drivers, onEdit, onDelete, readOnly = false, viewMo
     </div>
   );
 }
+
+export const DriverList = memo(DriverListComponent);

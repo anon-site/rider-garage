@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home, Package, Store } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { Bike } from "@/types/bike";
@@ -18,7 +19,7 @@ type DriverCardProps = {
   showGarage?: boolean;
 };
 
-export function DriverCard({ driver, bike, garage, onProfile, viewMode = "grid", deliveryCategories = [], showGarage = false }: DriverCardProps) {
+const DriverCardComponent = function DriverCard({ driver, bike, garage, onProfile, viewMode = "grid", deliveryCategories = [], showGarage = false }: DriverCardProps) {
   const { getLatestRecord } = useAttendance();
   const latestRecord = getLatestRecord(driver.id);
   const isOutside = latestRecord && !latestRecord.clockOut;
@@ -211,3 +212,5 @@ export function DriverCard({ driver, bike, garage, onProfile, viewMode = "grid",
     </div>
   );
 }
+
+export const DriverCard = memo(DriverCardComponent);
