@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Bike as BikeIcon, Calendar, AlertCircle, FileText, User } from "lucide-react";
+import { Pencil, Trash2, Bike as BikeIcon, Calendar, AlertCircle, FileText, User, Store } from "lucide-react";
 import type { Bike } from "@/types/bike";
 import { BIKE_STATUSES, BIKE_TYPES } from "@/types/bike";
 import { useDrivers } from "@/contexts/drivers-context";
+import { useGarages } from "@/contexts/control-panel-context";
 import { ConfirmDeleteModal } from "@/components/shared/confirm-delete-modal";
 
 type BikeListProps = {
@@ -44,7 +45,9 @@ function StripeColor(status: Bike["status"]) {
 
 export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = false, viewMode = "grid" }: BikeListProps) {
   const { drivers } = useDrivers();
+  const { garages } = useGarages();
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
+  const garageMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   function handleDeleteClick(id: string) {
@@ -81,7 +84,15 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
               </div>
               <div className="min-w-0 flex-1 grid grid-cols-[1fr_auto] sm:grid-cols-[1.5fr_1fr_1fr_auto] items-center gap-x-4">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-surface-900 truncate">{bike.plateNumber}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-bold text-surface-900 truncate">{bike.plateNumber}</p>
+                    {bike.garageId && (
+                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200/50">
+                        <Store className="h-3 w-3 shrink-0" />
+                        {garageMap[bike.garageId] ?? "Unknown Garage"}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-400">{bike.color ?? "—"} · {typeName}</p>
                 </div>
                 <div className="hidden sm:block">
@@ -147,9 +158,17 @@ export function BikeList({ bikes, onEdit, onDelete, readOnly = false, compact = 
                   <BikeIcon className={compact ? "h-5 w-5" : "h-4 w-4"} />
                 </div>
                 <div className="min-w-0">
-                  <h4 className={`font-bold text-surface-900 truncate ${compact ? "text-[13px]" : "text-sm"}`}>
-                    {bike.plateNumber}
-                  </h4>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className={`font-bold text-surface-900 truncate ${compact ? "text-[13px]" : "text-sm"}`}>
+                      {bike.plateNumber}
+                    </h4>
+                    {bike.garageId && (
+                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200/50">
+                        <Store className="h-3 w-3 shrink-0" />
+                        {garageMap[bike.garageId] ?? "Unknown Garage"}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-slate-400">{bike.color}</span>
                 </div>
               </div>

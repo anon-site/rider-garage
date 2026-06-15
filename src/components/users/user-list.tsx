@@ -134,7 +134,6 @@ export function UserList({ users, onEdit, onDelete, viewMode = "grid" }: UserLis
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const isGrid = viewMode === "grid";
   const garageMap = Object.fromEntries(garages.map((g) => [g.id, g]));
-  const garageNameMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
 
   function handleDeleteClick(id: string) {
     setDeletingId(id);
