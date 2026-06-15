@@ -26,13 +26,15 @@ import {
   exportPDF,
   exportCSV,
   parseImportJSON,
+  parseImportExcel,
   type DataScope,
   type SiteData,
   type ImportResult,
+  type ExtendedSiteData,
 } from "@/lib/data-io";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
-import { useUsers, useGarages } from "@/contexts/control-panel-context";
+import { useUsers, useGarages, useDeliveryCategories } from "@/contexts/control-panel-context";
 import { useAttendance } from "@/contexts/attendance-context";
 
 /* ─────────────────────────────────────────
@@ -162,7 +164,7 @@ function Toast({
 /* ─────────────────────────────────────────
    EXPORT PANEL
 ───────────────────────────────────────── */
-function ExportPanel({ data }: { data: SiteData }) {
+function ExportPanel({ data }: { data: ExtendedSiteData }) {
   const [format, setFormat] = useState<FormatId>("excel");
   const [scope, setScope] = useState<DataScope>("all");
   const [loading, setLoading] = useState(false);
@@ -332,32 +334,51 @@ type ImportPanelProps = {
 
 function ImportPanel({ onImport }: ImportPanelProps) {
   const [dragging, setDragging] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [pendingData, setPendingData] = useState<Partial<SiteData> | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const processFile = useCallback((file: File) => {
+  const processFile = useCallback(async (file: File) => {
     setConfirmed(false);
     setPendingData(null);
     setResult(null);
     setFileName(file.name);
+    setLoading(true);
 
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (ext !== "json") {
-      setResult({ ok: false, error: "Only JSON import is currently supported. Export as JSON first, then re-import." });
-      return;
+    
+    if (ext === "json") {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        const parsed = parseImportJSON(text);
+        setResult(parsed);
+        if (parsed.ok && parsed.data) setPendingData(parsed.data);
+        setLoading(false);
+      };
+      reader.readAsText(file);
+    } else if (ext === "xlsx" || ext === "xls" || ext === "csv") {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const buffer = e.target?.result as ArrayBuffer;
+          const parsed = await parseImportExcel(buffer);
+          setResult(parsed);
+          if (parsed.ok && parsed.data) setPendingData(parsed.data);
+        } catch {
+          setResult({ ok: false, error: "Failed to parse Excel file. Make sure it is a valid workbook." });
+        } finally {
+          setLoading(false);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      setResult({ ok: false, error: "Unsupported file format. Please upload a .json, .xlsx, .xls, or .csv file." });
+      setLoading(false);
     }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const parsed = parseImportJSON(text);
-      setResult(parsed);
-      if (parsed.ok && parsed.data) setPendingData(parsed.data);
-    };
-    reader.readAsText(file);
   }, []);
 
   function onDrop(e: React.DragEvent) {
@@ -387,28 +408,34 @@ function ImportPanel({ onImport }: ImportPanelProps) {
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => !loading && inputRef.current?.click()}
         className={cn(
-          "relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-all",
-          dragging
-            ? "border-brand-400 bg-brand-50"
-            : "border-surface-300 bg-surface-50/60 hover:border-brand-300 hover:bg-brand-50/30"
+          "relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-all",
+          loading
+            ? "border-brand-200 bg-brand-50/20 cursor-wait"
+            : dragging
+            ? "border-brand-400 bg-brand-50 cursor-pointer"
+            : "border-surface-300 bg-surface-50/60 hover:border-brand-300 hover:bg-brand-50/30 cursor-pointer"
         )}
       >
-        <input ref={inputRef} type="file" accept=".json" className="hidden" onChange={onInputChange} />
+        <input ref={inputRef} type="file" accept=".json,.xlsx,.xls,.csv" className="hidden" onChange={onInputChange} disabled={loading} />
         <span
           className={cn(
             "flex h-14 w-14 items-center justify-center rounded-2xl transition-all",
             dragging ? "bg-brand-100 text-brand-600" : "bg-surface-100 text-slate-400"
           )}
         >
-          <Upload className="h-7 w-7" strokeWidth={1.5} />
+          {loading ? (
+            <Loader2 className="h-7 w-7 animate-spin text-brand-600" />
+          ) : (
+            <Upload className="h-7 w-7" strokeWidth={1.5} />
+          )}
         </span>
         <div>
           <p className="font-semibold text-surface-900">
-            {dragging ? "Drop to upload" : "Drop file here or click to browse"}
+            {loading ? "Parsing your file..." : dragging ? "Drop to upload" : "Drop file here or click to browse"}
           </p>
-          <p className="mt-1 text-sm text-slate-400">Supports JSON export from this system</p>
+          <p className="mt-1 text-sm text-slate-400">Supports JSON, Excel (.xlsx, .xls), or CSV exports</p>
         </div>
         {fileName && !dragging && (
           <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">
@@ -495,8 +522,9 @@ export function ImportExportSection({ onImport }: ImportExportSectionProps) {
   const { users } = useUsers();
   const { garages } = useGarages();
   const { records: attendance } = useAttendance();
+  const { deliveryCategories } = useDeliveryCategories();
 
-  const data: SiteData = { drivers, bikes, users, garages, attendance };
+  const data: ExtendedSiteData = { drivers, bikes, users, garages, attendance, deliveryCategories };
 
   const tabs: { id: ActiveTab; label: string; icon: React.ElementType }[] = [
     { id: "export", label: "Export", icon: Download },

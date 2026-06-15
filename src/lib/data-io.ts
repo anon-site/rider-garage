@@ -307,3 +307,133 @@ export function parseImportJSON(text: string): ImportResult {
     return { ok: false, error: "Invalid JSON format. Please check your file." };
   }
 }
+
+export async function parseImportExcel(arrayBuffer: ArrayBuffer): Promise<ImportResult> {
+  try {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.read(arrayBuffer, { type: "array" });
+    const result: Partial<SiteData> = {};
+    const summary: Record<string, number> = {};
+
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    function getSheetRows(sheetName: string): any[] {
+      const ws = wb.Sheets[sheetName];
+      if (!ws) return [];
+      return XLSX.utils.sheet_to_json(ws);
+    }
+
+    // Drivers
+    const driversRows = getSheetRows("Drivers");
+    if (driversRows.length > 0) {
+      const rows = driversRows.filter(r => r.ID && !String(r.ID).startsWith("Total:"));
+      const drivers: Driver[] = rows.map((r) => ({
+        id: String(r.ID || ""),
+        name: String(r.Name || ""),
+        phone: String(r.Phone || ""),
+        appId: String(r["App ID"] || ""),
+        joinDate: r["Join Date"] ? String(r["Join Date"]) : undefined,
+        preferredBikeType: r["Preferred Bike Type"] && (String(r["Preferred Bike Type"]).toLowerCase().includes("motor") || String(r["Preferred Bike Type"]) === "electric_motorcycle") 
+          ? "electric_motorcycle" 
+          : r["Preferred Bike Type"] 
+          ? "electric_bicycle" 
+          : undefined,
+        deliveryCategoryIds: r["Delivery Category"] ? String(r["Delivery Category"]).split(", ").filter(Boolean) : [],
+        bikeId: r["Bike ID"] ? String(r["Bike ID"]) : undefined,
+        garageId: r["Garage ID"] ? String(r["Garage ID"]) : undefined,
+      }));
+      result.drivers = drivers;
+      summary.drivers = drivers.length;
+    }
+
+    // Bikes
+    const bikesRows = getSheetRows("Bikes");
+    if (bikesRows.length > 0) {
+      const rows = bikesRows.filter(r => r.ID && !String(r.ID).startsWith("Total:"));
+      const bikes: Bike[] = rows.map((r) => {
+        const rawType = String(r["Bike Type"] || "").toLowerCase();
+        const bikeType = rawType.includes("motor") || rawType === "electric_motorcycle" ? "electric_motorcycle" : "electric_bicycle";
+        
+        const rawStatus = String(r.Status || "").toLowerCase();
+        const status = rawStatus.includes("defect") || rawStatus === "defective" ? "defective" : rawStatus.includes("maint") || rawStatus === "maintenance" ? "maintenance" : "good";
+        
+        return {
+          id: String(r.ID || ""),
+          plateNumber: String(r["Plate Number"] || ""),
+          color: r.Color ? String(r.Color) : null,
+          bikeType,
+          status,
+          registrationDate: r["Registration Date"] ? String(r["Registration Date"]) : null,
+          defectDescription: r["Defect Description"] ? String(r["Defect Description"]) : null,
+          notes: r.Notes ? String(r.Notes) : null,
+          garageId: r["Garage ID"] ? String(r["Garage ID"]) : null,
+          driverId: r["Driver ID"] ? String(r["Driver ID"]) : null,
+        };
+      });
+      result.bikes = bikes;
+      summary.bikes = bikes.length;
+    }
+
+    // Users
+    const usersRows = getSheetRows("Users");
+    if (usersRows.length > 0) {
+      const rows = usersRows.filter(r => r.ID && !String(r.ID).startsWith("Total:"));
+      const users: User[] = rows.map((r) => {
+        const rawRole = String(r.Role || "observer").toLowerCase();
+        const role = rawRole.includes("admin") ? "admin" : rawRole.includes("super") ? "supervisor" : rawRole.includes("manag") || rawRole === "garage" ? "garage" : "observer";
+        return {
+          id: String(r.ID || ""),
+          name: String(r.Name || ""),
+          email: String(r.Email || ""),
+          phone: String(r.Phone || ""),
+          role,
+          garageId: r["Garage ID"] ? String(r["Garage ID"]) : undefined,
+          username: String(r.Username || r.Name || "").toLowerCase().replace(/\s+/g, ""),
+          password: String(r.Password || "123456"),
+          customPermissions: null,
+        };
+      });
+      result.users = users;
+      summary.users = users.length;
+    }
+
+    // Garages
+    const garagesRows = getSheetRows("Garages");
+    if (garagesRows.length > 0) {
+      const rows = garagesRows.filter(r => r.ID && !String(r.ID).startsWith("Total:"));
+      const garages: Garage[] = rows.map((r) => ({
+        id: String(r.ID || ""),
+        name: String(r.Name || ""),
+        location: String(r.Location || ""),
+        capacity: Number(r.Capacity || 0),
+        managerId: r["Manager ID"] ? String(r["Manager ID"]) : undefined,
+      }));
+      result.garages = garages;
+      summary.garages = garages.length;
+    }
+
+    // Attendance
+    const attendanceRows = getSheetRows("Attendance");
+    if (attendanceRows.length > 0) {
+      const rows = attendanceRows.filter(r => r.ID && !String(r.ID).startsWith("Total:"));
+      const attendance: AttendanceRecord[] = rows.map((r) => ({
+        id: String(r.ID || ""),
+        driverId: String(r["Driver ID"] || ""),
+        clockIn: String(r["Clock In"] || ""),
+        clockOut: r["Clock Out"] ? String(r["Clock Out"]) : undefined,
+        ordersDelivered: Number(r["Orders Delivered"] || 0),
+        rating: Number(r.Rating || 0),
+        notes: r.Notes ? String(r.Notes) : undefined,
+      }));
+      result.attendance = attendance;
+      summary.attendance = attendance.length;
+    }
+
+    if (Object.keys(result).length === 0) {
+      return { ok: false, error: "No recognisable data sheets found in Excel file." };
+    }
+
+    return { ok: true, data: result, summary };
+  } catch (err) {
+    return { ok: false, error: `Failed to parse Excel workbook: ${err instanceof Error ? err.message : "Invalid format"}` };
+  }
+}

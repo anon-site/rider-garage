@@ -13,7 +13,7 @@ import { exportPDF, exportExcel } from "@/lib/export-utils";
 import { useAttendance } from "@/contexts/attendance-context";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
-import { useGarages } from "@/contexts/control-panel-context";
+import { useGarages, useDeliveryCategories } from "@/contexts/control-panel-context";
 import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 
@@ -136,6 +136,7 @@ export function ReportsSection() {
   const { drivers } = useDrivers();
   const { bikes } = useBikes();
   const { garages } = useGarages();
+  const { deliveryCategories } = useDeliveryCategories();
   const { user, permissions } = useAuth();
 
   // Hide garages for garage managers and supervisors
@@ -281,10 +282,12 @@ export function ReportsSection() {
     setExporting(type);
     const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d.name]));
     const garageMap = Object.fromEntries(garages.map((g) => [g.id, g.name]));
+    const deliveryCategoryMap = Object.fromEntries(deliveryCategories.map((c) => [c.id, c.name]));
+    
     // Exclude garageStats for garage managers in export
     const exportData = isGarageManager
-      ? { driverStats, bikes, filteredRecords, driverMap, garageMap }
-      : { driverStats, bikes, garageStats, filteredRecords, driverMap, garageMap };
+      ? { driverStats, bikes, filteredRecords, driverMap, garageMap, deliveryCategoryMap }
+      : { driverStats, bikes, garageStats, filteredRecords, driverMap, garageMap, deliveryCategoryMap };
     try {
       if (type === "pdf") await exportPDF(exportData, period);
       else await exportExcel(exportData, period);

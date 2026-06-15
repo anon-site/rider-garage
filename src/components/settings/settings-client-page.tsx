@@ -17,23 +17,21 @@ export function SettingsClientPage() {
 
   const handleImport = useCallback(
     (data: Partial<SiteData>) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      /* eslint-disable @typescript-eslint/no-unused-vars */
       if (data.drivers) data.drivers.forEach(({ id, ...rest }) => addDriver(rest));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       if (data.bikes) data.bikes.forEach(({ id, ...rest }) => addBike(rest));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       if (data.users) data.users.forEach(({ id, ...rest }) => addUser(rest));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       if (data.garages) data.garages.forEach(({ id, ...rest }) => addGarage(rest));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       if (data.attendance) data.attendance.forEach(({ id, ...rest }) => addRecord(rest));
+      /* eslint-enable @typescript-eslint/no-unused-vars */
     },
     [addDriver, addBike, addUser, addGarage, addRecord]
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <ImportExportSection onImport={handleImport} />
     </div>
   );
 }
+
