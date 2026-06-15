@@ -20,12 +20,11 @@ async function main() {
     const data = snap.val() || {};
     console.log("Root keys:", Object.keys(data));
     
-    if (data.attendance) {
-      console.log("=== ATTENDANCE (First 5) ===");
-      Object.entries(data.attendance).slice(0, 5).forEach(([id, r]) => {
-        console.log(id, JSON.stringify(r));
-      });
-    }
+    console.log("=== SYSTEM ===");
+    console.log(data.system);
+    
+    console.log("=== DELIVERY CATEGORIES ===");
+    console.log(data.deliveryCategories);
   } catch (err) {
     console.error(err);
   }

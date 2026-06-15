@@ -120,6 +120,18 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
         const adminRef = push(ref(db, "users"));
         set(adminRef, SEED_ADMIN);
         setUsers([{ ...SEED_ADMIN, id: adminRef.key! }]);
+
+        /* Seed default delivery categories on first run */
+        const categoriesRef = ref(db, "deliveryCategories");
+        get(categoriesRef).then((catSnap) => {
+          if (!catSnap.exists()) {
+            const promises = DELIVERY_CATEGORIES.map(async (cat) => {
+              const catRef = push(ref(db, "deliveryCategories"));
+              await set(catRef, cat);
+            });
+            Promise.all(promises);
+          }
+        });
       }
       usersReady = true;
       checkDone();
@@ -136,35 +148,9 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
     const deliveryCategoriesRef = ref(db, "deliveryCategories");
     const unsubDeliveryCategories = onValue(deliveryCategoriesRef, (snap) => {
       const data = snap.val() as Record<string, Omit<DeliveryCategory, "id">> | null;
-      if (data) {
-        setDeliveryCategories(Object.entries(data).map(([id, c]) => ({ ...c, id })));
-        deliveryCategoriesReady = true;
-        checkDone();
-      } else {
-        // Only seed if not initialized yet in database
-        const initRef = ref(db, "system/deliveryCategoriesInitialized");
-        get(initRef).then(async (initSnap) => {
-          if (!initSnap.val()) {
-            await set(initRef, true);
-            const seedCategories = DELIVERY_CATEGORIES;
-            const promises = seedCategories.map(async (cat) => {
-              const catRef = push(ref(db, "deliveryCategories"));
-              await set(catRef, cat);
-              return { ...cat, id: catRef.key! };
-            });
-            const seeded = await Promise.all(promises);
-            setDeliveryCategories(seeded);
-          } else {
-            setDeliveryCategories([]);
-          }
-          deliveryCategoriesReady = true;
-          checkDone();
-        }).catch(() => {
-          setDeliveryCategories([]);
-          deliveryCategoriesReady = true;
-          checkDone();
-        });
-      }
+      setDeliveryCategories(data ? Object.entries(data).map(([id, c]) => ({ ...c, id })) : []);
+      deliveryCategoriesReady = true;
+      checkDone();
     });
 
     return () => {
