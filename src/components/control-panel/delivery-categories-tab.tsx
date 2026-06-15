@@ -38,7 +38,12 @@ export function DeliveryCategoriesTab() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this delivery category?")) {
-      await deleteDeliveryCategory(id);
+      try {
+        await deleteDeliveryCategory(id);
+      } catch (err) {
+        const error = err as Error;
+        alert(error.message || "Failed to delete delivery category");
+      }
     }
   };
 

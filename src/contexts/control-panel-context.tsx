@@ -138,20 +138,33 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
       const data = snap.val() as Record<string, Omit<DeliveryCategory, "id">> | null;
       if (data) {
         setDeliveryCategories(Object.entries(data).map(([id, c]) => ({ ...c, id })));
+        deliveryCategoriesReady = true;
+        checkDone();
       } else {
-        // Seed default delivery categories on first run
-        const seedCategories = DELIVERY_CATEGORIES;
-        const promises = seedCategories.map(async (cat) => {
-          const catRef = push(ref(db, "deliveryCategories"));
-          await set(catRef, cat);
-          return { ...cat, id: catRef.key! };
-        });
-        Promise.all(promises).then((seeded) => {
-          setDeliveryCategories(seeded);
+        // Only seed if not initialized yet in database
+        const initRef = ref(db, "system/deliveryCategoriesInitialized");
+        get(initRef).then(async (initSnap) => {
+          if (!initSnap.val()) {
+            await set(initRef, true);
+            const seedCategories = DELIVERY_CATEGORIES;
+            const promises = seedCategories.map(async (cat) => {
+              const catRef = push(ref(db, "deliveryCategories"));
+              await set(catRef, cat);
+              return { ...cat, id: catRef.key! };
+            });
+            const seeded = await Promise.all(promises);
+            setDeliveryCategories(seeded);
+          } else {
+            setDeliveryCategories([]);
+          }
+          deliveryCategoriesReady = true;
+          checkDone();
+        }).catch(() => {
+          setDeliveryCategories([]);
+          deliveryCategoriesReady = true;
+          checkDone();
         });
       }
-      deliveryCategoriesReady = true;
-      checkDone();
     });
 
     return () => {
