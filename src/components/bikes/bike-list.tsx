@@ -84,16 +84,16 @@ const BikeListComponent = function BikeList({ bikes, onEdit, onDelete, readOnly 
               </div>
               <div className="min-w-0 flex-1 grid grid-cols-[1fr_auto] sm:grid-cols-[1.5fr_1fr_1fr_auto] items-center gap-x-4">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-bold text-surface-900 truncate">{bike.plateNumber}</p>
+                  <p className="text-sm font-bold text-surface-900">{bike.plateNumber}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
                     {bike.garageId && (
-                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200/50">
+                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200/50 shrink-0">
                         <Store className="h-3 w-3 shrink-0" />
                         {garageMap[bike.garageId] ?? "Unknown Garage"}
                       </span>
                     )}
+                    <p className="text-xs text-slate-400">{bike.color ?? "—"} · {typeName}</p>
                   </div>
-                  <p className="text-xs text-slate-400">{bike.color ?? "—"} · {typeName}</p>
                 </div>
                 <div className="hidden sm:block">
                   <StatusBadge status={bike.status} />
@@ -153,23 +153,23 @@ const BikeListComponent = function BikeList({ bikes, onEdit, onDelete, readOnly 
           <div className={`flex flex-1 flex-col p-4 ${compact ? "gap-2.5" : "gap-3"}`}>
             {/* Header row */}
             <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
                 <div className={`flex shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-sm ${compact ? "h-10 w-10" : "h-9 w-9"}`}>
                   <BikeIcon className={compact ? "h-5 w-5" : "h-4 w-4"} />
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className={`font-bold text-surface-900 truncate ${compact ? "text-[13px]" : "text-sm"}`}>
-                      {bike.plateNumber}
-                    </h4>
+                <div className="min-w-0 flex-1">
+                  <h4 className={`font-bold text-surface-900 ${compact ? "text-[13px]" : "text-sm"}`}>
+                    {bike.plateNumber}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-0.5">
                     {bike.garageId && (
-                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200/50">
+                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200/50 shrink-0">
                         <Store className="h-3 w-3 shrink-0" />
                         {garageMap[bike.garageId] ?? "Unknown Garage"}
                       </span>
                     )}
+                    <span className="text-xs text-slate-400">{bike.color}</span>
                   </div>
-                  <span className="text-xs text-slate-400">{bike.color}</span>
                 </div>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
