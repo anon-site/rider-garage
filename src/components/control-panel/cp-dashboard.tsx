@@ -644,12 +644,12 @@ export function CpDashboard() {
           {/* ── Live Activity Feed ── */}
           <div className="glass-panel rounded-2xl p-5 ring-1 ring-white/60 shadow-lg shadow-surface-900/5">
             <div className="mb-4 flex items-center justify-between border-b border-surface-100 pb-3">
-              <SectionTitle icon={Activity} title="Live Activity" badge={categoryFilteredRecords.filter(r => !r.clockOut).length} />
-              <span className="text-xs text-slate-400">Currently on shift</span>
+              <SectionTitle icon={Activity} title="Live Activity" badge={categoryFilteredRecords.filter(r => !r.clockOut && Date.now() - new Date(r.clockIn).getTime() < 7 * 86400000).length} />
+              <span className="text-xs text-slate-400">Currently on shift (last 7 days)</span>
             </div>
             <div className="space-y-2.5">
               {categoryFilteredRecords
-                .filter(r => !r.clockOut)
+                .filter(r => !r.clockOut && Date.now() - new Date(r.clockIn).getTime() < 7 * 86400000)
                 .sort((a, b) => new Date(a.clockIn).getTime() - new Date(b.clockIn).getTime())
                 .map((r) => {
                   const driver = categoryFilteredDrivers.find((d) => d.id === r.driverId);
@@ -696,7 +696,7 @@ export function CpDashboard() {
                     </div>
                   );
                 })}
-              {categoryFilteredRecords.filter(r => !r.clockOut).length === 0 && (
+              {categoryFilteredRecords.filter(r => !r.clockOut && Date.now() - new Date(r.clockIn).getTime() < 7 * 86400000).length === 0 && (
                 <div className="text-center py-8">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-100 mx-auto mb-3">
                     <UserX className="h-6 w-6 text-slate-400" />
@@ -711,12 +711,12 @@ export function CpDashboard() {
           {/* ── Attendance Log ── */}
           <div className="glass-panel rounded-2xl p-5 ring-1 ring-white/60 shadow-lg shadow-surface-900/5">
             <div className="mb-4 flex items-center justify-between border-b border-surface-100 pb-3">
-              <SectionTitle icon={BarChart3} title="Attendance Log" badge={categoryFilteredRecords.filter(r => r.clockOut).length} />
-              <span className="text-xs text-slate-400">Recent completed sessions</span>
+              <SectionTitle icon={BarChart3} title="Attendance Log" badge={categoryFilteredRecords.filter(r => r.clockOut && Date.now() - new Date(r.clockIn).getTime() < 7 * 86400000).length} />
+              <span className="text-xs text-slate-400">Last 7 days</span>
             </div>
             <div className="space-y-2.5">
               {[...categoryFilteredRecords]
-                .filter(r => r.clockOut)
+                .filter(r => r.clockOut && Date.now() - new Date(r.clockIn).getTime() < 7 * 86400000)
                 .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime())
                 .slice(0, 8)
                 .map((r) => {
@@ -761,7 +761,7 @@ export function CpDashboard() {
                     </div>
                   );
                 })}
-              {categoryFilteredRecords.filter(r => r.clockOut).length === 0 && (
+              {categoryFilteredRecords.filter(r => r.clockOut && Date.now() - new Date(r.clockIn).getTime() < 7 * 86400000).length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-sm font-medium text-slate-500">No completed sessions yet</p>
                 </div>

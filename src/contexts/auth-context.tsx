@@ -111,10 +111,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Load user from storage on mount (check localStorage first, then sessionStorage)
   useEffect(() => {
-    const savedUser = localStorage.getItem("rider-garage-user") || sessionStorage.getItem("rider-garage-user");
-    if (savedUser) {
+    const raw = localStorage.getItem("rider-garage-user") || sessionStorage.getItem("rider-garage-user");
+    if (raw) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(raw);
+        const savedAt = parsed.__savedAt as number | undefined;
+        const isRemember = !!localStorage.getItem("rider-garage-user");
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        if (savedAt && Date.now() - savedAt > maxAge) {
+          // Session expired
+          localStorage.removeItem("rider-garage-user");
+          sessionStorage.removeItem("rider-garage-user");
+        } else {
+          const { __savedAt, ...userData } = parsed;
+          setUser(userData as User);
+        }
       } catch {
         localStorage.removeItem("rider-garage-user");
         sessionStorage.removeItem("rider-garage-user");
@@ -183,8 +194,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       setUser(found);
       // Save to localStorage if rememberMe, otherwise sessionStorage
+      // Remove password before persisting & add timestamp for expiry
+      const { password: _pw, ...safeUser } = found;
       const storage = rememberMe ? localStorage : sessionStorage;
-      storage.setItem("rider-garage-user", JSON.stringify(found));
+      storage.setItem("rider-garage-user", JSON.stringify({ ...safeUser, __savedAt: Date.now() }));
       return null;
     },
     []

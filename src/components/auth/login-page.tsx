@@ -142,8 +142,8 @@ export function LoginPage() {
             background: "linear-gradient(175deg, #002e2d 0%, #0a0a0a 100%)",
             border: "1px solid #00a4a2",
             boxShadow: "0 0 0 1px #001f1f, 0 0 20px rgba(0,255,253,0.25), inset 0 1px 0 rgba(0,255,253,0.08)",
-            width: "min(90vw, 420px)",
-            padding: "clamp(20px, 4vw, 32px) clamp(16px, 4vw, 24px)",
+            width: "min(90vw, 380px)",
+            padding: "clamp(24px, 4vw, 36px) clamp(24px, 4vw, 32px)",
             transition: "box-shadow 0.6s",
             borderRadius: 16,
           }}
@@ -155,7 +155,7 @@ export function LoginPage() {
           }}
         >
           {/* Username */}
-          <div style={{ position: "relative", width: "min(85vw, 360px)", margin: "0 auto clamp(10px, 2vw, 14px)" }}>
+          <div style={{ position: "relative", width: "85%", margin: "0 auto clamp(10px, 2vw, 14px)" }}>
             <span style={{
               position: "absolute", left: 0, top: 0, width: 10, height: 10,
               borderTop: "2px solid #00fffc", borderLeft: "2px solid #00fffc",
@@ -203,7 +203,7 @@ export function LoginPage() {
           </div>
 
           {/* Password */}
-          <div style={{ position: "relative", width: "min(85vw, 360px)", margin: "0 auto 8px" }}>
+          <div style={{ position: "relative", width: "85%", margin: "0 auto 8px" }}>
             <span style={{
               position: "absolute", left: 0, top: 0, width: 10, height: 10,
               borderTop: "2px solid #00fffc", borderLeft: "2px solid #00fffc",
@@ -265,7 +265,7 @@ export function LoginPage() {
           </div>
 
           {/* Remember me */}
-          <div style={{ width: "min(85vw, 360px)", margin: "0 auto 8px" }}>
+          <div style={{ width: "100%", margin: "0 auto 8px" }}>
             <label
               style={{
                 display: "flex",
@@ -297,7 +297,7 @@ export function LoginPage() {
             <div
               className="flex items-center gap-2"
               style={{
-                width: "min(85vw, 360px)", margin: "0 auto 8px",
+                width: "100%", margin: "0 auto 8px",
                 background: "rgba(255,50,50,0.1)",
                 border: "1px solid rgba(255,80,80,0.3)",
                 borderRadius: 5, padding: "6px 10px",
@@ -310,7 +310,7 @@ export function LoginPage() {
           )}
 
           {/* Submit */}
-          <div style={{ position: "relative", width: "min(85vw, 360px)", margin: "10px auto 0" }}>
+          <div style={{ position: "relative", width: "60%", margin: "10px auto 0" }}>
             {/* corner accents */}
             <span style={{ position:"absolute", left:0, top:0, width:12, height:12, borderTop:"2px solid #00fffc", borderLeft:"2px solid #00fffc", borderTopLeftRadius:10, zIndex:1 }} />
             <span style={{ position:"absolute", right:0, top:0, width:12, height:12, borderTop:"2px solid #00fffc", borderRight:"2px solid #00fffc", borderTopRightRadius:10, zIndex:1 }} />
