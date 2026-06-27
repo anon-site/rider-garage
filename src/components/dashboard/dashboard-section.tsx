@@ -9,7 +9,6 @@ import { useDeliveryCategories, useGarages } from "@/contexts/control-panel-cont
 import { useAuth } from "@/contexts/auth-context";
 import { DriverCard } from "./driver-card";
 import { DriverProfileModal } from "./driver-profile-modal";
-import { MonthNavigation } from "@/components/ui/month-navigation";
 import type { Driver } from "@/types/driver";
 
 type FilterType = "all" | "active" | "with-bike" | "waiting";
@@ -54,7 +53,7 @@ export function DashboardSection() {
   const { garages } = useGarages();
   const { drivers: allDrivers } = useDrivers();
   const { bikes: allBikes } = useBikes();
-  const { records, currentMonth } = useAttendance();
+  const { records } = useAttendance();
   const { deliveryCategories } = useDeliveryCategories();
 
   const managedGarage = useMemo(() => {
@@ -117,14 +116,6 @@ export function DashboardSection() {
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [profileDriver, setProfileDriver] = useState<Driver | null>(null);
-  const [loadingMonth] = useState(false);
-
-  // Load different month data
-  const loadReportMonth = useCallback(async (year: number, month: number) => {
-    // For dashboard, we'll use the existing loadMonth from attendance context
-    // This is a placeholder since dashboard doesn't need month-specific loading
-    console.log(`Loading month: ${year}-${month}`);
-  }, []);
 
   const filteredDrivers = useMemo(() => {
     let result = drivers;
@@ -288,34 +279,6 @@ export function DashboardSection() {
           </div>
         </div>
       )}
-
-      {/* Month Navigation Bar */}
-      <div className="relative rounded-2xl border border-surface-200 bg-gradient-to-r from-surface-50 to-white p-4 sm:p-5 shadow-sm">
-        <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-surface-400/5 blur-2xl" />
-        </div>
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-surface-600 to-surface-700 text-white shadow-md shadow-surface-200">
-              <Clock className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-surface-600">Attendance Period</span>
-              <h2 className="text-lg font-extrabold text-surface-900 leading-tight">
-                {new Date(currentMonth.year, currentMonth.month - 1).toLocaleString('en', { month: 'long', year: 'numeric' })}
-              </h2>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <MonthNavigation
-              currentMonth={currentMonth}
-              onMonthChange={loadReportMonth}
-              loading={loadingMonth}
-            />
-          </div>
-        </div>
-      </div>
 
       {user?.role === "admin" && adminView === "garages" ? (
         <div className="space-y-4">

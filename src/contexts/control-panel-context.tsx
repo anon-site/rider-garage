@@ -43,10 +43,10 @@ function stripUndefined<T extends object>(obj: T): Partial<T> {
 function generateUserId(existingIds: string[]): string {
   const prefix = "USR-";
   let counter = 1;
-  let newId = `${prefix}${String(counter).padStart(6, "0")}`;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
   while (existingIds.includes(newId)) {
     counter++;
-    newId = `${prefix}${String(counter).padStart(6, "0")}`;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
   }
   return newId;
 }
@@ -54,10 +54,10 @@ function generateUserId(existingIds: string[]): string {
 function generateGarageId(existingIds: string[]): string {
   const prefix = "GRG-";
   let counter = 1;
-  let newId = `${prefix}${String(counter).padStart(6, "0")}`;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
   while (existingIds.includes(newId)) {
     counter++;
-    newId = `${prefix}${String(counter).padStart(6, "0")}`;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
   }
   return newId;
 }
@@ -65,10 +65,10 @@ function generateGarageId(existingIds: string[]): string {
 function generateDeliveryCategoryId(existingIds: string[]): string {
   const prefix = "DC-";
   let counter = 1;
-  let newId = `${prefix}${String(counter).padStart(6, "0")}`;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
   while (existingIds.includes(newId)) {
     counter++;
-    newId = `${prefix}${String(counter).padStart(6, "0")}`;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
   }
   return newId;
 }
