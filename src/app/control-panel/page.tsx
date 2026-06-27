@@ -2,7 +2,7 @@ export const dynamic = "force-static";
 import { AppShell } from "@/components/layout/app-shell";
 import { Tabs } from "@/components/ui/tabs";
 import { UsersSection } from "@/components/users/users-section";
-import { CpDashboard } from "@/components/control-panel/cp-dashboard";
+import { CpDashboardOptimized } from "@/components/control-panel/cp-dashboard-optimized";
 import { RouteGuard } from "@/components/auth/route-guard";
 
 export default function ControlPanelPage() {
@@ -11,7 +11,7 @@ export default function ControlPanelPage() {
       <RouteGuard require="canManageUsers">
         <Tabs
           tabs={[
-            { id: "dashboard", label: "Dashboard", content: <CpDashboard /> },
+            { id: "dashboard", label: "Dashboard", content: <CpDashboardOptimized /> },
             { id: "users",     label: "Users",     content: <UsersSection /> },
           ]}
         />

@@ -9,6 +9,7 @@ import { useDeliveryCategories, useGarages } from "@/contexts/control-panel-cont
 import { useAuth } from "@/contexts/auth-context";
 import { DriverCard } from "./driver-card";
 import { DriverProfileModal } from "./driver-profile-modal";
+import { MonthNavigation } from "@/components/ui/month-navigation";
 import type { Driver } from "@/types/driver";
 
 type FilterType = "all" | "active" | "with-bike" | "waiting";
@@ -339,55 +340,11 @@ export function DashboardSection() {
           </div>
           
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => navigateMonth('prev')}
-              disabled={loadingMonth}
-              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-surface-600 ring-1 ring-surface-200 transition-all hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Previous month"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => navigateMonth('next')}
-              disabled={loadingMonth}
-              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-surface-600 ring-1 ring-surface-200 transition-all hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Next month"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            
-            {/* Back to current month button */}
-            {(() => {
-              const now = new Date();
-              const currentYear = now.getFullYear();
-              const currentMonthNum = now.getMonth() + 1;
-              const isCurrentMonth = currentYear === currentMonth.year && currentMonthNum === currentMonth.month;
-              
-              return !isCurrentMonth ? (
-                <button
-                  type="button"
-                  onClick={backToCurrentMonth}
-                  disabled={loadingMonth}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-brand-600 ring-1 ring-brand-200 transition-all hover:bg-brand-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Back to current month"
-                >
-                  <Timer className="h-4 w-4" />
-                  Current Month
-                </button>
-              ) : null;
-            })()}
-            
-            {loadingMonth && (
-              <div className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-surface-500">
-                <div className="h-4 w-4 animate-spin rounded-full border border-surface-300 border-t-transparent" />
-                Loading...
-              </div>
-            )}
+            <MonthNavigation
+              currentMonth={currentMonth}
+              onMonthChange={loadReportMonth}
+              loading={loadingMonth}
+            />
           </div>
         </div>
       </div>
