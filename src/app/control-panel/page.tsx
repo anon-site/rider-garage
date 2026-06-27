@@ -4,6 +4,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { UsersSection } from "@/components/users/users-section";
 import { CpDashboard } from "@/components/control-panel/cp-dashboard";
 import { RouteGuard } from "@/components/auth/route-guard";
+import { AttendanceProvider } from "@/contexts/attendance-context";
 
 export default function ControlPanelPage() {
   return (
@@ -11,7 +12,11 @@ export default function ControlPanelPage() {
       <RouteGuard require="canManageUsers">
         <Tabs
           tabs={[
-            { id: "dashboard", label: "Dashboard", content: <CpDashboard /> },
+            { id: "dashboard", label: "Dashboard", content: (
+              <AttendanceProvider>
+                <CpDashboard />
+              </AttendanceProvider>
+            ) },
             { id: "users",     label: "Users",     content: <UsersSection /> },
           ]}
         />

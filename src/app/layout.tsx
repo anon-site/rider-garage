@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/auth-context";
 import { ControlPanelProvider } from "@/contexts/control-panel-context";
 import { BikesProvider } from "@/contexts/bikes-context";
 import { DriversProvider } from "@/contexts/drivers-context";
-import { AttendanceProvider } from "@/contexts/attendance-context";
+import { LiveShiftsProvider } from "@/contexts/live-shifts-context";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { SecurityGuard } from "@/components/auth/security-guard";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -38,9 +38,9 @@ export default function RootLayout({
         <ControlPanelProvider>
           <BikesProvider>
             <DriversProvider>
-              <AttendanceProvider>
-                <AuthProvider>
-                  <AuthGate>
+              <AuthProvider>
+                <AuthGate>
+                  <LiveShiftsProvider>
                     <SecurityGuard>
                       <ToastProvider>
                         <SidebarProvider>
@@ -51,9 +51,9 @@ export default function RootLayout({
                         </SidebarProvider>
                       </ToastProvider>
                     </SecurityGuard>
-                  </AuthGate>
-                </AuthProvider>
-              </AttendanceProvider>
+                  </LiveShiftsProvider>
+                </AuthGate>
+              </AuthProvider>
             </DriversProvider>
           </BikesProvider>
         </ControlPanelProvider>

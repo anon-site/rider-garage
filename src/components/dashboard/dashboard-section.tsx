@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List, Store, MapPin, ChevronDown, ChevronUp, Check } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
-import { useAttendance } from "@/contexts/attendance-context";
+import { useLiveShifts } from "@/contexts/live-shifts-context";
 import { useDeliveryCategories, useGarages } from "@/contexts/control-panel-context";
 import { useAuth } from "@/contexts/auth-context";
 import { DriverCard } from "./driver-card";
@@ -53,7 +53,7 @@ export function DashboardSection() {
   const { garages } = useGarages();
   const { drivers: allDrivers } = useDrivers();
   const { bikes: allBikes } = useBikes();
-  const { records } = useAttendance();
+  const { activeDriverIds } = useLiveShifts();
   const { deliveryCategories } = useDeliveryCategories();
 
   const managedGarage = useMemo(() => {
@@ -107,10 +107,7 @@ export function DashboardSection() {
   const bikeMap = useMemo(() => Object.fromEntries(bikes.map((b) => [b.id, b])), [bikes]);
   const garageMap = useMemo(() => Object.fromEntries(garages.map((g) => [g.id, g])), [garages]);
 
-  const hasOpenExit = useCallback(
-    (driverId: string) => records.some((r) => r.driverId === driverId && r.clockIn && !r.clockOut),
-    [records]
-  );
+  const hasOpenExit = useCallback((driverId: string) => activeDriverIds.has(driverId), [activeDriverIds]);
 
   const [filter, setFilter] = useState<FilterType>("all");
   const [query, setQuery] = useState("");

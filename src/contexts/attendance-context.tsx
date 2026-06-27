@@ -9,15 +9,14 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { ref, onValue, push, set, update, remove } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 import { db } from "@/lib/firebase";
+import {
+  addAttendanceRecord,
+  updateAttendanceRecord,
+  deleteAttendanceRecord,
+} from "@/lib/attendance-mutations";
 import type { AttendanceRecord } from "@/types/attendance";
-
-function stripUndefined<T extends object>(obj: T): Partial<T> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined)
-  ) as Partial<T>;
-}
 
 type AttendanceContextValue = {
   records: AttendanceRecord[];
@@ -34,6 +33,8 @@ const AttendanceContext = createContext<AttendanceContextValue | null>(null);
 export function AttendanceProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recordsByDriver, setRecordsByDriver] = useState<Map<string, AttendanceRecord[]>>(new Map());
+  const [latestByDriver, setLatestByDriver] = useState<Map<string, AttendanceRecord | null>>(new Map());
 
   useEffect(() => {
     const attRef = ref(db, "attendance");
@@ -45,36 +46,49 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     return () => unsub();
   }, []);
 
+  // Build fast indexes whenever the global records change so lookups are O(1)
+  useEffect(() => {
+    const byDriver = new Map<string, AttendanceRecord[]>();
+    const latest = new Map<string, AttendanceRecord | null>();
+
+    for (const r of records) {
+      let list = byDriver.get(r.driverId);
+      if (!list) {
+        list = [];
+        byDriver.set(r.driverId, list);
+      }
+      list.push(r);
+    }
+
+    for (const [driverId, list] of byDriver.entries()) {
+      list.sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime());
+      latest.set(driverId, list[0] ?? null);
+    }
+
+    setRecordsByDriver(byDriver);
+    setLatestByDriver(latest);
+  }, [records]);
+
   const addRecord = useCallback(async (record: Omit<AttendanceRecord, "id">): Promise<string> => {
-    const newRef = push(ref(db, "attendance"));
-    await set(newRef, stripUndefined(record));
-    return newRef.key!;
+    return addAttendanceRecord(record);
   }, []);
 
   const updateRecord = useCallback(async (id: string, changes: Partial<Omit<AttendanceRecord, "id">>) => {
-    await update(ref(db, `attendance/${id}`), stripUndefined(changes));
+    await updateAttendanceRecord(id, changes);
   }, []);
 
   const deleteRecord = useCallback(async (id: string) => {
-    await remove(ref(db, `attendance/${id}`));
+    await deleteAttendanceRecord(id);
   }, []);
 
   const getRecordsByDriver = useCallback(
-    (driverId: string) =>
-      records
-        .filter((r) => r.driverId === driverId)
-        .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime()),
-    [records]
+    (driverId: string) => recordsByDriver.get(driverId) ?? [],
+    [recordsByDriver]
   );
 
   const getLatestRecord = useCallback(
-    (driverId: string): AttendanceRecord | null => {
-      const sorted = records
-        .filter((r) => r.driverId === driverId)
-        .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime());
-      return sorted[0] ?? null;
-    },
-    [records]
+    (driverId: string): AttendanceRecord | null => latestByDriver.get(driverId) ?? null,
+    [latestByDriver]
   );
 
   const value = useMemo(

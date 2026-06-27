@@ -28,15 +28,15 @@ function fmtHours(h: number) {
   const mm = Math.round((h - hh) * 60);
   return `${hh}h ${mm}m`;
 }
-function fmtShortDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+function fmtMonthLabel(isoMonth: string) {
+  return new Date(`${isoMonth}-01`).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 }
-function fmtDisplayDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+function fmtMonthShort(isoMonth: string) {
+  return new Date(`${isoMonth}-01`).toLocaleDateString("en-GB", { month: "short" });
 }
 
 /* ── types ── */
-type Period = "7d" | "30d" | "all";
+type Period = "1m" | "3m" | "6m" | "all";
 
 /* ── KPI Card ──────────────────────────────────────────────────────── */
 type Tone = "brand" | "emerald" | "amber" | "rose" | "violet" | "sky";
@@ -144,7 +144,7 @@ export function ReportsSection() {
   const isSupervisor = user?.role === "supervisor";
   const hideGaragesTab = isGarageManager || isSupervisor;
 
-  const [period, setPeriod] = useState<Period>("30d");
+  const [period, setPeriod] = useState<Period>("1m");
   const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "fleet" | "garages">(
     isGarageManager ? "overview" : "overview"
   );
@@ -154,8 +154,9 @@ export function ReportsSection() {
   const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   
-  // Date picker state
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // Month picker state
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [pickerYear, setPickerYear] = useState(() => new Date().getFullYear());
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
 
@@ -173,16 +174,17 @@ export function ReportsSection() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  /* ── Filter records by period or selected date ── */
+  /* ── Filter records by period or selected month ── */
   const filteredRecords = useMemo(() => {
-    if (selectedDate) {
-      return records.filter((r) => r.clockIn.slice(0, 10) === selectedDate);
+    if (selectedMonth) {
+      return records.filter((r) => r.clockIn.slice(0, 7) === selectedMonth);
     }
     if (period === "all") return records;
-    const days = period === "7d" ? 7 : 30;
-    const cutoff = new Date(Date.now() - days * 24 * 3600 * 1000);
+    const months = period === "1m" ? 1 : period === "3m" ? 3 : 6;
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - months);
     return records.filter((r) => new Date(r.clockIn) >= cutoff);
-  }, [records, period, selectedDate]);
+  }, [records, period, selectedMonth]);
 
   /* ── KPI Aggregates ── */
   const kpi = useMemo(() => {
@@ -239,18 +241,19 @@ export function ReportsSection() {
     });
   }, [bikes, drivers, garages, fleetQuery]);
 
-  /* ── Daily orders trend (last 7 or 30 days) ── */
-  const dailyTrend = useMemo(() => {
-    const days = period === "7d" ? 7 : period === "30d" ? 14 : 14;
-    return Array.from({ length: days }, (_, i) => {
-      const d = new Date(Date.now() - (days - 1 - i) * 24 * 3600 * 1000);
-      const key = d.toISOString().slice(0, 10);
-      const dayRec = filteredRecords.filter((r) => r.clockIn.slice(0, 10) === key);
+  /* ── Monthly orders trend (last N months) ── */
+  const monthlyTrend = useMemo(() => {
+    const months = period === "1m" ? 1 : period === "3m" ? 3 : 6;
+    const today = new Date();
+    return Array.from({ length: months }, (_, i) => {
+      const d = new Date(today.getFullYear(), today.getMonth() - (months - 1 - i), 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const monthRec = filteredRecords.filter((r) => r.clockIn.slice(0, 7) === key);
       return {
-        label: fmtShortDate(d.toISOString()),
-        shortLabel: String(d.getDate()), // e.g. "14"
-        fullDate: d.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" }), // e.g. "Sun, 14 Jun"
-        value: dayRec.reduce((s, r) => s + r.ordersDelivered, 0)
+        label: fmtMonthLabel(key),
+        shortLabel: fmtMonthShort(key),
+        fullDate: fmtMonthLabel(key),
+        value: monthRec.reduce((s, r) => s + r.ordersDelivered, 0),
       };
     });
   }, [filteredRecords, period]);
@@ -329,8 +332,9 @@ export function ReportsSection() {
   ];
 
   const PERIODS: { id: Period; label: string }[] = [
-    { id: "7d",  label: "Last 7 days" },
-    { id: "30d", label: "Last 30 days" },
+    { id: "1m",  label: "Last 1 month" },
+    { id: "3m",  label: "Last 3 months" },
+    { id: "6m",  label: "Last 6 months" },
     { id: "all", label: "All time" },
   ];
 
@@ -369,10 +373,10 @@ export function ReportsSection() {
               <button
                 key={id}
                 type="button"
-                onClick={() => { setPeriod(id); setSelectedDate(null); }}
+                onClick={() => { setPeriod(id); setSelectedMonth(null); }}
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
-                  period === id && !selectedDate
+                  period === id && !selectedMonth
                     ? "bg-brand-600 text-white shadow-sm"
                     : "text-slate-500 hover:text-surface-900"
                 )}
@@ -382,22 +386,22 @@ export function ReportsSection() {
             ))}
           </div>
           
-          {/* Date Picker Button */}
+          {/* Month Picker Button */}
           <div ref={datePickerRef} className="relative">
             <button
               type="button"
               onClick={() => setDatePickerOpen((o) => !o)}
               className={cn(
                 "inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:bg-surface-50",
-                selectedDate ? "border-brand-300 text-brand-700 ring-2 ring-brand-100" : "text-slate-700 hover:border-brand-300 hover:text-brand-700"
+                selectedMonth ? "border-brand-300 text-brand-700 ring-2 ring-brand-100" : "text-slate-700 hover:border-brand-300 hover:text-brand-700"
               )}
             >
               <Calendar className="h-4 w-4" />
-              {selectedDate ? fmtDisplayDate(selectedDate) : "Daily Report"}
-              {selectedDate && (
+              {selectedMonth ? fmtMonthLabel(selectedMonth) : "Monthly Report"}
+              {selectedMonth && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); setSelectedDate(null); }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedMonth(null); }}
                   className="ml-1 rounded-full p-0.5 hover:bg-brand-100"
                 >
                   <X className="h-3 w-3" />
@@ -407,34 +411,21 @@ export function ReportsSection() {
             </button>
 
             {datePickerOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-80 overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-2xl shadow-surface-900/10 ring-1 ring-black/5">
-                {/* Calendar Header */}
+              <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-72 overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-2xl shadow-surface-900/10 ring-1 ring-black/5">
+                {/* Year Header */}
                 <div className="border-b border-surface-100 px-4 py-3">
                   <div className="flex items-center justify-between">
                     <button
                       type="button"
-                      onClick={() => {
-                        const currentMonth = selectedDate ? new Date(selectedDate) : new Date();
-                        currentMonth.setMonth(currentMonth.getMonth() - 1);
-                        setSelectedDate(currentMonth.toISOString().slice(0, 10));
-                      }}
+                      onClick={() => setPickerYear((y) => y - 1)}
                       className="rounded-lg p-1.5 hover:bg-surface-100 transition-colors"
                     >
                       <ChevronLeft className="h-4 w-4 text-slate-600" />
                     </button>
-                    <span className="text-sm font-bold text-surface-900">
-                      {selectedDate 
-                        ? new Date(selectedDate).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
-                        : new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" })
-                      }
-                    </span>
+                    <span className="text-sm font-bold text-surface-900">{pickerYear}</span>
                     <button
                       type="button"
-                      onClick={() => {
-                        const currentMonth = selectedDate ? new Date(selectedDate) : new Date();
-                        currentMonth.setMonth(currentMonth.getMonth() + 1);
-                        setSelectedDate(currentMonth.toISOString().slice(0, 10));
-                      }}
+                      onClick={() => setPickerYear((y) => y + 1)}
                       className="rounded-lg p-1.5 hover:bg-surface-100 transition-colors"
                     >
                       <ChevronRight className="h-4 w-4 text-slate-600" />
@@ -442,54 +433,29 @@ export function ReportsSection() {
                   </div>
                 </div>
 
-                {/* Calendar Grid */}
+                {/* Months Grid */}
                 <div className="p-4">
-                  <div className="grid grid-cols-7 gap-1 mb-2">
-                    {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                      <div key={day} className="text-center text-[11px] font-semibold text-slate-400 py-1">
-                        {day}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {(() => {
-                      const baseDate = selectedDate ? new Date(selectedDate) : new Date();
-                      const year = baseDate.getFullYear();
-                      const month = baseDate.getMonth();
-                      const firstDay = new Date(year, month, 1).getDay();
-                      const daysInMonth = new Date(year, month + 1, 0).getDate();
-                      const today = new Date().toISOString().slice(0, 10);
-                      
-                      const days = [];
-                      // Empty cells for days before the first day of the month
-                      for (let i = 0; i < firstDay; i++) {
-                        days.push(<div key={`empty-${i}`} className="h-8" />);
-                      }
-                      // Days of the month
-                      for (let day = 1; day <= daysInMonth; day++) {
-                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                        const isSelected = selectedDate === dateStr;
-                        const isToday = dateStr === today;
-                        days.push(
-                          <button
-                            key={day}
-                            type="button"
-                            onClick={() => { setSelectedDate(dateStr); setDatePickerOpen(false); }}
-                            className={cn(
-                              "h-8 w-8 rounded-lg text-xs font-semibold transition-all",
-                              isSelected
-                                ? "bg-brand-600 text-white shadow-md"
-                                : isToday
-                                ? "bg-brand-50 text-brand-700 ring-1 ring-brand-200"
-                                : "hover:bg-surface-100 text-slate-700"
-                            )}
-                          >
-                            {day}
-                          </button>
-                        );
-                      }
-                      return days;
-                    })()}
+                  <div className="grid grid-cols-3 gap-2">
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const monthStr = `${pickerYear}-${String(i + 1).padStart(2, "0")}`;
+                      const isSelected = selectedMonth === monthStr;
+                      const monthName = new Date(`${monthStr}-01`).toLocaleDateString("en-GB", { month: "short" });
+                      return (
+                        <button
+                          key={monthStr}
+                          type="button"
+                          onClick={() => { setSelectedMonth(monthStr); setDatePickerOpen(false); }}
+                          className={cn(
+                            "rounded-lg py-2 text-xs font-semibold transition-all",
+                            isSelected
+                              ? "bg-brand-600 text-white shadow-md"
+                              : "hover:bg-surface-100 text-slate-700"
+                          )}
+                        >
+                          {monthName}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -497,14 +463,20 @@ export function ReportsSection() {
                 <div className="border-t border-surface-100 px-4 py-2.5 flex items-center justify-between">
                   <button
                     type="button"
-                    onClick={() => { setSelectedDate(new Date().toISOString().slice(0, 10)); setDatePickerOpen(false); }}
+                    onClick={() => {
+                      const now = new Date();
+                      const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+                      setSelectedMonth(thisMonth);
+                      setPickerYear(now.getFullYear());
+                      setDatePickerOpen(false);
+                    }}
                     className="text-xs font-semibold text-brand-600 hover:text-brand-700"
                   >
-                    Today
+                    This month
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setSelectedDate(null); setDatePickerOpen(false); }}
+                    onClick={() => { setSelectedMonth(null); setDatePickerOpen(false); }}
                     className="text-xs font-semibold text-slate-500 hover:text-slate-700"
                   >
                     Clear
@@ -540,7 +512,7 @@ export function ReportsSection() {
                 <div className="border-b border-surface-100 px-4 py-3">
                   <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Export Report</p>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    {period === "7d" ? "Last 7 days" : period === "30d" ? "Last 30 days" : "All time"}
+                    {period === "1m" ? "Last 1 month" : period === "3m" ? "Last 3 months" : period === "6m" ? "Last 6 months" : "All time"}
                   </p>
                 </div>
 
@@ -582,7 +554,7 @@ export function ReportsSection() {
                 {/* Footer note */}
                 <div className="border-t border-surface-100 px-4 py-2.5">
                   <p className="text-[10px] text-slate-400">
-                    Includes current filter: <span className="font-semibold text-slate-500">{period === "7d" ? "7 days" : period === "30d" ? "30 days" : "all records"}</span>
+                    Includes current filter: <span className="font-semibold text-slate-500">{period === "1m" ? "1 month" : period === "3m" ? "3 months" : period === "6m" ? "6 months" : "all records"}</span>
                   </p>
                 </div>
               </div>
@@ -612,16 +584,16 @@ export function ReportsSection() {
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-bold text-surface-900">Orders Trend</h3>
-                  <p className="text-xs text-slate-400">Daily delivery volume</p>
+                  <p className="text-xs text-slate-400">Monthly delivery volume</p>
                 </div>
                 <span className="flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-200">
                   <TrendingUp className="h-3 w-3" />
                   {kpi.totalOrders} total
                 </span>
               </div>
-              <MiniBarChart data={dailyTrend} />
+              <MiniBarChart data={monthlyTrend} />
               <p className="mt-3.5 text-[11px] text-slate-400 font-medium text-center border-t border-surface-100/60 pt-2.5">
-                Labels show days of the month. Hover to see full date and metrics.
+                Labels show months. Hover to see full month and metrics.
               </p>
             </div>
 
@@ -723,7 +695,7 @@ export function ReportsSection() {
             <div>
               <h3 className="text-lg font-bold text-surface-900">Driver Performance Report</h3>
               <p className="text-xs text-slate-400">
-                {filteredDriverStats.length} of {driverStats.length} drivers displayed · {period === "all" ? "All time" : period === "7d" ? "Last 7 days" : "Last 30 days"}
+                {filteredDriverStats.length} of {driverStats.length} drivers displayed · {period === "all" ? "All time" : period === "1m" ? "Last 1 month" : period === "3m" ? "Last 3 months" : "Last 6 months"}
               </p>
             </div>
             
@@ -1093,7 +1065,7 @@ export function ReportsSection() {
           <span>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
         </div>
         <span className="rounded-full bg-surface-100 px-3 py-1 text-[11px] font-semibold text-slate-500 ring-1 ring-surface-200">
-          {filteredRecords.length} records · {period === "all" ? "All time" : period === "7d" ? "Last 7 days" : "Last 30 days"}
+          {filteredRecords.length} records · {period === "all" ? "All time" : period === "1m" ? "Last 1 month" : period === "3m" ? "Last 3 months" : "Last 6 months"}
         </span>
       </div>
 

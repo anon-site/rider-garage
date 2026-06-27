@@ -2,6 +2,12 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useModalBehavior } from "@/hooks/use-modal";
+import { useDriverAttendance } from "@/hooks/use-driver-attendance";
+import {
+  addAttendanceRecord,
+  updateAttendanceRecord,
+  deleteAttendanceRecord,
+} from "@/lib/attendance-mutations";
 import {
   X,
   LogIn,
@@ -21,10 +27,10 @@ import {
   RotateCcw,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { AttendanceRecord } from "@/types/attendance";
-import { useAttendance } from "@/contexts/attendance-context";
 import { useAuth } from "@/contexts/auth-context";
 
 type DriverProfileModalProps = {
@@ -78,13 +84,11 @@ function fromLocalDatetimeValue(local: string) {
 
 export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileModalProps) {
   useModalBehavior(true, onClose);
-  const { addRecord, updateRecord, deleteRecord, getRecordsByDriver, getLatestRecord } =
-    useAttendance();
+  const { records: driverRecords, hasMore, loadMore } = useDriverAttendance(driver.id);
+  const latestRecord = driverRecords[0] ?? null;
+  const hasOpenExit = latestRecord && !latestRecord.clockOut;
   const { permissions } = useAuth();
   const canClock = permissions.canClockDriver;
-  const driverRecords = getRecordsByDriver(driver.id);
-  const latestRecord = getLatestRecord(driver.id);
-  const hasOpenExit = latestRecord && !latestRecord.clockOut;
 
   const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -119,11 +123,17 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   const latestRating = latestRecord?.rating ?? 100;
 
   const [exitDate, setExitDate] = useState(nowLocal());
-  const [exitRating, setExitRating] = useState(latestRating);
 
   const [entryDate, setEntryDate] = useState(nowLocal());
   const [entryRating, setEntryRating] = useState(latestRating);
   const [entryOrders, setEntryOrders] = useState(0);
+
+  // Keep the entry rating input in sync with the latest loaded record rating.
+  // Without this, useState captures the initial 100 default before records finish loading
+  // and never updates, so the user sees 100 even when the driver's real rating is 92.
+  useEffect(() => {
+    setEntryRating(latestRating);
+  }, [latestRating]);
 
   const [autoTimeEnabled, setAutoTimeEnabled] = useState(true);
   useEffect(() => {
@@ -143,17 +153,17 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   const [editNotes, setEditNotes] = useState("");
 
   function handleExit() {
-    addRecord({
+    addAttendanceRecord({
       driverId: driver.id,
       clockIn: fromLocalDatetimeValue(exitDate),
       ordersDelivered: 0,
-      rating: exitRating,
+      rating: latestRating,
     });
   }
 
   function handleEntry() {
     if (!latestRecord || latestRecord.clockOut) return;
-    updateRecord(latestRecord.id, {
+    updateAttendanceRecord(latestRecord.id, {
       clockOut: fromLocalDatetimeValue(entryDate),
       rating: entryRating,
       ordersDelivered: entryOrders,
@@ -182,13 +192,13 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
     } else {
       changes.clockOut = undefined;
     }
-    updateRecord(editingRecord.id, changes);
+    updateAttendanceRecord(editingRecord.id, changes);
     setEditingRecord(null);
   }
 
   function confirmDelete(id: string) {
     if (deletingId === id) {
-      deleteRecord(id);
+      deleteAttendanceRecord(id);
       setDeletingId(null);
     } else {
       setDeletingId(id);
@@ -276,27 +286,14 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
         {canClock && <div className="border-b border-surface-100 bg-surface-50/60 p-3 sm:p-5">
           {!hasOpenExit ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="grid grid-cols-[1fr_90px] gap-3 sm:grid-cols-[240px_90px]">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Exit Time</label>
-                  <input
-                    type="datetime-local"
-                    value={exitDate}
-                    onChange={(e) => { setAutoTimeEnabled(false); setExitDate(e.target.value); }}
-                    className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-900 shadow-sm outline-none transition-colors focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Rating</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={exitRating}
-                    onChange={(e) => setExitRating(Math.min(100, Math.max(0, Number(e.target.value))))}
-                    className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-900 shadow-sm outline-none transition-colors focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-                  />
-                </div>
+              <div className="space-y-1.5 w-full sm:w-64">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Exit Time</label>
+                <input
+                  type="datetime-local"
+                  value={exitDate}
+                  onChange={(e) => { setAutoTimeEnabled(false); setExitDate(e.target.value); }}
+                  className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-900 shadow-sm outline-none transition-colors focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                />
               </div>
               <button
                 type="button"
@@ -369,7 +366,8 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
             <Clock className="h-4 w-4 text-slate-400" />
             <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500">Shift History</h4>
             <span className="rounded-full bg-surface-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
-              {filteredRecords.length}{selectedDate ? ` / ${driverRecords.length}` : ""}
+              {filteredRecords.length}
+              {selectedDate ? ` / ${driverRecords.length}` : ""}
             </span>
             {driverRecords.length > 0 && (
               <div className="relative ml-auto flex items-center gap-2">
@@ -573,7 +571,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
                           <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-[10px] font-bold text-slate-500 shadow-sm ring-1 ring-surface-200">
-                            #{driverRecords.length - idx}
+                            #{filteredRecords.length - idx}
                           </span>
                           <span className="inline-flex items-center gap-1">
                             <Timer className="h-3 w-3" />
@@ -640,6 +638,16 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                   )}
                 </div>
               ))}
+              {hasMore && !selectedDate && (
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-surface-200 bg-surface-50 py-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-surface-100 hover:text-surface-900"
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                  Load more history
+                </button>
+              )}
             </div>
           )}
         </div>

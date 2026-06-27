@@ -1,12 +1,12 @@
 "use client";
 
 import { memo } from "react";
-import { Phone, Calendar, Bike as BikeIcon, UserCircle, Star, Home, Package, Store } from "lucide-react";
+import { Phone, Calendar, Bike as BikeIcon, UserCircle, Home, Package, Store } from "lucide-react";
 import type { Driver } from "@/types/driver";
 import type { Bike } from "@/types/bike";
 import type { DeliveryCategory } from "@/types/delivery-category";
 import type { Garage } from "@/types/garage";
-import { useAttendance } from "@/contexts/attendance-context";
+import { useLiveShifts } from "@/contexts/live-shifts-context";
 import { DELIVERY_CATEGORIES } from "@/types/delivery-category";
 
 type DriverCardProps = {
@@ -20,9 +20,8 @@ type DriverCardProps = {
 };
 
 const DriverCardComponent = function DriverCard({ driver, bike, garage, onProfile, viewMode = "grid", deliveryCategories = [], showGarage = false }: DriverCardProps) {
-  const { getLatestRecord } = useAttendance();
-  const latestRecord = getLatestRecord(driver.id);
-  const isOutside = latestRecord && !latestRecord.clockOut;
+  const { activeDriverIds } = useLiveShifts();
+  const isOutside = activeDriverIds.has(driver.id);
 
   // Get delivery category info
   const driverCategories = driver.deliveryCategoryIds?.map(id => 
@@ -112,12 +111,6 @@ const DriverCardComponent = function DriverCard({ driver, bike, garage, onProfil
           </div>
           <div className="hidden sm:flex items-center gap-2">
             {deliveryCategoryBadges}
-            {latestRecord && latestRecord.rating > 0 && (
-              <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold ring-1 ${latestRecord.rating >= 80 ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-rose-200"}`}>
-                <Star className={`h-3.5 w-3.5 fill-current ${latestRecord.rating >= 80 ? "text-emerald-500" : "text-rose-500"}`} />
-                {latestRecord.rating}
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-2 justify-end">
             {statusBadge}
@@ -188,12 +181,6 @@ const DriverCardComponent = function DriverCard({ driver, bike, garage, onProfil
           {/* Secondary info row */}
           <div className="flex flex-wrap items-center gap-2">
             {deliveryCategoryBadges}
-            {latestRecord && latestRecord.rating > 0 && (
-              <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold ring-1 ${latestRecord.rating >= 80 ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-rose-200"}`}>
-                <Star className={`h-3.5 w-3.5 fill-current ${latestRecord.rating >= 80 ? "text-emerald-500" : "text-rose-500"}`} />
-                {latestRecord.rating}
-              </span>
-            )}
           </div>
         </div>
 

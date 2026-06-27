@@ -128,7 +128,7 @@ export async function exportPDF(data: ExportData, period: string) {
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(148, 163, 184);
-  doc.text(`Period: ${period === "7d" ? "Last 7 days" : period === "30d" ? "Last 30 days" : "All time"}   ·   Generated: ${nowLabel()}`, pageW - 14, 14, { align: "right" });
+  doc.text(`Period: ${period === "1m" ? "Last 1 month" : period === "3m" ? "Last 3 months" : period === "6m" ? "Last 6 months" : "All time"}   ·   Generated: ${nowLabel()}`, pageW - 14, 14, { align: "right" });
 
   let y = 30;
 
@@ -244,7 +244,10 @@ function addHeader(doc: InstanceType<typeof import("jspdf").default>, pageW: num
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(148, 163, 184);
-  doc.text(`Period: ${period}`, pageW - 14, 14, { align: "right" });
+  doc.text(
+    `Period: ${period === "1m" ? "Last 1 month" : period === "3m" ? "Last 3 months" : period === "6m" ? "Last 6 months" : "All time"}`,
+    pageW - 14, 14, { align: "right" }
+  );
 }
 
 /* ── Shared data shape ── */
