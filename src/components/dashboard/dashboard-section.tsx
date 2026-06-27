@@ -290,8 +290,10 @@ export function DashboardSection() {
       )}
 
       {/* Month Navigation Bar */}
-      <div className="relative overflow-hidden rounded-2xl border border-surface-200 bg-gradient-to-r from-surface-50 to-white p-4 sm:p-5 shadow-sm">
-        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-surface-400/5 blur-2xl" />
+      <div className="relative rounded-2xl border border-surface-200 bg-gradient-to-r from-surface-50 to-white p-4 sm:p-5 shadow-sm">
+        <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-surface-400/5 blur-2xl" />
+        </div>
         <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-surface-600 to-surface-700 text-white shadow-md shadow-surface-200">
