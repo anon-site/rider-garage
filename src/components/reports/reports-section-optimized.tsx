@@ -2,12 +2,11 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
-  TrendingUp, Package, Star, Clock, Users,
-  Bike as BikeIcon, Warehouse, Calendar, Download,
-  ChevronDown, ChevronUp, Filter, AlertTriangle,
-  CheckCircle2, ArrowUpRight, ArrowDownRight, Minus,
+  Package, Star, Clock,
+  Bike as BikeIcon, Download,
+  ChevronDown, Minus,
   FileText, Activity, ShieldOff, FileSpreadsheet, Loader2,
-  X, ChevronLeft, ChevronRight, Search, MapPin, Timer,
+  Search, ArrowUpRight, ArrowDownRight, CheckCircle2,
 } from "lucide-react";
 import { exportPDF, exportExcel } from "@/lib/export-utils";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -32,13 +31,9 @@ function fmtHours(h: number) {
 function fmtShortDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 }
-function fmtDisplayDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
-}
 
 /* ── types ── */
-type Period = "7d" | "30d" | "all" | "current-month" | "custom";
-type ReportRange = { start: Date; end: Date };
+type Period = "7d" | "30d" | "all" | "current-month";
 
 /* ── KPI Card ──────────────────────────────────────────────────────── */
 type Tone = "brand" | "emerald" | "amber" | "rose" | "violet" | "sky";
@@ -207,8 +202,6 @@ export function ReportsSectionOptimized() {
 
   // Search states
   const [driverQuery, setDriverQuery] = useState("");
-  const [fleetQuery, setFleetQuery] = useState("");
-  const [garageQuery, setGarageQuery] = useState("");
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -334,7 +327,7 @@ export function ReportsSectionOptimized() {
         <div className="text-center">
           <ShieldOff className="mx-auto h-12 w-12 text-slate-400" />
           <h3 className="mt-2 text-lg font-semibold text-slate-900">Access Restricted</h3>
-          <p className="mt-1 text-sm text-slate-500">You don't have permission to view reports.</p>
+          <p className="mt-1 text-sm text-slate-500">You don&apos;t have permission to view reports.</p>
         </div>
       </div>
     );

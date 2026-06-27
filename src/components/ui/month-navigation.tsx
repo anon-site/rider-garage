@@ -15,7 +15,6 @@ interface MonthNavigationProps {
   currentMonth: { year: number; month: number };
   onMonthChange: (year: number, month: number) => void;
   loading?: boolean;
-  showYearNavigation?: boolean;
   maxYears?: number;
 }
 
@@ -23,7 +22,6 @@ export function MonthNavigation({
   currentMonth, 
   onMonthChange, 
   loading = false,
-  showYearNavigation = true,
   maxYears = 3
 }: MonthNavigationProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);

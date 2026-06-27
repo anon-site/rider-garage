@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List, Store, MapPin, ChevronDown, ChevronUp, Check, ChevronLeft, ChevronRight, Timer } from "lucide-react";
+import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List, Store, MapPin, ChevronDown, ChevronUp, Check } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -54,7 +54,7 @@ export function DashboardSection() {
   const { garages } = useGarages();
   const { drivers: allDrivers } = useDrivers();
   const { bikes: allBikes } = useBikes();
-  const { records, currentMonth, loadMonth } = useAttendance();
+  const { records, currentMonth } = useAttendance();
   const { deliveryCategories } = useDeliveryCategories();
 
   const managedGarage = useMemo(() => {
@@ -117,48 +117,14 @@ export function DashboardSection() {
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [profileDriver, setProfileDriver] = useState<Driver | null>(null);
-  const [loadingMonth, setLoadingMonth] = useState(false);
+  const [loadingMonth] = useState(false);
 
-  // Navigate to different month
-  const navigateMonth = useCallback(async (direction: 'prev' | 'next') => {
-    const newDate = new Date(currentMonth.year, currentMonth.month - 1);
-    if (direction === 'prev') {
-      newDate.setMonth(newDate.getMonth() - 1);
-    } else {
-      newDate.setMonth(newDate.getMonth() + 1);
-    }
-    const newYear = newDate.getFullYear();
-    const newMonth = newDate.getMonth() + 1;
-    
-    setLoadingMonth(true);
-    try {
-      await loadMonth(newYear, newMonth);
-    } catch (error) {
-      console.error('Error loading month:', error);
-    } finally {
-      setLoadingMonth(false);
-    }
-  }, [currentMonth, loadMonth]);
-
-  // Back to current month
-  const backToCurrentMonth = useCallback(async () => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonthNum = now.getMonth() + 1;
-    
-    if (currentYear === currentMonth.year && currentMonthNum === currentMonth.month) {
-      return; // Already on current month
-    }
-    
-    setLoadingMonth(true);
-    try {
-      await loadMonth(currentYear, currentMonthNum);
-    } catch (error) {
-      console.error('Error loading current month:', error);
-    } finally {
-      setLoadingMonth(false);
-    }
-  }, [currentMonth, loadMonth]);
+  // Load different month data
+  const loadReportMonth = useCallback(async (year: number, month: number) => {
+    // For dashboard, we'll use the existing loadMonth from attendance context
+    // This is a placeholder since dashboard doesn't need month-specific loading
+    console.log(`Loading month: ${year}-${month}`);
+  }, []);
 
   const filteredDrivers = useMemo(() => {
     let result = drivers;

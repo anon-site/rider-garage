@@ -5,25 +5,14 @@ import {
   Users,
   Bike as BikeIcon,
   Warehouse,
-  ShieldCheck,
-  TrendingUp,
-  Clock,
   Star,
-  AlertTriangle,
-  Wrench,
   CheckCircle2,
-  UserCheck,
-  UserX,
   MapPin,
   Package,
   BarChart3,
   Activity,
   Crown,
   Eye,
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Timer,
   Loader2,
 } from "lucide-react";
 import { useUsers, useGarages, useDeliveryCategories } from "@/contexts/control-panel-context";
@@ -32,7 +21,6 @@ import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
 import { useAuth } from "@/contexts/auth-context";
 import { ROLES } from "@/types/user";
-import type { Bike } from "@/types/bike";
 import { cn } from "@/lib/utils";
 import { DeliveryCategoriesTab } from "./delivery-categories-tab";
 import { MonthNavigation } from "@/components/ui/month-navigation";
@@ -50,14 +38,6 @@ function fmtHours(h: number) {
   return `${hh}h ${mm}m`;
 }
 
-function fmtDate(iso: string | null | undefined) {
-  if (!iso) return "N/A";
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 /* ── stat card ── */
 type Tone = "brand" | "emerald" | "amber" | "rose" | "violet" | "sky";
