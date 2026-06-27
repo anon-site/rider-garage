@@ -21,6 +21,7 @@ import type { AttendanceRecord } from "@/types/attendance";
 type AttendanceContextValue = {
   records: AttendanceRecord[];
   loading: boolean;
+  error: string | null;
   addRecord: (record: Omit<AttendanceRecord, "id">) => Promise<string>;
   updateRecord: (id: string, changes: Partial<Omit<AttendanceRecord, "id">>) => Promise<void>;
   deleteRecord: (id: string) => Promise<void>;
@@ -33,16 +34,25 @@ const AttendanceContext = createContext<AttendanceContextValue | null>(null);
 export function AttendanceProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [recordsByDriver, setRecordsByDriver] = useState<Map<string, AttendanceRecord[]>>(new Map());
   const [latestByDriver, setLatestByDriver] = useState<Map<string, AttendanceRecord | null>>(new Map());
 
   useEffect(() => {
     const attRef = ref(db, "attendance");
-    const unsub = onValue(attRef, (snap) => {
-      const data = snap.val() as Record<string, Omit<AttendanceRecord, "id">> | null;
-      setRecords(data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : []);
-      setLoading(false);
-    });
+    const unsub = onValue(
+      attRef,
+      (snap) => {
+        const data = snap.val() as Record<string, Omit<AttendanceRecord, "id">> | null;
+        setRecords(data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : []);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        setError(err.message);
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, []);
 
@@ -92,8 +102,8 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ records, loading, addRecord, updateRecord, deleteRecord, getRecordsByDriver, getLatestRecord }),
-    [records, loading, addRecord, updateRecord, deleteRecord, getRecordsByDriver, getLatestRecord]
+    () => ({ records, loading, error, addRecord, updateRecord, deleteRecord, getRecordsByDriver, getLatestRecord }),
+    [records, loading, error, addRecord, updateRecord, deleteRecord, getRecordsByDriver, getLatestRecord]
   );
 
   return (

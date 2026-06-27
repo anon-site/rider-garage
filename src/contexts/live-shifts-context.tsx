@@ -16,6 +16,7 @@ type LiveShiftsContextValue = {
   activeRecords: AttendanceRecord[];
   activeDriverIds: Set<string>;
   loading: boolean;
+  error: string | null;
 };
 
 const LiveShiftsContext = createContext<LiveShiftsContextValue | null>(null);
@@ -23,6 +24,7 @@ const LiveShiftsContext = createContext<LiveShiftsContextValue | null>(null);
 export function LiveShiftsProvider({ children }: { children: ReactNode }) {
   const [activeRecords, setActiveRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Only listen to records that are currently open (no clockOut).
@@ -32,11 +34,19 @@ export function LiveShiftsProvider({ children }: { children: ReactNode }) {
       orderByChild("clockOut"),
       equalTo(null)
     );
-    const unsub = onValue(activeRef, (snap) => {
-      const data = snap.val() as Record<string, Omit<AttendanceRecord, "id">> | null;
-      setActiveRecords(data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : []);
-      setLoading(false);
-    });
+    const unsub = onValue(
+      activeRef,
+      (snap) => {
+        const data = snap.val() as Record<string, Omit<AttendanceRecord, "id">> | null;
+        setActiveRecords(data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : []);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        setError(err.message);
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, []);
 
@@ -49,8 +59,8 @@ export function LiveShiftsProvider({ children }: { children: ReactNode }) {
   }, [activeRecords]);
 
   const value = useMemo(
-    () => ({ activeRecords, activeDriverIds, loading }),
-    [activeRecords, activeDriverIds, loading]
+    () => ({ activeRecords, activeDriverIds, loading, error }),
+    [activeRecords, activeDriverIds, loading, error]
   );
 
   return (

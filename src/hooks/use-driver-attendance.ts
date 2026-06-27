@@ -10,6 +10,7 @@ const PAGE_SIZE = 25;
 type UseDriverAttendanceResult = {
   records: AttendanceRecord[];
   loading: boolean;
+  error: string | null;
   hasMore: boolean;
   loadMore: () => void;
 };
@@ -18,25 +19,36 @@ export function useDriverAttendance(driverId: string | null): UseDriverAttendanc
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!driverId) {
       setRecords([]);
       setLoading(false);
+      setError(null);
       return;
     }
     setLoading(true);
+    setError(null);
     const q = query(
       ref(db, "attendance"),
       orderByChild("driverId"),
       equalTo(driverId),
       limitToLast(limit)
     );
-    const unsub = onValue(q, (snap) => {
-      const data = snap.val() as Record<string, Omit<AttendanceRecord, "id">> | null;
-      setRecords(data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : []);
-      setLoading(false);
-    });
+    const unsub = onValue(
+      q,
+      (snap) => {
+        const data = snap.val() as Record<string, Omit<AttendanceRecord, "id">> | null;
+        setRecords(data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : []);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        setError(err.message);
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, [driverId, limit]);
 
@@ -53,5 +65,5 @@ export function useDriverAttendance(driverId: string | null): UseDriverAttendanc
     setLimit((prev) => prev + PAGE_SIZE);
   }, []);
 
-  return { records: sortedRecords, loading, hasMore, loadMore };
+  return { records: sortedRecords, loading, error, hasMore, loadMore };
 }

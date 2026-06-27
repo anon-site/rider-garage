@@ -10,12 +10,17 @@ import {
   X, ChevronLeft, ChevronRight, Search, MapPin,
 } from "lucide-react";
 import { exportPDF, exportExcel } from "@/lib/export-utils";
-import { useAttendance } from "@/contexts/attendance-context";
+import { useLiveShifts } from "@/contexts/live-shifts-context";
+import { useAttendanceRange } from "@/hooks/use-attendance-range";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { FixedSizeList, type ListChildComponentProps } from "react-window";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useGarages, useDeliveryCategories } from "@/contexts/control-panel-context";
 import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
+import type { Driver } from "@/types/driver";
+import type { Bike } from "@/types/bike";
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 function calcHours(clockIn: string, clockOut?: string) {
@@ -37,6 +42,23 @@ function fmtMonthShort(isoMonth: string) {
 
 /* ── types ── */
 type Period = "1m" | "3m" | "6m" | "all";
+
+function getRangeDates(period: Period, selectedMonth: string | null) {
+  if (period === "all") return { startDate: null, endDate: null };
+
+  const months = period === "1m" ? 1 : period === "3m" ? 3 : 6;
+  const anchor = selectedMonth ? new Date(`${selectedMonth}-01T00:00:00.000Z`) : new Date();
+
+  const startYear = anchor.getUTCFullYear();
+  const startMonth = anchor.getUTCMonth() - (months - 1);
+  const startDate = new Date(Date.UTC(startYear, startMonth, 1, 0, 0, 0, 0)).toISOString();
+
+  const endDate = selectedMonth
+    ? new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 0, 23, 59, 59, 999)).toISOString()
+    : new Date().toISOString();
+
+  return { startDate, endDate };
+}
 
 /* ── KPI Card ──────────────────────────────────────────────────────── */
 type Tone = "brand" | "emerald" | "amber" | "rose" | "violet" | "sky";
@@ -128,16 +150,84 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+type DriverStat = Driver & {
+  orders: number;
+  hours: number;
+  rating: number;
+  sessions: number;
+  bike?: Bike;
+  isActive: boolean;
+};
+
+/* ── Virtualized driver table row ──────────────────────────────────── */
+function DriverTableRow({ index, style, data }: ListChildComponentProps<DriverStat[]>) {
+  const d = data[index];
+  return (
+    <tr style={style} className="group border-b border-surface-100 bg-white/35 hover:bg-surface-50/80 transition-all duration-150">
+      <td style={{ width: "8%" }} className="px-5 py-4">
+        <span className="inline-flex items-center rounded-lg bg-surface-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 border border-surface-200/50">
+          {d.id}
+        </span>
+      </td>
+      <td style={{ width: "22%" }} className="px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-xs font-extrabold text-white shadow-sm ring-2 ring-white">
+            {d.name.charAt(0)}
+          </div>
+          <div>
+            <p className="font-semibold text-surface-900 text-sm">{d.name}</p>
+            <p className="text-[11px] text-slate-400">{d.phone}</p>
+          </div>
+        </div>
+      </td>
+      <td style={{ width: "12%" }} className="px-5 py-4">
+        {d.isActive ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />Active
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200">
+            Offline
+          </span>
+        )}
+      </td>
+      <td style={{ width: "18%" }} className="px-5 py-4">
+        {d.bike ? (
+          <div className="flex flex-col gap-0.5">
+            <span className="font-semibold text-surface-800 text-xs">{d.bike.plateNumber}</span>
+            <span className={cn(
+              "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider w-fit mt-0.5",
+              d.bike.status === "good" ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" :
+              d.bike.status === "maintenance" ? "bg-amber-50 text-amber-600 ring-1 ring-amber-100" :
+              "bg-rose-50 text-rose-600 ring-1 ring-rose-100"
+            )}>
+              {d.bike.status}
+            </span>
+          </div>
+        ) : (
+          <span className="text-xs text-slate-400">— No bike</span>
+        )}
+      </td>
+      <td style={{ width: "10%" }} className="px-5 py-4 text-right">
+        <span className="font-extrabold text-surface-900 text-sm">{d.orders}</span>
+      </td>
+      <td style={{ width: "10%" }} className="px-5 py-4 text-right text-slate-600 font-medium">{fmtHours(d.hours)}</td>
+      <td style={{ width: "10%" }} className="px-5 py-4 text-right text-slate-500 font-medium">{d.sessions}</td>
+      <td style={{ width: "10%" }} className="px-5 py-4 text-right"><StarRating rating={Math.round(d.rating)} /></td>
+    </tr>
+  );
+}
+
 /* ══════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════ */
 export function ReportsSection() {
-  const { records } = useAttendance();
   const { drivers } = useDrivers();
   const { bikes } = useBikes();
   const { garages } = useGarages();
   const { deliveryCategories } = useDeliveryCategories();
   const { user, permissions } = useAuth();
+  const { activeRecords, activeDriverIds } = useLiveShifts();
 
   // Hide garages for garage managers and supervisors
   const isGarageManager = user?.role === "garage";
@@ -164,6 +254,9 @@ export function ReportsSection() {
   const [driverQuery, setDriverQuery] = useState("");
   const [fleetQuery, setFleetQuery] = useState("");
   const [garageQuery, setGarageQuery] = useState("");
+  const debouncedDriverQuery = useDebouncedValue(driverQuery, 300);
+  const debouncedFleetQuery = useDebouncedValue(fleetQuery, 300);
+  const debouncedGarageQuery = useDebouncedValue(garageQuery, 300);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -174,17 +267,9 @@ export function ReportsSection() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  /* ── Filter records by period or selected month ── */
-  const filteredRecords = useMemo(() => {
-    if (selectedMonth) {
-      return records.filter((r) => r.clockIn.slice(0, 7) === selectedMonth);
-    }
-    if (period === "all") return records;
-    const months = period === "1m" ? 1 : period === "3m" ? 3 : 6;
-    const cutoff = new Date();
-    cutoff.setMonth(cutoff.getMonth() - months);
-    return records.filter((r) => new Date(r.clockIn) >= cutoff);
-  }, [records, period, selectedMonth]);
+  /* ── Fetch only the records needed for the current chart range ── */
+  const { startDate, endDate } = useMemo(() => getRangeDates(period, selectedMonth), [period, selectedMonth]);
+  const { records: filteredRecords, loading, error } = useAttendanceRange(startDate, endDate);
 
   /* ── KPI Aggregates ── */
   const kpi = useMemo(() => {
@@ -192,12 +277,12 @@ export function ReportsSection() {
     const totalHours  = filteredRecords.reduce((s, r) => s + calcHours(r.clockIn, r.clockOut), 0);
     const avgRating   = filteredRecords.length > 0
       ? filteredRecords.reduce((s, r) => s + r.rating, 0) / filteredRecords.length : 0;
-    const activeSessions = records.filter((r) => !r.clockOut).length;
+    const activeSessions = activeRecords.length;
     const bikesGood   = bikes.filter((b) => b.status === "good").length;
     const bikesIssue  = bikes.filter((b) => b.status !== "good").length;
     const uniqueDrivers = new Set(filteredRecords.map((r) => r.driverId)).size;
     return { totalOrders, totalHours, avgRating, activeSessions, bikesGood, bikesIssue, uniqueDrivers, totalSessions: filteredRecords.length };
-  }, [filteredRecords, records, bikes]);
+  }, [filteredRecords, activeRecords, bikes]);
 
   /* ── Driver summaries ── */
   const driverStats = useMemo(() => {
@@ -207,27 +292,27 @@ export function ReportsSection() {
       const hours  = dRec.reduce((s, r) => s + calcHours(r.clockIn, r.clockOut), 0);
       const rating = dRec.length > 0 ? dRec.reduce((s, r) => s + r.rating, 0) / dRec.length : 0;
       const bike   = d.bikeId ? bikes.find((b) => b.id === d.bikeId) : undefined;
-      const isActive = records.some((r) => r.driverId === d.id && !r.clockOut);
+      const isActive = activeDriverIds.has(d.id);
       return { ...d, orders, hours, rating, sessions: dRec.length, bike, isActive };
     }).sort((a, b) => {
       const key = sortBy;
       const diff = b[key] - a[key];
       return sortDir === "desc" ? diff : -diff;
     });
-  }, [drivers, filteredRecords, records, bikes, sortBy, sortDir]);
+  }, [drivers, filteredRecords, activeDriverIds, bikes, sortBy, sortDir]);
 
   const filteredDriverStats = useMemo(() => {
-    const q = driverQuery.trim().toLowerCase();
+    const q = debouncedDriverQuery.trim().toLowerCase();
     if (!q) return driverStats;
     return driverStats.filter((d) =>
       d.name.toLowerCase().includes(q) ||
       d.id.toLowerCase().includes(q) ||
       d.phone.toLowerCase().includes(q)
     );
-  }, [driverStats, driverQuery]);
+  }, [driverStats, debouncedDriverQuery]);
 
   const filteredBikes = useMemo(() => {
-    const q = fleetQuery.trim().toLowerCase();
+    const q = debouncedFleetQuery.trim().toLowerCase();
     if (!q) return bikes;
     return bikes.filter((b) => {
       const driver = b.driverId ? drivers.find((d) => d.id === b.driverId) : null;
@@ -239,14 +324,14 @@ export function ReportsSection() {
         (garage?.name.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [bikes, drivers, garages, fleetQuery]);
+  }, [bikes, drivers, garages, debouncedFleetQuery]);
 
   /* ── Monthly orders trend (last N months) ── */
   const monthlyTrend = useMemo(() => {
     const months = period === "1m" ? 1 : period === "3m" ? 3 : 6;
-    const today = new Date();
+    const anchor = selectedMonth ? new Date(`${selectedMonth}-01T00:00:00.000Z`) : new Date();
     return Array.from({ length: months }, (_, i) => {
-      const d = new Date(today.getFullYear(), today.getMonth() - (months - 1 - i), 1);
+      const d = new Date(anchor.getUTCFullYear(), anchor.getUTCMonth() - (months - 1 - i), 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const monthRec = filteredRecords.filter((r) => r.clockIn.slice(0, 7) === key);
       return {
@@ -256,7 +341,7 @@ export function ReportsSection() {
         value: monthRec.reduce((s, r) => s + r.ordersDelivered, 0),
       };
     });
-  }, [filteredRecords, period]);
+  }, [filteredRecords, period, selectedMonth]);
 
   /* ── Garage stats ── */
   const garageStats = useMemo(() => {
@@ -271,13 +356,13 @@ export function ReportsSection() {
   }, [garages, drivers, bikes, filteredRecords]);
 
   const filteredGarageStats = useMemo(() => {
-    const q = garageQuery.trim().toLowerCase();
+    const q = debouncedGarageQuery.trim().toLowerCase();
     if (!q) return garageStats;
     return garageStats.filter((g) =>
       g.name.toLowerCase().includes(q) ||
       g.location.toLowerCase().includes(q)
     );
-  }, [garageStats, garageQuery]);
+  }, [garageStats, debouncedGarageQuery]);
 
   /* ── Export handler ── */
   async function handleExport(type: "pdf" | "excel") {
@@ -563,6 +648,20 @@ export function ReportsSection() {
         </div>
       </div>
 
+      {/* ── Loading / Error state ─────────────────────────────── */}
+      {loading && (
+        <div className="flex items-center justify-center gap-2 rounded-2xl bg-white/60 p-6 ring-1 ring-white/60 text-sm text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Loading report data…
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center gap-2 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700 ring-1 ring-rose-100">
+          <AlertTriangle className="h-4 w-4" />
+          <span className="font-medium">Error loading report:</span> {error}
+        </div>
+      )}
+
       {/* ── KPI Row ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <KpiCard icon={Package}    label="Total Orders"    value={kpi.totalOrders}                      sub={`${kpi.totalSessions} sessions`}            tone="brand"   />
@@ -728,96 +827,55 @@ export function ReportsSection() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-surface-150/80 shadow-inner bg-white/40">
-            <table className="w-full min-w-[800px] text-sm text-left">
-              <thead>
-                <tr className="border-b border-surface-200 bg-surface-50/50">
-                  <th className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">ID</th>
-                  <th className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Driver</th>
-                  <th className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Status</th>
-                  <th className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Bike</th>
-                  <th className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    <button type="button" onClick={() => toggleSort("orders")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
-                      Orders <SortIcon col="orders" />
-                    </button>
-                  </th>
-                  <th className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    <button type="button" onClick={() => toggleSort("hours")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
-                      Hours <SortIcon col="hours" />
-                    </button>
-                  </th>
-                  <th className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">Sessions</th>
-                  <th className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    <button type="button" onClick={() => toggleSort("rating")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
-                      Rating <SortIcon col="rating" />
-                    </button>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-surface-100 bg-white/35">
-                {filteredDriverStats.map((d) => (
-                  <tr key={d.id} className="group hover:bg-surface-50/80 transition-all duration-150">
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center rounded-lg bg-surface-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 border border-surface-200/50">
-                        {d.id}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-xs font-extrabold text-white shadow-sm ring-2 ring-white">
-                          {d.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-surface-900 text-sm">{d.name}</p>
-                          <p className="text-[11px] text-slate-400">{d.phone}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      {d.isActive ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200">
-                          Offline
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4">
-                      {d.bike ? (
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-surface-800 text-xs">{d.bike.plateNumber}</span>
-                          <span className={cn(
-                            "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider w-fit mt-0.5",
-                            d.bike.status === "good" ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" :
-                            d.bike.status === "maintenance" ? "bg-amber-50 text-amber-600 ring-1 ring-amber-100" :
-                            "bg-rose-50 text-rose-600 ring-1 ring-rose-100"
-                          )}>
-                            {d.bike.status}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400">— No bike</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <span className="font-extrabold text-surface-900 text-sm">{d.orders}</span>
-                    </td>
-                    <td className="px-5 py-4 text-right text-slate-600 font-medium">{fmtHours(d.hours)}</td>
-                    <td className="px-5 py-4 text-right text-slate-500 font-medium">{d.sessions}</td>
-                    <td className="px-5 py-4 text-right"><StarRating rating={Math.round(d.rating)} /></td>
+          <div className="overflow-hidden rounded-2xl border border-surface-150/80 shadow-inner bg-white/40">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px] table-fixed text-sm text-left">
+                <thead>
+                  <tr className="border-b border-surface-200 bg-surface-50/50">
+                    <th style={{ width: "8%" }} className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">ID</th>
+                    <th style={{ width: "22%" }} className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Driver</th>
+                    <th style={{ width: "12%" }} className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Status</th>
+                    <th style={{ width: "18%" }} className="px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Bike</th>
+                    <th style={{ width: "10%" }} className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      <button type="button" onClick={() => toggleSort("orders")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
+                        Orders <SortIcon col="orders" />
+                      </button>
+                    </th>
+                    <th style={{ width: "10%" }} className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      <button type="button" onClick={() => toggleSort("hours")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
+                        Hours <SortIcon col="hours" />
+                      </button>
+                    </th>
+                    <th style={{ width: "10%" }} className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">Sessions</th>
+                    <th style={{ width: "10%" }} className="px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      <button type="button" onClick={() => toggleSort("rating")} className="inline-flex items-center gap-1 hover:text-surface-900 transition-colors">
+                        Rating <SortIcon col="rating" />
+                      </button>
+                    </th>
                   </tr>
-                ))}
-                {filteredDriverStats.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-sm text-slate-400 font-medium bg-white/10">
-                      No driver records found matching your query.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+              </table>
+            </div>
+            <div className="overflow-x-auto" style={{ height: 420 }}>
+              {filteredDriverStats.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                  No driver records found matching your query.
+                </div>
+              ) : (
+                <FixedSizeList
+                  height={420}
+                  itemCount={filteredDriverStats.length}
+                  itemSize={72}
+                  itemData={filteredDriverStats}
+                  width="100%"
+                  outerElementType="table"
+                  innerElementType="tbody"
+                  className="w-full min-w-[800px] table-fixed text-sm text-left"
+                >
+                  {DriverTableRow}
+                </FixedSizeList>
+              )}
+            </div>
           </div>
         </div>
       )}
