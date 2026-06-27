@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useModalBehavior } from "@/hooks/use-modal";
 import {
   X,
@@ -52,8 +52,28 @@ function formatHours(exitTime: string, entryTime?: string) {
   return `${hours.toFixed(1)} h`;
 }
 
-function nowISO() {
-  return new Date().toISOString().slice(0, 16);
+function nowLocal() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function toLocalDatetimeValue(iso: string) {
+  const d = new Date(iso);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function fromLocalDatetimeValue(local: string) {
+  return new Date(local).toISOString();
 }
 
 export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileModalProps) {
@@ -96,23 +116,36 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
     return driverRecords.filter((r) => new Date(r.clockIn).toISOString().slice(0, 10) === selectedDate);
   }, [driverRecords, selectedDate]);
 
-  const [exitDate, setExitDate] = useState(nowISO());
-  const [exitRating, setExitRating] = useState(80);
+  const latestRating = latestRecord?.rating ?? 100;
 
-  const [entryDate, setEntryDate] = useState(nowISO());
-  const [entryRating, setEntryRating] = useState(80);
+  const [exitDate, setExitDate] = useState(nowLocal());
+  const [exitRating, setExitRating] = useState(latestRating);
+
+  const [entryDate, setEntryDate] = useState(nowLocal());
+  const [entryRating, setEntryRating] = useState(latestRating);
   const [entryOrders, setEntryOrders] = useState(0);
+
+  const [autoTimeEnabled, setAutoTimeEnabled] = useState(true);
+  useEffect(() => {
+    if (!autoTimeEnabled) return;
+    const interval = setInterval(() => {
+      const now = nowLocal();
+      setExitDate(now);
+      setEntryDate(now);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [autoTimeEnabled]);
 
   const [editExit, setEditExit] = useState("");
   const [editEntry, setEditEntry] = useState("");
   const [editOrders, setEditOrders] = useState(0);
-  const [editRating, setEditRating] = useState(80);
+  const [editRating, setEditRating] = useState(100);
   const [editNotes, setEditNotes] = useState("");
 
   function handleExit() {
     addRecord({
       driverId: driver.id,
-      clockIn: new Date(exitDate).toISOString(),
+      clockIn: fromLocalDatetimeValue(exitDate),
       ordersDelivered: 0,
       rating: exitRating,
     });
@@ -121,7 +154,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   function handleEntry() {
     if (!latestRecord || latestRecord.clockOut) return;
     updateRecord(latestRecord.id, {
-      clockOut: new Date(entryDate).toISOString(),
+      clockOut: fromLocalDatetimeValue(entryDate),
       rating: entryRating,
       ordersDelivered: entryOrders,
     });
@@ -129,8 +162,8 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
 
   function startEdit(record: AttendanceRecord) {
     setEditingRecord(record);
-    setEditExit(record.clockIn.slice(0, 16));
-    setEditEntry(record.clockOut ? record.clockOut.slice(0, 16) : "");
+    setEditExit(toLocalDatetimeValue(record.clockIn));
+    setEditEntry(record.clockOut ? toLocalDatetimeValue(record.clockOut) : "");
     setEditOrders(record.ordersDelivered);
     setEditRating(record.rating);
     setEditNotes(record.notes ?? "");
@@ -139,13 +172,13 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   function saveEdit() {
     if (!editingRecord) return;
     const changes: Partial<Omit<AttendanceRecord, "id">> = {
-      clockIn: new Date(editExit).toISOString(),
+      clockIn: fromLocalDatetimeValue(editExit),
       ordersDelivered: editOrders,
       rating: editRating,
       notes: editNotes.trim() || undefined,
     };
     if (editEntry) {
-      changes.clockOut = new Date(editEntry).toISOString();
+      changes.clockOut = fromLocalDatetimeValue(editEntry);
     } else {
       changes.clockOut = undefined;
     }
@@ -227,7 +260,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium backdrop-blur-sm ring-1 ring-white/15">
                 <CalendarDays className="h-3 w-3" />
-                Joined {driver.joinDate}
+                Joined {driver.joinDate ?? "—"}
               </span>
               {bikeName && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/20 px-2 py-0.5 text-[11px] font-medium text-brand-200 ring-1 ring-brand-400/30">
@@ -249,7 +282,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                   <input
                     type="datetime-local"
                     value={exitDate}
-                    onChange={(e) => setExitDate(e.target.value)}
+                    onChange={(e) => { setAutoTimeEnabled(false); setExitDate(e.target.value); }}
                     className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-900 shadow-sm outline-none transition-colors focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                   />
                 </div>
@@ -281,7 +314,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                   <LogOut className="h-4 w-4" />
                 </div>
                 <span className="font-medium">
-                  Exited at <strong className="text-rose-800">{formatDateTime(latestRecord!.clockIn)}</strong>
+                  Exited at <strong className="text-rose-800">{latestRecord ? formatDateTime(latestRecord.clockIn) : "—"}</strong>
                 </span>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -291,7 +324,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
                     <input
                       type="datetime-local"
                       value={entryDate}
-                      onChange={(e) => setEntryDate(e.target.value)}
+                      onChange={(e) => { setAutoTimeEnabled(false); setEntryDate(e.target.value); }}
                       className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-900 shadow-sm outline-none transition-colors focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                     />
                   </div>

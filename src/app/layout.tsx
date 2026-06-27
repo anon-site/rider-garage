@@ -9,6 +9,7 @@ import { BikesProvider } from "@/contexts/bikes-context";
 import { DriversProvider } from "@/contexts/drivers-context";
 import { AttendanceProvider } from "@/contexts/attendance-context";
 import { AuthGate } from "@/components/auth/auth-gate";
+import { SecurityGuard } from "@/components/auth/security-guard";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { ToastProvider } from "@/components/ui/toast";
 
@@ -40,14 +41,16 @@ export default function RootLayout({
               <AttendanceProvider>
                 <AuthProvider>
                   <AuthGate>
-                    <ToastProvider>
-                      <SidebarProvider>
-                        <Sidebar />
-                        <ErrorBoundary>
-                          {children}
-                        </ErrorBoundary>
-                      </SidebarProvider>
-                    </ToastProvider>
+                    <SecurityGuard>
+                      <ToastProvider>
+                        <SidebarProvider>
+                          <Sidebar />
+                          <ErrorBoundary>
+                            {children}
+                          </ErrorBoundary>
+                        </SidebarProvider>
+                      </ToastProvider>
+                    </SecurityGuard>
                   </AuthGate>
                 </AuthProvider>
               </AttendanceProvider>

@@ -151,7 +151,7 @@ const DriverCardComponent = function DriverCard({ driver, bike, garage, onProfil
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
               <span className="inline-flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                <span className="truncate">{driver.joinDate}</span>
+                <span className="truncate">{driver.joinDate ?? "—"}</span>
               </span>
               {showGarage && garage && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700 ring-1 ring-brand-100">
