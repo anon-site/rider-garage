@@ -11,6 +11,7 @@ import { AttendanceProvider } from "@/contexts/attendance-context";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { ToastProvider } from "@/components/ui/toast";
+import { SecurityProtection } from "@/components/security/security-protection";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,6 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
+        <SecurityProtection />
         <ControlPanelProvider>
           <BikesProvider>
             <DriversProvider>

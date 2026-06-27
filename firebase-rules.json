@@ -1,0 +1,58 @@
+{
+  "rules": {
+    ".read": "false",
+    ".write": "false",
+    "users": {
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || auth.uid === $userId)",
+      "$userId": {
+        ".read": "auth != null && (auth.uid === $userId || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && (auth.uid === $userId || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+    "drivers": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$driverId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || (root.child('users').child(auth.uid).child('role').val() === 'garage' && root.child('users').child(auth.uid).child('garageId').val() === data.child('garageId').val()))"
+      }
+    },
+    "bikes": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$bikeId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || (root.child('users').child(auth.uid).child('role').val() === 'garage' && root.child('users').child(auth.uid).child('garageId').val() === data.child('garageId').val()))"
+      }
+    },
+    "attendance": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$year": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$month": {
+          ".read": "auth != null",
+          ".write": "auth != null",
+          "$driverId": {
+            ".read": "auth != null && (auth.uid === $driverId || root.child('users').child(auth.uid).child('role').val() === 'admin' || (root.child('users').child(auth.uid).child('role').val() === 'garage' && root.child('users').child(auth.uid).child('garageId').val() === root.child('drivers').child($driverId).child('garageId').val()))",
+            ".write": "auth != null && (auth.uid === $driverId || root.child('users').child(auth.uid).child('role').val() === 'admin' || (root.child('users').child(auth.uid).child('role').val() === 'garage' && root.child('users').child(auth.uid).child('garageId').val() === root.child('drivers').child($driverId).child('garageId').val()))"
+          }
+        }
+      }
+    },
+    "garages": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$garageId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('garageId').val() === $garageId)",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+    "deliveryCategories": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    }
+  }
+}

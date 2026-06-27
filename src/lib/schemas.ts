@@ -30,7 +30,7 @@ export const userEditSchema = userSchema.partial().extend({
 export const garageSchema = z.object({
   name: z.string().min(2, "Garage name must be at least 2 characters").max(100, "Garage name must be less than 100 characters"),
   location: z.string().min(2, "Location must be at least 2 characters").max(200, "Location must be less than 200 characters"),
-  capacity: z.number().int().min(1, "Capacity must be at least 1").max(1000, "Capacity must be less than 1000"),
+  capacity: z.number().int().min(1, "Capacity must be at least 1").max(999999, "Capacity must be less than 999,999"),
   managerId: z.string().optional().or(z.literal("")),
 });
 

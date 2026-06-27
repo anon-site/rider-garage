@@ -21,10 +21,10 @@ function stripUndefined<T extends object>(obj: T): Partial<T> {
 function generateDriverId(existingIds: string[]): string {
   const prefix = "DRV-";
   let counter = 1;
-  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  let newId = `${prefix}${String(counter).padStart(6, "0")}`;
   while (existingIds.includes(newId)) {
     counter++;
-    newId = `${prefix}${String(counter).padStart(3, "0")}`;
+    newId = `${prefix}${String(counter).padStart(6, "0")}`;
   }
   return newId;
 }

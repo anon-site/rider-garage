@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List, Store, MapPin, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { Users, Bike, UserCheck, Clock, X, PackageOpen, Search, LayoutGrid, List, Store, MapPin, ChevronDown, ChevronUp, Check, ChevronLeft, ChevronRight, Timer } from "lucide-react";
 import { useDrivers } from "@/contexts/drivers-context";
 import { useBikes } from "@/contexts/bikes-context";
 import { useAttendance } from "@/contexts/attendance-context";
@@ -53,7 +53,7 @@ export function DashboardSection() {
   const { garages } = useGarages();
   const { drivers: allDrivers } = useDrivers();
   const { bikes: allBikes } = useBikes();
-  const { records } = useAttendance();
+  const { records, currentMonth, loadMonth } = useAttendance();
   const { deliveryCategories } = useDeliveryCategories();
 
   const managedGarage = useMemo(() => {
@@ -116,6 +116,48 @@ export function DashboardSection() {
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [profileDriver, setProfileDriver] = useState<Driver | null>(null);
+  const [loadingMonth, setLoadingMonth] = useState(false);
+
+  // Navigate to different month
+  const navigateMonth = useCallback(async (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentMonth.year, currentMonth.month - 1);
+    if (direction === 'prev') {
+      newDate.setMonth(newDate.getMonth() - 1);
+    } else {
+      newDate.setMonth(newDate.getMonth() + 1);
+    }
+    const newYear = newDate.getFullYear();
+    const newMonth = newDate.getMonth() + 1;
+    
+    setLoadingMonth(true);
+    try {
+      await loadMonth(newYear, newMonth);
+    } catch (error) {
+      console.error('Error loading month:', error);
+    } finally {
+      setLoadingMonth(false);
+    }
+  }, [currentMonth, loadMonth]);
+
+  // Back to current month
+  const backToCurrentMonth = useCallback(async () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthNum = now.getMonth() + 1;
+    
+    if (currentYear === currentMonth.year && currentMonthNum === currentMonth.month) {
+      return; // Already on current month
+    }
+    
+    setLoadingMonth(true);
+    try {
+      await loadMonth(currentYear, currentMonthNum);
+    } catch (error) {
+      console.error('Error loading current month:', error);
+    } finally {
+      setLoadingMonth(false);
+    }
+  }, [currentMonth, loadMonth]);
 
   const filteredDrivers = useMemo(() => {
     let result = drivers;
@@ -279,6 +321,76 @@ export function DashboardSection() {
           </div>
         </div>
       )}
+
+      {/* Month Navigation Bar */}
+      <div className="relative overflow-hidden rounded-2xl border border-surface-200 bg-gradient-to-r from-surface-50 to-white p-4 sm:p-5 shadow-sm">
+        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-surface-400/5 blur-2xl" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-surface-600 to-surface-700 text-white shadow-md shadow-surface-200">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-surface-600">Attendance Period</span>
+              <h2 className="text-lg font-extrabold text-surface-900 leading-tight">
+                {new Date(currentMonth.year, currentMonth.month - 1).toLocaleString('en', { month: 'long', year: 'numeric' })}
+              </h2>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigateMonth('prev')}
+              disabled={loadingMonth}
+              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-surface-600 ring-1 ring-surface-200 transition-all hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Previous month"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => navigateMonth('next')}
+              disabled={loadingMonth}
+              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-surface-600 ring-1 ring-surface-200 transition-all hover:bg-surface-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Next month"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            
+            {/* Back to current month button */}
+            {(() => {
+              const now = new Date();
+              const currentYear = now.getFullYear();
+              const currentMonthNum = now.getMonth() + 1;
+              const isCurrentMonth = currentYear === currentMonth.year && currentMonthNum === currentMonth.month;
+              
+              return !isCurrentMonth ? (
+                <button
+                  type="button"
+                  onClick={backToCurrentMonth}
+                  disabled={loadingMonth}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-brand-600 ring-1 ring-brand-200 transition-all hover:bg-brand-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Back to current month"
+                >
+                  <Timer className="h-4 w-4" />
+                  Current Month
+                </button>
+              ) : null;
+            })()}
+            
+            {loadingMonth && (
+              <div className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-surface-500">
+                <div className="h-4 w-4 animate-spin rounded-full border border-surface-300 border-t-transparent" />
+                Loading...
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {user?.role === "admin" && adminView === "garages" ? (
         <div className="space-y-4">
