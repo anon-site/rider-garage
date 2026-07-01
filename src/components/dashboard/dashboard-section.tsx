@@ -145,7 +145,7 @@ export function DashboardSection() {
     <div className="space-y-6">
       {/* Admin's Garage Selector & View Toggle */}
       {user?.role === "admin" && (
-        <div className="relative rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50/50 to-white p-4 sm:p-5 shadow-sm z-30">
+        <div className="relative rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50/50 to-white p-4 sm:p-5 shadow-sm">
           <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/5 blur-2xl" />
           </div>

@@ -36,7 +36,7 @@ export function Header({ title, description }: HeaderProps) {
   const avatarGrad = user ? (ROLE_AVATAR[user.role] ?? "from-brand-500 to-brand-600") : "from-brand-500 to-brand-600";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-white/60 bg-white/70 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-white/60 bg-white/70 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"

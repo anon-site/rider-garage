@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, CheckCheck, LogIn, LogOut, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/contexts/notifications-context";
@@ -30,6 +31,9 @@ export function NotificationBell() {
     useNotifications();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelStyle, setPanelStyle] = useState<{ top: number; right: number } | null>(null);
 
   const canView =
     permissions.canViewDashboard ||
@@ -38,13 +42,44 @@ export function NotificationBell() {
 
   const close = useCallback(() => setOpen(false), []);
 
+  const updatePanelPosition = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    setPanelStyle({
+      top: rect.bottom + 8,
+      right: Math.max(16, window.innerWidth - rect.right),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    updatePanelPosition();
+
+    const handleReposition = () => updatePanelPosition();
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+
+    return () => {
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [open, updatePanelPosition]);
+
   useEffect(() => {
     if (!open) return;
 
     const handlePointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        close();
+      const target = event.target as Node;
+      if (
+        containerRef.current?.contains(target) ||
+        panelRef.current?.contains(target)
+      ) {
+        return;
       }
+      close();
     };
 
     const handleEscape = (event: KeyboardEvent) => {
@@ -64,8 +99,15 @@ export function NotificationBell() {
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          setOpen((prev) => {
+            const next = !prev;
+            if (!prev) updatePanelPosition();
+            return next;
+          });
+        }}
         aria-label="Notifications"
         aria-expanded={open}
         className={cn(
@@ -81,8 +123,15 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(100vw-2rem,380px)] overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-2xl ring-1 ring-black/5">
+      {open &&
+        panelStyle &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={panelRef}
+            className="fixed z-[100] w-[min(100vw-2rem,380px)] overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-2xl ring-1 ring-black/5"
+            style={{ top: panelStyle.top, right: panelStyle.right }}
+          >
           <div className="flex items-center justify-between border-b border-surface-100 px-4 py-3">
             <div>
               <h2 className="text-base font-bold text-surface-900">Notifications</h2>
@@ -172,8 +221,9 @@ export function NotificationBell() {
               </ul>
             )}
           </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
