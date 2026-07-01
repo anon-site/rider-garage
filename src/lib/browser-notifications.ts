@@ -41,9 +41,13 @@ export async function enableBrowserNotifications(userId?: string): Promise<{
 
     let pushRegistered = false;
     if (userId) {
-      const { isFcmConfigured, registerFcmToken } = await import("@/lib/fcm");
-      if (isFcmConfigured()) {
-        pushRegistered = Boolean(await registerFcmToken(userId));
+      try {
+        const { isFcmConfigured, registerFcmToken } = await import("@/lib/fcm");
+        if (isFcmConfigured()) {
+          pushRegistered = Boolean(await registerFcmToken(userId));
+        }
+      } catch (error) {
+        console.warn("[FCM] Token registration failed:", error);
       }
     }
 

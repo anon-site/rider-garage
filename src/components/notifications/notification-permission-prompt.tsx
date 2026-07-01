@@ -8,11 +8,21 @@ import {
   enableBrowserNotifications,
   getBrowserNotificationPreference,
   isBrowserNotificationSupported,
+  setBrowserNotificationPreference,
 } from "@/lib/browser-notifications";
 import { isFcmConfigured } from "@/lib/fcm";
 import { unlockNotificationAudio } from "@/lib/notification-sounds";
 
 const DISMISS_KEY = "rider-garage-notification-prompt-dismissed";
+
+function shouldShowPrompt(): boolean {
+  if (!isBrowserNotificationSupported()) return false;
+  if (areBrowserNotificationsEnabled()) return false;
+  if (getBrowserNotificationPreference() === "disabled") return false;
+  if (Notification.permission === "denied") return false;
+  if (localStorage.getItem(DISMISS_KEY) === "1") return false;
+  return true;
+}
 
 export function NotificationPermissionPrompt() {
   const { user, permissions } = useAuth();
@@ -23,12 +33,11 @@ export function NotificationPermissionPrompt() {
     permissions.canViewDashboard || permissions.canClockDriver || permissions.canManageUsers;
 
   useEffect(() => {
-    if (!canReceiveAlerts || !isBrowserNotificationSupported()) return;
-    if (areBrowserNotificationsEnabled()) return;
-    if (getBrowserNotificationPreference() === "disabled") return;
-    if (Notification.permission === "denied") return;
-    if (localStorage.getItem(DISMISS_KEY) === "1") return;
-    setVisible(true);
+    if (!canReceiveAlerts) {
+      setVisible(false);
+      return;
+    }
+    setVisible(shouldShowPrompt());
   }, [canReceiveAlerts]);
 
   const dismiss = useCallback(() => {
@@ -39,11 +48,21 @@ export function NotificationPermissionPrompt() {
   const handleEnable = useCallback(async () => {
     setLoading(true);
     unlockNotificationAudio();
-    const result = await enableBrowserNotifications(user?.id);
-    setLoading(false);
-    if (result.ok) {
-      localStorage.setItem(DISMISS_KEY, "1");
-      setVisible(false);
+
+    try {
+      const result = await enableBrowserNotifications(user?.id);
+      if (result.permission === "granted") {
+        localStorage.setItem(DISMISS_KEY, "1");
+        setVisible(false);
+      }
+    } catch {
+      if (Notification.permission === "granted") {
+        setBrowserNotificationPreference("enabled");
+        localStorage.setItem(DISMISS_KEY, "1");
+        setVisible(false);
+      }
+    } finally {
+      setLoading(false);
     }
   }, [user?.id]);
 
