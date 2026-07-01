@@ -18,6 +18,8 @@ const firebaseConfig: FirebaseClientConfig = {
   appId: "1:1301708487:web:f642546c923851f53a88e2",
 };
 
+const firebaseVapidKey = "gV8M2nA0qC0--xdtcqtHK31MvXr2T6d80rc8O7KyYKE";
+
 export function getFirebaseConfig(): FirebaseClientConfig {
   return {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() || firebaseConfig.apiKey,
@@ -34,4 +36,8 @@ export function getFirebaseConfig(): FirebaseClientConfig {
       firebaseConfig.messagingSenderId,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim() || firebaseConfig.appId,
   };
+}
+
+export function getFirebaseVapidKey(): string {
+  return process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY?.trim() || firebaseVapidKey;
 }

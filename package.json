@@ -11,6 +11,8 @@
     "firebase:import": "node --env-file=.env.migration scripts/firebase-migrate.mjs import",
     "firebase:migrate": "node --env-file=.env.migration scripts/firebase-migrate.mjs migrate",
     "firebase:deploy-rules": "firebase deploy --only database",
+    "firebase:deploy-functions": "cd functions && npm install && cd .. && firebase deploy --only functions",
+    "firebase:deploy-push": "npm run firebase:deploy-rules && npm run firebase:deploy-functions",
     "fix-data": "node --env-file=.env.local fix-data.js"
   },
   "dependencies": {

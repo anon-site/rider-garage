@@ -34,8 +34,7 @@ yarn-error.log*
 .firebaserc
 firebase-export.json
 
-# vercel
-.vercel
+/functions/node_modules
 
 # typescript
 *.tsbuildinfo

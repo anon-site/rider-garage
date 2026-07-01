@@ -4,6 +4,7 @@ import "./globals.css";
 import { SidebarProvider } from "@/components/layout/sidebar-context";
 import { Sidebar } from "@/components/layout/sidebar";
 import { AuthProvider } from "@/contexts/auth-context";
+import { NotificationsProvider } from "@/contexts/notifications-context";
 import { ControlPanelProvider } from "@/contexts/control-panel-context";
 import { BikesProvider } from "@/contexts/bikes-context";
 import { DriversProvider } from "@/contexts/drivers-context";
@@ -12,6 +13,10 @@ import { AuthGate } from "@/components/auth/auth-gate";
 import { SecurityGuard } from "@/components/auth/security-guard";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { ToastProvider } from "@/components/ui/toast";
+import { AttendanceNotificationListener } from "@/components/notifications/attendance-notification-listener";
+import { NotificationPermissionPrompt } from "@/components/notifications/notification-permission-prompt";
+import { NotificationAudioUnlock } from "@/components/notifications/notification-audio-unlock";
+import { FcmRegistration } from "@/components/notifications/fcm-registration";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,6 +30,7 @@ export const metadata: Metadata = {
     template: "%s | Rider Garage",
   },
   description: "Delivery fleet garage management system",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -40,9 +46,14 @@ export default function RootLayout({
             <DriversProvider>
               <AuthProvider>
                 <AuthGate>
+                  <NotificationsProvider>
                   <LiveShiftsProvider>
                     <SecurityGuard>
                       <ToastProvider>
+                        <NotificationAudioUnlock />
+                        <FcmRegistration />
+                        <AttendanceNotificationListener />
+                        <NotificationPermissionPrompt />
                         <SidebarProvider>
                           <Sidebar />
                           <ErrorBoundary>
@@ -52,6 +63,7 @@ export default function RootLayout({
                       </ToastProvider>
                     </SecurityGuard>
                   </LiveShiftsProvider>
+                  </NotificationsProvider>
                 </AuthGate>
               </AuthProvider>
             </DriversProvider>

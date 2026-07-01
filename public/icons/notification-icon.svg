@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Rider Garage">
+  <rect width="128" height="128" rx="28" fill="#0f172a"/>
+  <path d="M64 24l8 20h22l-18 14 7 22-19-14-19 14 7-22-18-14h22z" fill="#38bdf8"/>
+  <circle cx="64" cy="96" r="10" fill="#f8fafc"/>
+</svg>

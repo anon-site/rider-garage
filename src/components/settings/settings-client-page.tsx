@@ -6,6 +6,7 @@ import { useBikes } from "@/contexts/bikes-context";
 import { useUsers, useGarages } from "@/contexts/control-panel-context";
 import { useAttendance } from "@/contexts/attendance-context";
 import { ImportExportSection } from "./import-export-section";
+import { BrowserNotificationsSection } from "./browser-notifications-section";
 import type { SiteData } from "@/lib/data-io";
 
 export function SettingsClientPage() {
@@ -30,6 +31,7 @@ export function SettingsClientPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      <BrowserNotificationsSection />
       <ImportExportSection onImport={handleImport} />
     </div>
   );

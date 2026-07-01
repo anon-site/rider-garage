@@ -32,6 +32,10 @@ import {
 import type { Driver } from "@/types/driver";
 import type { AttendanceRecord } from "@/types/attendance";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/components/ui/toast";
+import { useNotifications } from "@/contexts/notifications-context";
+import { suppressAttendanceNotification } from "@/lib/attendance-notification-suppress";
+import { notifyDriverMovement } from "@/lib/driver-movement-notify";
 
 type DriverProfileModalProps = {
   driver: Driver;
@@ -45,6 +49,13 @@ function formatDateTime(iso: string) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -88,6 +99,8 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   const latestRecord = driverRecords[0] ?? null;
   const hasOpenExit = latestRecord && !latestRecord.clockOut;
   const { permissions } = useAuth();
+  const { toast } = useToast();
+  const { addNotification } = useNotifications();
   const canClock = permissions.canClockDriver;
 
   const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
@@ -152,22 +165,52 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   const [editRating, setEditRating] = useState(100);
   const [editNotes, setEditNotes] = useState("");
 
-  function handleExit() {
-    addAttendanceRecord({
-      driverId: driver.id,
-      clockIn: fromLocalDatetimeValue(exitDate),
-      ordersDelivered: 0,
-      rating: latestRating,
-    });
+  async function handleExit() {
+    try {
+      const clockIn = fromLocalDatetimeValue(exitDate);
+      const id = await addAttendanceRecord({
+        driverId: driver.id,
+        clockIn,
+        ordersDelivered: 0,
+        rating: latestRating,
+      });
+      suppressAttendanceNotification(id);
+      notifyDriverMovement({
+        kind: "exit",
+        driverId: driver.id,
+        driverName: driver.name,
+        time: formatTime(clockIn),
+        recordId: id,
+        toast,
+        addNotification,
+      });
+    } catch {
+      toast("error", "Failed to record exit. Please try again.");
+    }
   }
 
-  function handleEntry() {
+  async function handleEntry() {
     if (!latestRecord || latestRecord.clockOut) return;
-    updateAttendanceRecord(latestRecord.id, {
-      clockOut: fromLocalDatetimeValue(entryDate),
-      rating: entryRating,
-      ordersDelivered: entryOrders,
-    });
+    try {
+      const clockOut = fromLocalDatetimeValue(entryDate);
+      suppressAttendanceNotification(latestRecord.id);
+      await updateAttendanceRecord(latestRecord.id, {
+        clockOut,
+        rating: entryRating,
+        ordersDelivered: entryOrders,
+      });
+      notifyDriverMovement({
+        kind: "entry",
+        driverId: driver.id,
+        driverName: driver.name,
+        time: formatTime(clockOut),
+        recordId: latestRecord.id,
+        toast,
+        addNotification,
+      });
+    } catch {
+      toast("error", "Failed to record entry. Please try again.");
+    }
   }
 
   function startEdit(record: AttendanceRecord) {

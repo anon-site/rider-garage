@@ -3,6 +3,7 @@
 import { Menu } from "lucide-react";
 import { useSidebar } from "./sidebar-context";
 import { useAuth } from "@/contexts/auth-context";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 type HeaderProps = {
   title: string;
@@ -56,6 +57,7 @@ export function Header({ title, description }: HeaderProps) {
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
+        <NotificationBell />
         {badge && (
           <span className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 sm:inline-flex ${badge.cls}`}>
             <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />

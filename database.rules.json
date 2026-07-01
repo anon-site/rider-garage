@@ -30,6 +30,12 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
+    "pushTokens": {
+      "$userId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
     "$other": {
       ".read": "auth != null",
       ".write": "auth != null"
