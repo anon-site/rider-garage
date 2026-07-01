@@ -18,6 +18,16 @@ const ENV_KEYS = {
   appId: "NEXT_PUBLIC_FIREBASE_APP_ID",
 } as const;
 
+const FALLBACK_CONFIG: FirebaseClientConfig = {
+  apiKey: "build-placeholder-api-key",
+  authDomain: "build-placeholder.firebaseapp.com",
+  databaseURL: "https://build-placeholder-default-rtdb.firebaseio.com",
+  projectId: "build-placeholder",
+  storageBucket: "build-placeholder.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:buildplaceholder",
+};
+
 export function getFirebaseConfig(): FirebaseClientConfig {
   const config = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
@@ -35,9 +45,14 @@ export function getFirebaseConfig(): FirebaseClientConfig {
 
   if (missing.length > 0) {
     const vars = missing.map((key) => ENV_KEYS[key]).join(", ");
-    throw new Error(
-      `Firebase configuration is incomplete. Set these environment variables: ${vars}`
-    );
+
+    // During server-side prerender/build, avoid crashing static generation.
+    // The real Firebase config is still required in the browser/runtime.
+    if (typeof window === "undefined") {
+      return FALLBACK_CONFIG;
+    }
+
+    throw new Error(`Firebase configuration is incomplete. Set these environment variables: ${vars}`);
   }
 
   return config;
