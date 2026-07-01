@@ -8,13 +8,6 @@ export type FirebaseClientConfig = {
   appId: string;
 };
 
-export type FirebaseConfigState = {
-  config: FirebaseClientConfig;
-  missing: string[];
-  isConfigured: boolean;
-  errorMessage: string | null;
-};
-
 const ENV_KEYS = {
   apiKey: "NEXT_PUBLIC_FIREBASE_API_KEY",
   authDomain: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
@@ -25,17 +18,7 @@ const ENV_KEYS = {
   appId: "NEXT_PUBLIC_FIREBASE_APP_ID",
 } as const;
 
-const FALLBACK_CONFIG: FirebaseClientConfig = {
-  apiKey: "build-placeholder-api-key",
-  authDomain: "build-placeholder.firebaseapp.com",
-  databaseURL: "https://build-placeholder-default-rtdb.firebaseio.com",
-  projectId: "build-placeholder",
-  storageBucket: "build-placeholder.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:buildplaceholder",
-};
-
-export function getFirebaseConfigState(): FirebaseConfigState {
+export function getFirebaseConfig(): FirebaseClientConfig {
   const config = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
@@ -50,35 +33,12 @@ export function getFirebaseConfigState(): FirebaseConfigState {
     (key) => !config[key]
   );
 
-  if (missing.length === 0) {
-    return {
-      config,
-      missing: [],
-      isConfigured: true,
-      errorMessage: null,
-    };
-  }
-
-  const vars = missing.map((key) => ENV_KEYS[key]);
-  const errorMessage = `Firebase configuration is incomplete. Set these environment variables: ${vars.join(", ")}`;
-
   if (missing.length > 0) {
-    return {
-      config: FALLBACK_CONFIG,
-      missing: vars,
-      isConfigured: false,
-      errorMessage,
-    };
+    const vars = missing.map((key) => ENV_KEYS[key]).join(", ");
+    throw new Error(
+      `Firebase configuration is incomplete. Set these environment variables: ${vars}`
+    );
   }
 
-  return {
-    config,
-    missing: [],
-    isConfigured: true,
-    errorMessage: null,
-  };
-}
-
-export function getFirebaseConfig(): FirebaseClientConfig {
-  return getFirebaseConfigState().config;
+  return config;
 }

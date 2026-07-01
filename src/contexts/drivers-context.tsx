@@ -8,10 +8,9 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { ref, onValue, set, update, remove, get, query, orderByChild, equalTo } from "firebase/database";
+import { ref, onValue, set, update, remove, get } from "firebase/database";
 import { db } from "@/lib/firebase";
 import type { Driver } from "@/types/driver";
-import { useAuth } from "@/contexts/auth-context";
 
 function stripUndefined<T extends object>(obj: T): Partial<T> {
   return Object.fromEntries(
@@ -44,27 +43,16 @@ const DriversContext = createContext<DriversContextValue | null>(null);
 export function DriversProvider({ children }: { children: ReactNode }) {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   useEffect(() => {
-    if (user?.role === "observer") {
-      setDrivers([]);
-      setLoading(false);
-      return;
-    }
-
-    const driversRef =
-      user?.role === "garage" && user.garageId
-        ? query(ref(db, "drivers"), orderByChild("garageId"), equalTo(user.garageId))
-        : ref(db, "drivers");
-
+    const driversRef = ref(db, "drivers");
     const unsub = onValue(driversRef, (snap) => {
       const data = snap.val() as Record<string, Omit<Driver, "id">> | null;
       setDrivers(data ? Object.entries(data).map(([id, d]) => ({ ...d, id })) : []);
       setLoading(false);
     });
     return () => unsub();
-  }, [user?.garageId, user?.role]);
+  }, []);
 
   const addDriver = useCallback(async (driver: Omit<Driver, "id">, customId?: string): Promise<string> => {
     const driverId = customId || generateDriverId(drivers.map(d => d.id));

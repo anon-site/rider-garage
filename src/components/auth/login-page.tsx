@@ -3,12 +3,14 @@
 import { useState, useCallback } from "react";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { useUsers } from "@/contexts/control-panel-context";
 
 /* ── Hexagon rows config ── */
 const HEX_ROWS = [12, 11, 12, 11, 12];
 
 export function LoginPage() {
   const { login } = useAuth();
+  const { users } = useUsers();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -23,11 +25,11 @@ export function LoginPage() {
       setError(null);
       setLoading(true);
       await new Promise((r) => setTimeout(r, 700));
-      const err = await login(username.trim(), password, rememberMe);
+      const err = await login(username.trim(), password, users, rememberMe);
       if (err) setError(err);
       setLoading(false);
     },
-    [username, password, login, rememberMe]
+    [username, password, login, users, rememberMe]
   );
 
   return (

@@ -9,21 +9,17 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import {
-  onAuthStateChanged,
-  signInWithCustomToken,
-  signOut,
-  setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence,
-} from "firebase/auth";
-import type { PublicUser, RoleId } from "@/types/user";
+import type { User, RoleId } from "@/types/user";
 import type { CustomPermissions } from "@/types/user";
-import { auth, db, isFirebaseClientConfigured, firebaseClientConfigError } from "@/lib/firebase";
-import { ref, get } from "firebase/database";
-import { toPublicUser } from "@/lib/user-profile";
+import { verifyPassword, isHashedPassword } from "@/lib/crypto";
 import { recordFailedAttempt, recordSuccessfulLogin, getRemainingLockoutTime } from "@/lib/rate-limiter";
 
+/* ── Permission matrix ─────────────────────────────────────────────────
+  canEdit:        add / edit / delete records in Bikes & Drivers
+  canManageUsers: access Control Panel (users/garages management)
+  canViewAll:     access all pages
+  canClockDriver: clock drivers in/out from Dashboard
+──────────────────────────────────────────────────────────────────────── */
 export type Permissions = {
   canEdit: boolean;
   canManageUsers: boolean;
@@ -66,8 +62,8 @@ const ROLE_PERMISSIONS: Record<RoleId, Permissions> = {
     canViewReports: false,
     canViewDashboard: true,
     canViewGarages: false,
-    canViewBikes: false,
-    canViewDrivers: false,
+    canViewBikes: true,
+    canViewDrivers: true,
     canViewSettings: false,
   },
   garage: {
@@ -83,15 +79,15 @@ const ROLE_PERMISSIONS: Record<RoleId, Permissions> = {
   },
 };
 
+/* ── Context value ─────────────────────────────────────────────────── */
 export type AuthContextValue = {
-  user: PublicUser | null;
+  user: User | null;
   permissions: Permissions;
-  login: (username: string, password: string, rememberMe?: boolean) => Promise<string | null>;
-  logout: () => Promise<void>;
+  /** Returns null on success, error string on failure */
+  login: (username: string, password: string, allUsers: User[], rememberMe?: boolean) => Promise<string | null>;
+  logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isFirebaseConfigured: boolean;
-  firebaseConfigError: string | null;
 };
 
 const DEFAULT_PERMISSIONS: Permissions = {
@@ -108,44 +104,34 @@ const DEFAULT_PERMISSIONS: Permissions = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/* ── Provider ──────────────────────────────────────────────────────── */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<PublicUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Load user from storage on mount (check localStorage first, then sessionStorage)
   useEffect(() => {
-    if (!isFirebaseClientConfigured) {
-      setUser(null);
-      setIsLoading(false);
-      return;
-    }
-
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) {
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
+    const raw = localStorage.getItem("rider-garage-user") || sessionStorage.getItem("rider-garage-user");
+    if (raw) {
       try {
-        const tokenResult = await firebaseUser.getIdTokenResult();
-        const userId = (tokenResult.claims.userId as string | undefined) ?? firebaseUser.uid;
-        const profileSnap = await get(ref(db, `users/${userId}`));
-
-        if (!profileSnap.exists()) {
-          setUser(null);
-          setIsLoading(false);
-          return;
+        const parsed = JSON.parse(raw);
+        const savedAt = parsed.__savedAt as number | undefined;
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        if (savedAt && Date.now() - savedAt > maxAge) {
+          // Session expired
+          localStorage.removeItem("rider-garage-user");
+          sessionStorage.removeItem("rider-garage-user");
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { __savedAt: _savedAt, ...userData } = parsed;
+          setUser(userData as User);
         }
-
-        setUser(toPublicUser(userId, profileSnap.val() as Record<string, unknown>));
       } catch {
-        setUser(null);
-      } finally {
-        setIsLoading(false);
+        localStorage.removeItem("rider-garage-user");
+        sessionStorage.removeItem("rider-garage-user");
       }
-    });
-
-    return () => unsub();
+    }
+    setIsLoading(false);
   }, []);
 
   const permissions = useMemo<Permissions>(() => {
@@ -154,20 +140,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user.customPermissions) return base;
     const cp = user.customPermissions as CustomPermissions;
     return {
-      canEdit: cp.canEdit ?? base.canEdit,
-      canManageUsers: cp.canManageUsers ?? base.canManageUsers,
-      canClockDriver: cp.canClockDriver ?? base.canClockDriver,
-      canViewReports: cp.canViewReports ?? base.canViewReports,
+      canEdit:          cp.canEdit          ?? base.canEdit,
+      canManageUsers:   cp.canManageUsers   ?? base.canManageUsers,
+      canClockDriver:   cp.canClockDriver   ?? base.canClockDriver,
+      canViewReports:   cp.canViewReports   ?? base.canViewReports,
       canViewDashboard: cp.canViewDashboard ?? base.canViewDashboard,
-      canViewGarages: cp.canViewGarages ?? base.canViewGarages,
-      canViewBikes: cp.canViewBikes ?? base.canViewBikes,
-      canViewDrivers: cp.canViewDrivers ?? base.canViewDrivers,
-      canViewSettings: cp.canViewSettings ?? base.canViewSettings,
+      canViewGarages:   cp.canViewGarages   ?? base.canViewGarages,
+      canViewBikes:     cp.canViewBikes     ?? base.canViewBikes,
+      canViewDrivers:   cp.canViewDrivers   ?? base.canViewDrivers,
+      canViewSettings:  cp.canViewSettings  ?? base.canViewSettings,
     };
   }, [user]);
 
   const login = useCallback(
-    async (username: string, password: string, rememberMe = false): Promise<string | null> => {
+    async (username: string, password: string, allUsers: User[], rememberMe = false): Promise<string | null> => {
+      // Check rate limiting first
       const lockoutTime = getRemainingLockoutTime();
       if (lockoutTime !== null) {
         const minutes = Math.floor(lockoutTime / 60000);
@@ -175,77 +162,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return `Too many failed attempts. Please try again in ${minutes}m ${seconds}s.`;
       }
 
-      if (!isFirebaseClientConfigured) {
-        return firebaseClientConfigError || "Firebase configuration is missing.";
-      }
-
-      try {
-        const response = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-        });
-
-        const data = (await response.json()) as { customToken?: string; user?: PublicUser; error?: string };
-
-        if (!response.ok) {
-          const result = recordFailedAttempt();
-          if (result.locked) {
-            const minutes = Math.floor((result.remainingTime || 0) / 60000);
-            const seconds = Math.floor(((result.remainingTime || 0) % 60000) / 1000);
-            return `Too many failed attempts. Account locked for ${minutes}m ${seconds}s.`;
-          }
-          return data.error || "Login failed.";
-        }
-
-        if (!data.customToken || !data.user) {
-          return "Login failed.";
-        }
-
-        await setPersistence(
-          auth,
-          rememberMe ? browserLocalPersistence : browserSessionPersistence
-        );
-        await signInWithCustomToken(auth, data.customToken);
-        setUser(data.user);
-        recordSuccessfulLogin();
-        return null;
-      } catch {
+      const found = allUsers.find(
+        (u) => u.username.toLowerCase() === username.trim().toLowerCase()
+      );
+      if (!found) {
         recordFailedAttempt();
-        return "Unable to connect. Please try again.";
+        return "No account found with this username.";
       }
+      
+      // Check password - support both hashed and plain text for migration
+      let passwordValid = false;
+      if (isHashedPassword(found.password)) {
+        passwordValid = await verifyPassword(password, found.password);
+      } else {
+        // Legacy plain text comparison
+        passwordValid = password === found.password;
+      }
+      
+      if (!passwordValid) {
+        const result = recordFailedAttempt();
+        if (result.locked) {
+          const minutes = Math.floor((result.remainingTime || 0) / 60000);
+          const seconds = Math.floor(((result.remainingTime || 0) % 60000) / 1000);
+          return `Too many failed attempts. Account locked for ${minutes}m ${seconds}s.`;
+        }
+        return "Incorrect password.";
+      }
+      
+      // Successful login - clear rate limiting
+      recordSuccessfulLogin();
+      
+      setUser(found);
+      // Save to localStorage if rememberMe, otherwise sessionStorage
+      // Remove password before persisting & add timestamp for expiry
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...safeUser } = found;
+      const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem("rider-garage-user", JSON.stringify({ ...safeUser, __savedAt: Date.now() }));
+      return null;
     },
     []
   );
 
-  const logout = useCallback(async () => {
-    await signOut(auth);
+  const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem("rider-garage-user");
     sessionStorage.removeItem("rider-garage-user");
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      permissions,
-      login,
-      logout,
-      isAuthenticated: !!user,
-      isLoading,
-      isFirebaseConfigured: isFirebaseClientConfigured,
-      firebaseConfigError: firebaseClientConfigError,
-    }),
+    () => ({ user, permissions, login, logout, isAuthenticated: !!user, isLoading }),
     [user, permissions, login, logout, isLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/* ── Hook ──────────────────────────────────────────────────────────── */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
 
+/* ── Exported helpers ──────────────────────────────────────────────── */
 export { ROLE_PERMISSIONS };

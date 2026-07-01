@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { X, ShieldCheck, RotateCcw, Eye, EyeOff } from "lucide-react";
-import type { PublicUser, RoleId, CustomPermissions } from "@/types/user";
+import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
-import type { UpdateUserInput } from "@/contexts/control-panel-context";
+import { hashPassword } from "@/lib/crypto";
 import { userEditSchema, type UserEditFormData } from "@/lib/schemas";
 
 type EditUserModalProps = {
-  user: PublicUser | null;
-  onSave: (id: string, changes: UpdateUserInput) => void;
+  user: User | null;
+  onSave: (id: string, changes: Partial<Omit<User, "id">>) => void;
   onChangeId?: (oldId: string, newId: string) => Promise<void>;
   onClose: () => void;
   existingUsernames?: string[];
@@ -39,7 +39,6 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordTouched, setPasswordTouched] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -58,8 +57,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
       setCustomId(user.id);
       setName(user.name);
       setUsername(user.username);
-      setPassword("");
-      setPasswordTouched(false);
+      setPassword(user.password);
       setEmail(user.email);
       setPhone(user.phone);
       setRole(user.role);
@@ -95,11 +93,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
     e.preventDefault();
     setValidationErrors({});
     
-    if (!name.trim() || !username.trim() || !user) return;
-    if (passwordTouched && password.trim().length < 6) {
-      setValidationErrors({ password: "Password must be at least 6 characters." });
-      return;
-    }
+    if (!name.trim() || !username.trim() || !password.trim() || !user) return;
     if (isDuplicateUsername || isDuplicateId) return;
 
     // Validate with Zod
@@ -131,10 +125,13 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
       await onChangeId(user.id, customId.trim());
     }
 
-    const changes: UpdateUserInput = { name, username, email, phone, role };
-    if (passwordTouched && password.trim()) {
-      changes.password = password;
+    // Hash password if it's been changed (not the same as existing)
+    let finalPassword = password;
+    if (password !== user.password) {
+      finalPassword = await hashPassword(password);
     }
+
+    const changes: Partial<Omit<User, "id">> = { name, username, password: finalPassword, email, phone, role };
     if (role === "garage" && garageId) {
       changes.garageId = garageId;
     } else {
@@ -268,19 +265,14 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
                 )}
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-surface-900">
-                  Password <span className="text-slate-400 text-xs font-normal">(leave blank to keep)</span>
-                </label>
+                <label className="text-sm font-medium text-surface-900">Password</label>
                 <div className="relative">
                   <input
                     type={showPass ? "text" : "password"}
+                    required
                     value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setPasswordTouched(true);
-                      setValidationErrors((prev) => ({ ...prev, password: "" }));
-                    }}
-                    placeholder="Enter new password to change"
+                    onChange={(e) => { setPassword(e.target.value); setValidationErrors(prev => ({ ...prev, password: '' })); }}
+                    autoComplete="new-password"
                     className={`w-full rounded-xl border bg-white px-3 py-2 pr-10 text-sm text-surface-900 outline-none focus:ring-2 ${
                       validationErrors.password ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : "border-surface-200 focus:border-brand-400 focus:ring-brand-100"
                     }`}

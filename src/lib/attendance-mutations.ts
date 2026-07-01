@@ -1,7 +1,6 @@
-import { ref, push, set, update, remove, get } from "firebase/database";
+import { ref, push, set, update, remove } from "firebase/database";
 import { db } from "@/lib/firebase";
 import type { AttendanceRecord } from "@/types/attendance";
-import type { Driver } from "@/types/driver";
 
 function stripUndefined<T extends object>(obj: T): Partial<T> {
   return Object.fromEntries(
@@ -12,19 +11,8 @@ function stripUndefined<T extends object>(obj: T): Partial<T> {
 export async function addAttendanceRecord(
   record: Omit<AttendanceRecord, "id">
 ): Promise<string> {
-  let payload = record;
-
-  if (!record.garageId) {
-    const driverSnap = await get(ref(db, `drivers/${record.driverId}`));
-    const driver = driverSnap.val() as Driver | null;
-    payload = {
-      ...record,
-      garageId: driver?.garageId,
-    };
-  }
-
   const newRef = push(ref(db, "attendance"));
-  await set(newRef, stripUndefined(payload));
+  await set(newRef, stripUndefined(record));
   return newRef.key!;
 }
 

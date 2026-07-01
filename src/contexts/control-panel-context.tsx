@@ -16,18 +16,22 @@ import {
   update,
   remove,
   get,
-  query,
-  orderByChild,
-  equalTo,
 } from "firebase/database";
 import { db } from "@/lib/firebase";
-import { authFetch } from "@/lib/auth-fetch";
-import { toPublicUser } from "@/lib/user-profile";
-import type { PublicUser } from "@/types/user";
+import type { User } from "@/types/user";
 import type { Garage } from "@/types/garage";
 import type { DeliveryCategory } from "@/types/delivery-category";
 import { DELIVERY_CATEGORIES } from "@/types/delivery-category";
-import { useAuth } from "@/contexts/auth-context";
+
+/* ── seed admin on first run ────────────────────────────────────── */
+const SEED_ADMIN: Omit<User, "id"> = {
+  name: "Ahmed Hassan",
+  username: "ahmed",
+  password: "admin123",
+  email: "ahmed@ridergarage.com",
+  phone: "+964 770 123 4567",
+  role: "admin",
+};
 
 /* ── helpers ── */
 function stripUndefined<T extends object>(obj: T): Partial<T> {
@@ -36,27 +40,16 @@ function stripUndefined<T extends object>(obj: T): Partial<T> {
   ) as Partial<T>;
 }
 
-export type CreateUserInput = Omit<PublicUser, "id"> & { password: string };
-export type UpdateUserInput = Partial<Omit<PublicUser, "id">> & { password?: string };
-
-type ControlPanelContextValue = {
-  users: PublicUser[];
-  garages: Garage[];
-  deliveryCategories: DeliveryCategory[];
-  loading: boolean;
-  addUser: (user: CreateUserInput, customId?: string) => Promise<string>;
-  updateUser: (id: string, changes: UpdateUserInput) => Promise<void>;
-  changeUserId: (oldId: string, newId: string) => Promise<void>;
-  deleteUser: (id: string) => Promise<void>;
-  addGarage: (garage: Omit<Garage, "id">, customId?: string) => Promise<string>;
-  updateGarage: (id: string, changes: Partial<Omit<Garage, "id">>) => Promise<void>;
-  changeGarageId: (oldId: string, newId: string) => Promise<void>;
-  deleteGarage: (id: string) => Promise<void>;
-  addDeliveryCategory: (category: Omit<DeliveryCategory, "id">, customId?: string) => Promise<string>;
-  updateDeliveryCategory: (id: string, changes: Partial<Omit<DeliveryCategory, "id">>) => Promise<void>;
-  changeDeliveryCategoryId: (oldId: string, newId: string) => Promise<void>;
-  deleteDeliveryCategory: (id: string) => Promise<void>;
-};
+function generateUserId(existingIds: string[]): string {
+  const prefix = "USR-";
+  let counter = 1;
+  let newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  while (existingIds.includes(newId)) {
+    counter++;
+    newId = `${prefix}${String(counter).padStart(3, "0")}`;
+  }
+  return newId;
+}
 
 function generateGarageId(existingIds: string[]): string {
   const prefix = "GRG-";
@@ -80,14 +73,32 @@ function generateDeliveryCategoryId(existingIds: string[]): string {
   return newId;
 }
 
+type ControlPanelContextValue = {
+  users: User[];
+  garages: Garage[];
+  deliveryCategories: DeliveryCategory[];
+  loading: boolean;
+  addUser: (user: Omit<User, "id">, customId?: string) => Promise<string>;
+  updateUser: (id: string, changes: Partial<Omit<User, "id">>) => Promise<void>;
+  changeUserId: (oldId: string, newId: string) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
+  addGarage: (garage: Omit<Garage, "id">, customId?: string) => Promise<string>;
+  updateGarage: (id: string, changes: Partial<Omit<Garage, "id">>) => Promise<void>;
+  changeGarageId: (oldId: string, newId: string) => Promise<void>;
+  deleteGarage: (id: string) => Promise<void>;
+  addDeliveryCategory: (category: Omit<DeliveryCategory, "id">, customId?: string) => Promise<string>;
+  updateDeliveryCategory: (id: string, changes: Partial<Omit<DeliveryCategory, "id">>) => Promise<void>;
+  changeDeliveryCategoryId: (oldId: string, newId: string) => Promise<void>;
+  deleteDeliveryCategory: (id: string) => Promise<void>;
+};
+
 const ControlPanelContext = createContext<ControlPanelContextValue | null>(null);
 
 export function ControlPanelProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<PublicUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [garages, setGarages] = useState<Garage[]>([]);
   const [deliveryCategories, setDeliveryCategories] = useState<DeliveryCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   /* ── Real-time listeners ── */
   useEffect(() => {
@@ -99,55 +110,45 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
       if (usersReady && garagesReady && deliveryCategoriesReady) setLoading(false);
     };
 
-    let unsubUsers: () => void = () => {};
-    if (user?.role === "admin") {
-      const usersRef = ref(db, "users");
-      unsubUsers = onValue(usersRef, (snap) => {
-        const data = snap.val() as Record<string, Record<string, unknown>> | null;
-        if (data) {
-          setUsers(Object.entries(data).map(([id, u]) => toPublicUser(id, u)));
-        } else {
-          setUsers([]);
-        }
-        usersReady = true;
-        checkDone();
-      });
-    } else {
-      setUsers([]);
+    const usersRef = ref(db, "users");
+    const unsubUsers = onValue(usersRef, (snap) => {
+      const data = snap.val() as Record<string, Omit<User, "id">> | null;
+      if (data) {
+        setUsers(Object.entries(data).map(([id, u]) => ({ ...u, id })));
+      } else {
+        /* Seed admin on first run */
+        const adminRef = push(ref(db, "users"));
+        set(adminRef, SEED_ADMIN);
+        setUsers([{ ...SEED_ADMIN, id: adminRef.key! }]);
+
+        /* Seed default delivery categories on first run */
+        const categoriesRef = ref(db, "deliveryCategories");
+        get(categoriesRef).then((catSnap) => {
+          if (!catSnap.exists()) {
+            const promises = DELIVERY_CATEGORIES.map(async (cat) => {
+              const catRef = push(ref(db, "deliveryCategories"));
+              await set(catRef, cat);
+            });
+            Promise.all(promises);
+          }
+        });
+      }
       usersReady = true;
       checkDone();
-    }
+    });
 
-    let unsubGarages: () => void = () => {};
-    if (user?.role === "observer") {
-      setGarages([]);
+    const garagesRef = ref(db, "garages");
+    const unsubGarages = onValue(garagesRef, (snap) => {
+      const data = snap.val() as Record<string, Omit<Garage, "id">> | null;
+      setGarages(data ? Object.entries(data).map(([id, g]) => ({ ...g, id })) : []);
       garagesReady = true;
       checkDone();
-    } else {
-      const garagesRef =
-        user?.role === "garage"
-          ? query(ref(db, "garages"), orderByChild("managerId"), equalTo(user.id))
-          : ref(db, "garages");
-      unsubGarages = onValue(garagesRef, (snap) => {
-        const data = snap.val() as Record<string, Omit<Garage, "id">> | null;
-        setGarages(data ? Object.entries(data).map(([id, g]) => ({ ...g, id })) : []);
-        garagesReady = true;
-        checkDone();
-      });
-    }
+    });
 
     const deliveryCategoriesRef = ref(db, "deliveryCategories");
     const unsubDeliveryCategories = onValue(deliveryCategoriesRef, (snap) => {
       const data = snap.val() as Record<string, Omit<DeliveryCategory, "id">> | null;
-      if (data) {
-        setDeliveryCategories(Object.entries(data).map(([id, c]) => ({ ...c, id })));
-      } else {
-        DELIVERY_CATEGORIES.forEach(async (cat) => {
-          const catRef = push(ref(db, "deliveryCategories"));
-          await set(catRef, cat);
-        });
-        setDeliveryCategories([]);
-      }
+      setDeliveryCategories(data ? Object.entries(data).map(([id, c]) => ({ ...c, id })) : []);
       deliveryCategoriesReady = true;
       checkDone();
     });
@@ -157,42 +158,68 @@ export function ControlPanelProvider({ children }: { children: ReactNode }) {
       unsubGarages();
       unsubDeliveryCategories();
     };
-  }, [user?.id, user?.role]);
-
-  /* ── Users CRUD (server-side for credentials) ── */
-  const addUser = useCallback(async (user: CreateUserInput, customId?: string): Promise<string> => {
-    const response = await authFetch("/api/users", {
-      method: "POST",
-      body: JSON.stringify({ ...user, id: customId }),
-    });
-    const data = (await response.json()) as { id?: string; error?: string };
-    if (!response.ok) throw new Error(data.error || "Failed to create user.");
-    return data.id!;
   }, []);
 
-  const updateUser = useCallback(async (id: string, changes: UpdateUserInput) => {
-    const response = await authFetch(`/api/users/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(changes),
-    });
-    const data = (await response.json()) as { error?: string };
-    if (!response.ok) throw new Error(data.error || "Failed to update user.");
-  }, []);
+  /* ── Users CRUD ── */
+  const addUser = useCallback(async (user: Omit<User, "id">, customId?: string): Promise<string> => {
+    const userId = customId || generateUserId(users.map(u => u.id));
+    const userRef = ref(db, `users/${userId}`);
+    await set(userRef, stripUndefined(user));
+    if (user.garageId) {
+      await update(ref(db, `garages/${user.garageId}`), { managerId: userId });
+    }
+    return userId;
+  }, [users]);
+
+  const updateUser = useCallback(async (id: string, changes: Partial<Omit<User, "id">>) => {
+    const oldUser = users.find((u) => u.id === id);
+    if (oldUser?.role === "admin" && changes.role && changes.role !== "admin") {
+      throw new Error("Cannot change the role of an Admin user.");
+    }
+    await update(ref(db, `users/${id}`), stripUndefined(changes));
+
+    const newGarageId = changes.garageId !== undefined ? changes.garageId : oldUser?.garageId;
+
+    if (oldUser?.garageId && oldUser.garageId !== newGarageId) {
+      await update(ref(db, `garages/${oldUser.garageId}`), { managerId: null });
+    }
+    if (newGarageId) {
+      await update(ref(db, `garages/${newGarageId}`), { managerId: id });
+    }
+    if (changes.garageId === undefined && oldUser?.garageId) {
+      await update(ref(db, `users/${id}`), { garageId: null });
+    }
+  }, [users]);
 
   const changeUserId = useCallback(async (oldId: string, newId: string) => {
-    const response = await authFetch(`/api/users/${oldId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ newId }),
-    });
-    const data = (await response.json()) as { error?: string };
-    if (!response.ok) throw new Error(data.error || "Failed to change user ID.");
-  }, []);
+    const oldUser = users.find((u) => u.id === oldId);
+    if (oldUser?.role === "admin") {
+      throw new Error("Cannot change the ID of an Admin user.");
+    }
+    const oldRef = ref(db, `users/${oldId}`);
+    const newRef = ref(db, `users/${newId}`);
+    const snapshot = await get(oldRef);
+    if (!snapshot.exists()) throw new Error("User not found");
+    const data = snapshot.val();
+    await set(newRef, data);
+    await remove(oldRef);
+
+    // Update garage reference if user is a manager
+    if (data.garageId) {
+      await update(ref(db, `garages/${data.garageId}`), { managerId: newId });
+    }
+  }, [users]);
 
   const deleteUser = useCallback(async (id: string) => {
-    const response = await authFetch(`/api/users/${id}`, { method: "DELETE" });
-    const data = (await response.json()) as { error?: string };
-    if (!response.ok) throw new Error(data.error || "Failed to delete user.");
-  }, []);
+    const user = users.find((u) => u.id === id);
+    if (user?.role === "admin") {
+      throw new Error("Cannot delete an Admin user.");
+    }
+    if (user?.garageId) {
+      await update(ref(db, `garages/${user.garageId}`), { managerId: null });
+    }
+    await remove(ref(db, `users/${id}`));
+  }, [users]);
 
   /* ── Garages CRUD ── */
   const addGarage = useCallback(async (garage: Omit<Garage, "id">, customId?: string): Promise<string> => {

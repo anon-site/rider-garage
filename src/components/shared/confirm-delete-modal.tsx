@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { X, AlertTriangle, Lock } from "lucide-react";
+import { useUsers } from "@/contexts/control-panel-context";
 import { useModalBehavior } from "@/hooks/use-modal";
-import { authFetch } from "@/lib/auth-fetch";
 
 type ConfirmDeleteModalProps = {
   title: string;
@@ -14,40 +14,32 @@ type ConfirmDeleteModalProps = {
 
 export function ConfirmDeleteModal({ title, description, onConfirm, onCancel }: ConfirmDeleteModalProps) {
   useModalBehavior(true, onCancel);
+  const { users } = useUsers();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [verifying, setVerifying] = useState(false);
 
-  async function handleConfirm() {
-    setVerifying(true);
-    setError("");
-
-    try {
-      const response = await authFetch("/api/auth/verify-admin", {
-        method: "POST",
-        body: JSON.stringify({ password }),
-      });
-      const data = (await response.json()) as { error?: string };
-
-      if (!response.ok) {
-        setError(data.error || "Incorrect admin password.");
-        setPassword("");
-        return;
-      }
-
-      onConfirm();
-    } catch {
-      setError("Verification failed. Please try again.");
-    } finally {
-      setVerifying(false);
+  function handleConfirm() {
+    const admin = users.find((u) => u.role === "admin");
+    if (!admin) {
+      setError("No admin account found.");
+      return;
     }
+    if (password !== admin.password) {
+      setError("Incorrect admin password.");
+      setPassword("");
+      return;
+    }
+    onConfirm();
   }
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-label={title}>
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
 
+      {/* Modal */}
       <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-surface-200">
+        {/* Header */}
         <div className="flex items-center gap-3 border-b border-surface-200 bg-red-50 px-6 py-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100">
             <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -65,9 +57,10 @@ export function ConfirmDeleteModal({ title, description, onConfirm, onCancel }: 
           </button>
         </div>
 
+        {/* Body */}
         <div className="px-6 py-5 space-y-4">
           <p className="text-sm text-slate-600">
-            Enter your admin password to confirm this action.
+            Enter the admin password to confirm this action.
           </p>
 
           <div className="relative">
@@ -88,6 +81,7 @@ export function ConfirmDeleteModal({ title, description, onConfirm, onCancel }: 
           )}
         </div>
 
+        {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-surface-200 bg-surface-50 px-6 py-4">
           <button
             type="button"
@@ -99,10 +93,9 @@ export function ConfirmDeleteModal({ title, description, onConfirm, onCancel }: 
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={verifying || !password}
-            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-red-700 active:scale-[0.98]"
           >
-            {verifying ? "Verifying…" : "Delete"}
+            Delete
           </button>
         </div>
       </div>

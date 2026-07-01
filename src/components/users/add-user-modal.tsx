@@ -2,15 +2,15 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { X, Plus, ShieldCheck, RotateCcw, Eye, EyeOff } from "lucide-react";
-import type { CreateUserInput } from "@/contexts/control-panel-context";
-import type { RoleId, CustomPermissions } from "@/types/user";
+import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
+import { hashPassword } from "@/lib/crypto";
 import { userSchema, type UserFormData } from "@/lib/schemas";
 
 type AddUserModalProps = {
-  onSubmit: (user: CreateUserInput, customId?: string) => void;
+  onSubmit: (user: Omit<User, "id">, customId?: string) => void;
   onClose: () => void;
   existingUsernames?: string[];
   existingIds?: string[];
@@ -117,8 +117,10 @@ export function AddUserModal({ onSubmit, onClose, existingUsernames = [], existi
       return;
     }
     
-    // Password is hashed server-side
-    const payload: CreateUserInput = { name, username, password, email, phone, role };
+    // Hash the password before saving
+    const hashedPassword = await hashPassword(password);
+    
+    const payload: Omit<User, "id"> = { name, username, password: hashedPassword, email, phone, role };
     if (role === "garage" && garageId) payload.garageId = garageId;
     if (Object.keys(customPerms).length > 0) payload.customPermissions = customPerms;
     onSubmit(payload, customId.trim() || undefined);

@@ -11,15 +11,12 @@
     "firebase:import": "node --env-file=.env.migration scripts/firebase-migrate.mjs import",
     "firebase:migrate": "node --env-file=.env.migration scripts/firebase-migrate.mjs migrate",
     "firebase:deploy-rules": "firebase deploy --only database",
-    "firebase:migrate-auth": "node --env-file=.env.local scripts/migrate-firebase-auth.mjs",
-    "firebase:bootstrap-admin": "node --env-file=.env.local scripts/migrate-firebase-auth.mjs --bootstrap",
     "fix-data": "node --env-file=.env.local fix-data.js"
   },
   "dependencies": {
     "@types/react-window": "^1.8.8",
     "clsx": "^2.1.1",
     "firebase": "^12.13.0",
-    "firebase-admin": "^14.1.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.511.0",

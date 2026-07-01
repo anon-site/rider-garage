@@ -1,15 +1,6 @@
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps } from "firebase/app";
 import { getDatabase } from "firebase/database";
-import { getFirebaseConfigState } from "@/lib/firebase-config";
+import { getFirebaseConfig } from "@/lib/firebase-config";
 
-const firebaseState = getFirebaseConfigState();
-
-export const isFirebaseClientConfigured = firebaseState.isConfigured;
-export const firebaseClientConfigError = firebaseState.errorMessage;
-
-export const app: FirebaseApp =
-  getApps().length === 0 ? initializeApp(firebaseState.config) : getApps()[0];
-
-export const auth = getAuth(app);
+const app = getApps().length === 0 ? initializeApp(getFirebaseConfig()) : getApps()[0];
 export const db = getDatabase(app);

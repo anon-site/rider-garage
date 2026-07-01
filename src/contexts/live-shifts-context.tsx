@@ -11,7 +11,6 @@ import {
 import { ref, onValue, query, orderByChild, equalTo } from "firebase/database";
 import { db } from "@/lib/firebase";
 import type { AttendanceRecord } from "@/types/attendance";
-import { useAuth } from "@/contexts/auth-context";
 
 type LiveShiftsContextValue = {
   activeRecords: AttendanceRecord[];
@@ -26,26 +25,20 @@ export function LiveShiftsProvider({ children }: { children: ReactNode }) {
   const [activeRecords, setActiveRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
 
   useEffect(() => {
-    if (user?.role === "observer") {
-      setActiveRecords([]);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    const activeRef =
-      user?.role === "garage" && user.garageId
-        ? query(ref(db, "attendance"), orderByChild("garageId"), equalTo(user.garageId))
-        : query(ref(db, "attendance"), orderByChild("clockOut"), equalTo(null));
+    // Only listen to records that are currently open (no clockOut).
+    // This stays small even when historical attendance data grows huge.
+    const activeRef = query(
+      ref(db, "attendance"),
+      orderByChild("clockOut"),
+      equalTo(null)
+    );
     const unsub = onValue(
       activeRef,
       (snap) => {
         const data = snap.val() as Record<string, Omit<AttendanceRecord, "id">> | null;
-        const records = data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : [];
-        setActiveRecords(records.filter((record) => !record.clockOut));
+        setActiveRecords(data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : []);
         setLoading(false);
         setError(null);
       },
@@ -55,7 +48,7 @@ export function LiveShiftsProvider({ children }: { children: ReactNode }) {
       }
     );
     return () => unsub();
-  }, [user?.garageId, user?.role]);
+  }, []);
 
   const activeDriverIds = useMemo(() => {
     const set = new Set<string>();

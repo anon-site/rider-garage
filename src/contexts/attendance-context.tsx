@@ -9,7 +9,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { ref, onValue, query, orderByChild, equalTo } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 import { db } from "@/lib/firebase";
 import {
   addAttendanceRecord,
@@ -17,7 +17,6 @@ import {
   deleteAttendanceRecord,
 } from "@/lib/attendance-mutations";
 import type { AttendanceRecord } from "@/types/attendance";
-import { useAuth } from "@/contexts/auth-context";
 
 type AttendanceContextValue = {
   records: AttendanceRecord[];
@@ -38,14 +37,9 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [recordsByDriver, setRecordsByDriver] = useState<Map<string, AttendanceRecord[]>>(new Map());
   const [latestByDriver, setLatestByDriver] = useState<Map<string, AttendanceRecord | null>>(new Map());
-  const { user } = useAuth();
 
   useEffect(() => {
-    const attRef =
-      user?.role === "garage" && user.garageId
-        ? query(ref(db, "attendance"), orderByChild("garageId"), equalTo(user.garageId))
-        : ref(db, "attendance");
-
+    const attRef = ref(db, "attendance");
     const unsub = onValue(
       attRef,
       (snap) => {
@@ -60,7 +54,7 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
       }
     );
     return () => unsub();
-  }, [user?.garageId, user?.role]);
+  }, []);
 
   // Build fast indexes whenever the global records change so lookups are O(1)
   useEffect(() => {

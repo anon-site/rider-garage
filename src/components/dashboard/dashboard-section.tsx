@@ -55,7 +55,6 @@ export function DashboardSection() {
   const { bikes: allBikes } = useBikes();
   const { activeDriverIds } = useLiveShifts();
   const { deliveryCategories } = useDeliveryCategories();
-  const isObserver = user?.role === "observer";
 
   const managedGarage = useMemo(() => {
     if (user?.role === "garage" && user.garageId) {
@@ -141,41 +140,6 @@ export function DashboardSection() {
     withBike: drivers.filter((d) => d.bikeId).length,
     waiting: drivers.filter((d) => !d.bikeId).length,
   }), [drivers, hasOpenExit]);
-
-  if (isObserver) {
-    return (
-      <div className="space-y-6">
-        <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-sky-600">Restricted Dashboard</p>
-              <h2 className="mt-1 text-xl font-bold text-surface-900">Viewer access is limited by design</h2>
-              <p className="mt-2 max-w-2xl text-sm text-slate-600">
-                This account can open the dashboard, but detailed driver, bike, garage, and attendance datasets are not loaded into the browser.
-                This keeps operational data out of DevTools for observer users.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Role</p>
-            <p className="mt-2 text-2xl font-bold text-surface-900">Observer</p>
-            <p className="mt-1 text-sm text-slate-500">Dashboard-only mode with no detailed fleet data exposure.</p>
-          </div>
-          <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Data Policy</p>
-            <p className="mt-2 text-2xl font-bold text-surface-900">Minimal</p>
-            <p className="mt-1 text-sm text-slate-500">No driver lists, bike lists, garages, or attendance history are fetched for this role.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
