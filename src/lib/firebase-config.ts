@@ -8,6 +8,13 @@ export type FirebaseClientConfig = {
   appId: string;
 };
 
+export type FirebaseConfigState = {
+  config: FirebaseClientConfig;
+  missing: string[];
+  isConfigured: boolean;
+  errorMessage: string | null;
+};
+
 const ENV_KEYS = {
   apiKey: "NEXT_PUBLIC_FIREBASE_API_KEY",
   authDomain: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
@@ -28,7 +35,7 @@ const FALLBACK_CONFIG: FirebaseClientConfig = {
   appId: "1:000000000000:web:buildplaceholder",
 };
 
-export function getFirebaseConfig(): FirebaseClientConfig {
+export function getFirebaseConfigState(): FirebaseConfigState {
   const config = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
@@ -43,17 +50,35 @@ export function getFirebaseConfig(): FirebaseClientConfig {
     (key) => !config[key]
   );
 
-  if (missing.length > 0) {
-    const vars = missing.map((key) => ENV_KEYS[key]).join(", ");
-
-    // During server-side prerender/build, avoid crashing static generation.
-    // The real Firebase config is still required in the browser/runtime.
-    if (typeof window === "undefined") {
-      return FALLBACK_CONFIG;
-    }
-
-    throw new Error(`Firebase configuration is incomplete. Set these environment variables: ${vars}`);
+  if (missing.length === 0) {
+    return {
+      config,
+      missing: [],
+      isConfigured: true,
+      errorMessage: null,
+    };
   }
 
-  return config;
+  const vars = missing.map((key) => ENV_KEYS[key]);
+  const errorMessage = `Firebase configuration is incomplete. Set these environment variables: ${vars.join(", ")}`;
+
+  if (missing.length > 0) {
+    return {
+      config: FALLBACK_CONFIG,
+      missing: vars,
+      isConfigured: false,
+      errorMessage,
+    };
+  }
+
+  return {
+    config,
+    missing: [],
+    isConfigured: true,
+    errorMessage: null,
+  };
+}
+
+export function getFirebaseConfig(): FirebaseClientConfig {
+  return getFirebaseConfigState().config;
 }

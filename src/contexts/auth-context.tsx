@@ -19,7 +19,7 @@ import {
 } from "firebase/auth";
 import type { PublicUser, RoleId } from "@/types/user";
 import type { CustomPermissions } from "@/types/user";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, isFirebaseClientConfigured, firebaseClientConfigError } from "@/lib/firebase";
 import { ref, get } from "firebase/database";
 import { toPublicUser } from "@/lib/user-profile";
 import { recordFailedAttempt, recordSuccessfulLogin, getRemainingLockoutTime } from "@/lib/rate-limiter";
@@ -90,6 +90,8 @@ export type AuthContextValue = {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isFirebaseConfigured: boolean;
+  firebaseConfigError: string | null;
 };
 
 const DEFAULT_PERMISSIONS: Permissions = {
@@ -111,6 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isFirebaseClientConfigured) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null);
@@ -167,6 +175,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return `Too many failed attempts. Please try again in ${minutes}m ${seconds}s.`;
       }
 
+      if (!isFirebaseClientConfigured) {
+        return firebaseClientConfigError || "Firebase configuration is missing.";
+      }
+
       try {
         const response = await fetch("/api/auth/login", {
           method: "POST",
@@ -214,7 +226,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, permissions, login, logout, isAuthenticated: !!user, isLoading }),
+    () => ({
+      user,
+      permissions,
+      login,
+      logout,
+      isAuthenticated: !!user,
+      isLoading,
+      isFirebaseConfigured: isFirebaseClientConfigured,
+      firebaseConfigError: firebaseClientConfigError,
+    }),
     [user, permissions, login, logout, isLoading]
   );
 
