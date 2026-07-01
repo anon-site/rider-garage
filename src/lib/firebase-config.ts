@@ -8,15 +8,15 @@ export type FirebaseClientConfig = {
   appId: string;
 };
 
-const ENV_KEYS = {
-  apiKey: "NEXT_PUBLIC_FIREBASE_API_KEY",
-  authDomain: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-  databaseURL: "NEXT_PUBLIC_FIREBASE_DATABASE_URL",
-  projectId: "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-  storageBucket: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
-  messagingSenderId: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-  appId: "NEXT_PUBLIC_FIREBASE_APP_ID",
-} as const;
+const firebaseConfig = {
+  apiKey: "AIzaSyB9LgXRw_YCKtOtJ8xvm6EAWvf5z2b0xHA",
+  authDomain: "rider-garage.firebaseapp.com",
+  databaseURL: "https://rider-garage-default-rtdb.firebaseio.com",
+  projectId: "rider-garage",
+  storageBucket: "rider-garage.firebasestorage.app",
+  messagingSenderId: "1301708487",
+  appId: "1:1301708487:web:f642546c923851f53a88e2"
+};
 
 export function getFirebaseConfig(): FirebaseClientConfig {
   const config = {
