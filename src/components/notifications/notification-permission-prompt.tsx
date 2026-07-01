@@ -50,7 +50,9 @@ export function NotificationPermissionPrompt() {
     unlockNotificationAudio();
 
     try {
-      const result = await enableBrowserNotifications(user?.id);
+      const result = await enableBrowserNotifications(
+        user ? { id: user.id, role: user.role, garageId: user.garageId } : undefined
+      );
       if (result.permission === "granted") {
         localStorage.setItem(DISMISS_KEY, "1");
         setVisible(false);
@@ -64,7 +66,7 @@ export function NotificationPermissionPrompt() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user]);
 
   if (!visible) return null;
 

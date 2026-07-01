@@ -30,7 +30,11 @@ export async function requestBrowserNotificationPermission(): Promise<Notificati
   return Notification.requestPermission();
 }
 
-export async function enableBrowserNotifications(userId?: string): Promise<{
+import type { NotificationSubscriber } from "@/lib/notification-scope";
+
+export async function enableBrowserNotifications(
+  subscriber?: NotificationSubscriber
+): Promise<{
   ok: boolean;
   permission: NotificationPermission;
   pushRegistered: boolean;
@@ -40,11 +44,17 @@ export async function enableBrowserNotifications(userId?: string): Promise<{
     setBrowserNotificationPreference("enabled");
 
     let pushRegistered = false;
-    if (userId) {
+    if (subscriber) {
       try {
         const { isFcmConfigured, registerFcmToken } = await import("@/lib/fcm");
         if (isFcmConfigured()) {
-          pushRegistered = Boolean(await registerFcmToken(userId));
+          pushRegistered = Boolean(
+            await registerFcmToken({
+              userId: subscriber.id,
+              role: subscriber.role,
+              garageId: subscriber.garageId,
+            })
+          );
         }
       } catch (error) {
         console.warn("[FCM] Token registration failed:", error);

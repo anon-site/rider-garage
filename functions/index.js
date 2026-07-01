@@ -20,15 +20,36 @@ async function getDriverName(driverId) {
   return snap.val() || driverId;
 }
 
-async function collectPushTokens() {
+async function getDriverGarageId(driverId) {
+  const snap = await db.ref(`drivers/${driverId}/garageId`).get();
+  return snap.val() || null;
+}
+
+function shouldReceiveGarageNotification(role, userGarageId, driverGarageId) {
+  if (role === "admin" || role === "supervisor" || role === "observer") {
+    return true;
+  }
+
+  if (role === "garage") {
+    if (!userGarageId || !driverGarageId) return false;
+    return userGarageId === driverGarageId;
+  }
+
+  return false;
+}
+
+async function collectPushTokensForGarage(driverGarageId) {
   const snap = await db.ref("pushTokens").get();
   if (!snap.exists()) return [];
 
   const tokens = [];
   snap.forEach((userSnap) => {
     userSnap.forEach((tokenSnap) => {
-      const token = tokenSnap.val()?.token;
-      if (token) tokens.push(token);
+      const value = tokenSnap.val();
+      if (!value?.token) return;
+      if (shouldReceiveGarageNotification(value.role, value.garageId, driverGarageId)) {
+        tokens.push(value.token);
+      }
     });
   });
   return [...new Set(tokens)];
@@ -70,8 +91,8 @@ async function removeInvalidTokens(tokens, response) {
   }
 }
 
-async function sendAttendancePush({ title, body, tag, type }) {
-  const tokens = await collectPushTokens();
+async function sendAttendancePush({ title, body, tag, type, driverGarageId }) {
+  const tokens = await collectPushTokensForGarage(driverGarageId);
   if (!tokens.length) return;
 
   const response = await messaging.sendEachForMulticast({
@@ -81,6 +102,7 @@ async function sendAttendancePush({ title, body, tag, type }) {
       body,
       tag,
       type,
+      garageId: driverGarageId || "",
     },
   });
 
@@ -91,7 +113,10 @@ exports.onDriverExitPush = onValueCreated("/attendance/{recordId}", async (event
   const record = event.data.val();
   if (!record?.driverId || !record?.clockIn) return;
 
-  const driverName = await getDriverName(record.driverId);
+  const [driverName, driverGarageId] = await Promise.all([
+    getDriverName(record.driverId),
+    getDriverGarageId(record.driverId),
+  ]);
   const time = formatTime(record.clockIn);
   const body = `${driverName} left the garage at ${time}`;
 
@@ -100,6 +125,7 @@ exports.onDriverExitPush = onValueCreated("/attendance/{recordId}", async (event
     body,
     tag: `attendance-exit-${event.params.recordId}`,
     type: "driver_exit",
+    driverGarageId,
   });
 });
 
@@ -110,7 +136,10 @@ exports.onDriverReturnPush = onValueUpdated("/attendance/{recordId}", async (eve
   if (!before || !after) return;
   if (before.clockOut || !after.clockOut) return;
 
-  const driverName = await getDriverName(after.driverId);
+  const [driverName, driverGarageId] = await Promise.all([
+    getDriverName(after.driverId),
+    getDriverGarageId(after.driverId),
+  ]);
   const time = formatTime(after.clockOut);
   const body = `${driverName} returned to the garage at ${time}`;
 
@@ -119,5 +148,6 @@ exports.onDriverReturnPush = onValueUpdated("/attendance/{recordId}", async (eve
     body,
     tag: `attendance-entry-${event.params.recordId}`,
     type: "driver_entry",
+    driverGarageId,
   });
 });

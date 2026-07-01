@@ -12,12 +12,16 @@ export function FcmRegistration() {
     if (!user?.id || !isFcmConfigured()) return;
 
     if (areBrowserNotificationsEnabled()) {
-      void registerFcmToken(user.id);
+      void registerFcmToken({
+        userId: user.id,
+        role: user.role,
+        garageId: user.garageId,
+      });
       return;
     }
 
     void unregisterFcmToken(user.id);
-  }, [user?.id]);
+  }, [user?.id, user?.role, user?.garageId]);
 
   return null;
 }

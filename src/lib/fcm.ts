@@ -2,6 +2,13 @@ import { getToken, deleteToken, onMessage, isSupported, type Messaging } from "f
 import { ref, remove, set } from "firebase/database";
 import { app, db } from "@/lib/firebase";
 import { getFirebaseVapidKey } from "@/lib/firebase-config";
+import type { RoleId } from "@/types/user";
+
+export type FcmSubscriber = {
+  userId: string;
+  role: RoleId;
+  garageId?: string;
+};
 
 const FCM_TOKEN_ID_KEY = "rider-garage-fcm-token-id";
 const FCM_USER_ID_KEY = "rider-garage-fcm-user-id";
@@ -43,7 +50,7 @@ export function isFcmConfigured(): boolean {
   return Boolean(getVapidKey());
 }
 
-export async function registerFcmToken(userId: string): Promise<string | null> {
+export async function registerFcmToken(subscriber: FcmSubscriber): Promise<string | null> {
   const vapidKey = getVapidKey();
   if (!vapidKey) {
     console.warn("[FCM] NEXT_PUBLIC_FIREBASE_VAPID_KEY is not set.");
@@ -62,15 +69,17 @@ export async function registerFcmToken(userId: string): Promise<string | null> {
   if (!token) return null;
 
   const tokenId = tokenStorageId(token);
-  await set(ref(db, `pushTokens/${userId}/${tokenId}`), {
+  await set(ref(db, `pushTokens/${subscriber.userId}/${tokenId}`), {
     token,
-    userId,
+    userId: subscriber.userId,
+    role: subscriber.role,
+    garageId: subscriber.garageId ?? null,
     updatedAt: new Date().toISOString(),
     userAgent: navigator.userAgent.slice(0, 200),
   });
 
   localStorage.setItem(FCM_TOKEN_ID_KEY, tokenId);
-  localStorage.setItem(FCM_USER_ID_KEY, userId);
+  localStorage.setItem(FCM_USER_ID_KEY, subscriber.userId);
 
   attachForegroundMessageHandler(messaging);
   return token;

@@ -39,7 +39,9 @@ export function BrowserNotificationsSection() {
   const handleEnable = useCallback(async () => {
     setLoading(true);
     setMessage(null);
-    const result = await enableBrowserNotifications(user?.id);
+    const result = await enableBrowserNotifications(
+      user ? { id: user.id, role: user.role, garageId: user.garageId } : undefined
+    );
     setPermission(result.permission);
     setEnabled(result.ok);
     if (result.ok) {
