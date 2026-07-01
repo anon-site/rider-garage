@@ -25,6 +25,11 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
+    "deliveryCategories": {
+      ".indexOn": ["priority"],
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
     "$other": {
       ".read": "auth != null",
       ".write": "auth != null"

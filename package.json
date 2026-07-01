@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "firebase:export": "node --env-file=.env.migration scripts/firebase-migrate.mjs export",
+    "firebase:import": "node --env-file=.env.migration scripts/firebase-migrate.mjs import",
+    "firebase:migrate": "node --env-file=.env.migration scripts/firebase-migrate.mjs migrate",
+    "firebase:deploy-rules": "firebase deploy --only database",
+    "fix-data": "node --env-file=.env.local fix-data.js"
   },
   "dependencies": {
     "@types/react-window": "^1.8.8",
