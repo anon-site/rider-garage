@@ -8,12 +8,15 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/toast";
 import { useNotifications } from "@/contexts/notifications-context";
 import type { AttendanceRecord } from "@/types/attendance";
-import { isAttendanceNotificationSuppressed } from "@/lib/attendance-notification-suppress";
 import { notifyDriverMovement } from "@/lib/driver-movement-notify";
 import {
   getDriverGarageId,
   shouldNotifyUserForDriverGarage,
 } from "@/lib/notification-scope";
+import {
+  isAttendanceNotificationSuppressed,
+  markAttendanceNotificationHandled,
+} from "@/lib/attendance-notification-suppress";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-GB", {
@@ -78,9 +81,13 @@ export function AttendanceNotificationListener() {
       if (!currentUser) return;
 
       for (const [id, record] of current) {
-        if (!prevRecordsRef.current.has(id) && !isAttendanceNotificationSuppressed(id)) {
+        if (
+          !prevRecordsRef.current.has(id) &&
+          !isAttendanceNotificationSuppressed(id, "exit")
+        ) {
           const garageId = getDriverGarageId(names, record.driverId);
           if (!shouldNotifyUserForDriverGarage(currentUser, garageId)) continue;
+          if (!markAttendanceNotificationHandled(id, "exit")) continue;
 
           notifyDriverMovement({
             kind: "exit",
@@ -100,10 +107,11 @@ export function AttendanceNotificationListener() {
           prev &&
           !prev.clockOut &&
           record.clockOut &&
-          !isAttendanceNotificationSuppressed(id)
+          !isAttendanceNotificationSuppressed(id, "entry")
         ) {
           const garageId = getDriverGarageId(names, record.driverId);
           if (!shouldNotifyUserForDriverGarage(currentUser, garageId)) continue;
+          if (!markAttendanceNotificationHandled(id, "entry")) continue;
 
           notifyDriverMovement({
             kind: "entry",
