@@ -17,6 +17,7 @@ import { AttendanceNotificationListener } from "@/components/notifications/atten
 import { NotificationPermissionPrompt } from "@/components/notifications/notification-permission-prompt";
 import { NotificationAudioUnlock } from "@/components/notifications/notification-audio-unlock";
 import { FcmRegistration } from "@/components/notifications/fcm-registration";
+import { MissedNotificationsSync } from "@/components/notifications/missed-notifications-sync";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -52,6 +53,7 @@ export default function RootLayout({
                       <ToastProvider>
                         <NotificationAudioUnlock />
                         <FcmRegistration />
+                        <MissedNotificationsSync />
                         <AttendanceNotificationListener />
                         <NotificationPermissionPrompt />
                         <SidebarProvider>

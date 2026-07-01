@@ -5,6 +5,8 @@ import { X, ShieldCheck, RotateCcw, Eye, EyeOff } from "lucide-react";
 import type { User, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
+import { GarageAssignmentSelect } from "@/components/users/garage-assignment-select";
+import { isGarageAssignable } from "@/lib/garage-assignment";
 import { ROLE_PERMISSIONS } from "@/contexts/auth-context";
 import { hashPassword } from "@/lib/crypto";
 import { userEditSchema, type UserEditFormData } from "@/lib/schemas";
@@ -51,6 +53,9 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
   const otherIds = user ? existingIds.filter(id => id !== user.id) : existingIds;
   const isDuplicateUsername = username.trim() !== "" && otherUsernames.includes(username.trim().toLowerCase());
   const isDuplicateId = customId.trim() !== "" && otherIds.includes(customId.trim());
+  const hasValidGarageAssignment =
+    role !== "garage" ||
+    (garageId !== "" && isGarageAssignable(garages, garageId, user?.id));
 
   useEffect(() => {
     if (user) {
@@ -94,7 +99,7 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
     setValidationErrors({});
     
     if (!name.trim() || !username.trim() || !password.trim() || !user) return;
-    if (isDuplicateUsername || isDuplicateId) return;
+    if (isDuplicateUsername || isDuplicateId || !hasValidGarageAssignment) return;
 
     // Validate with Zod
     const formData: UserEditFormData = {
@@ -427,24 +432,12 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
           </div>
 
           {role === "garage" && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-surface-900">
-                Assigned Garage
-              </label>
-              <select
-                required
-                value={garageId}
-                onChange={(e) => setGarageId(e.target.value)}
-                className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-              >
-                <option value="">Select a garage</option>
-                {garages.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <GarageAssignmentSelect
+              value={garageId}
+              onChange={setGarageId}
+              currentManagerUserId={user.id}
+              error={validationErrors.garageId}
+            />
           )}
 
           <div className="flex justify-end gap-3 pt-2">
@@ -453,9 +446,9 @@ export function EditUserModal({ user, onSave, onChangeId, onClose, existingUsern
             </button>
             <button
               type="submit"
-              disabled={isDuplicateUsername || isDuplicateId}
+              disabled={isDuplicateUsername || isDuplicateId || !hasValidGarageAssignment}
               className={`rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md transition-all active:scale-[0.98] ${
-                isDuplicateUsername || isDuplicateId
+                isDuplicateUsername || isDuplicateId || !hasValidGarageAssignment
                   ? "bg-surface-200 text-slate-400 cursor-not-allowed"
                   : "bg-brand-600 text-white shadow-brand-200 hover:bg-brand-700"
               }`}

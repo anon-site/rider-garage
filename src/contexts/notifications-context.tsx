@@ -92,8 +92,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }) => {
       if (!user?.id) return;
 
-      const item = createNotification(input);
-      setNotifications((prev) => [item, ...prev].slice(0, MAX_NOTIFICATIONS));
+      setNotifications((prev) => {
+        if (prev.some((n) => n.recordId === input.recordId && n.type === input.type)) {
+          return prev;
+        }
+
+        const item = createNotification(input);
+        return [item, ...prev].slice(0, MAX_NOTIFICATIONS);
+      });
     },
     [user?.id]
   );

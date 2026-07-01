@@ -13,6 +13,7 @@ import type { User, RoleId } from "@/types/user";
 import type { CustomPermissions } from "@/types/user";
 import { verifyPassword, isHashedPassword } from "@/lib/crypto";
 import { recordFailedAttempt, recordSuccessfulLogin, getRemainingLockoutTime } from "@/lib/rate-limiter";
+import { setLastActiveTime } from "@/lib/notification-last-active";
 
 /* ── Permission matrix ─────────────────────────────────────────────────
   canEdit:        add / edit / delete records in Bikes & Drivers
@@ -205,7 +206,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    setUser(null);
+    setUser((current) => {
+      if (current?.id) {
+        setLastActiveTime(current.id);
+      }
+      return null;
+    });
     localStorage.removeItem("rider-garage-user");
     sessionStorage.removeItem("rider-garage-user");
   }, []);
