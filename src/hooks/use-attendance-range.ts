@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ref, onValue, query, orderByChild, startAt, endAt } from "firebase/database";
+import { ref, onValue, query, orderByChild, startAt, endAt, equalTo } from "firebase/database";
 import { db } from "@/lib/firebase";
 import type { AttendanceRecord } from "@/types/attendance";
+import { useAuth } from "@/contexts/auth-context";
 
 export type UseAttendanceRangeResult = {
   records: AttendanceRecord[];
@@ -23,19 +24,32 @@ export function useAttendanceRange(
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const userRole = user?.role;
+  const userGarageId = user?.garageId;
 
   useEffect(() => {
+    if (userRole === "observer") {
+      setRecords([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
+    const isGarageScope = userRole === "garage" && !!userGarageId;
     const attRef = ref(db, "attendance");
-    let constrainedRef = query(attRef, orderByChild("clockIn"));
+    let constrainedRef = isGarageScope
+      ? query(attRef, orderByChild("garageId"), equalTo(userGarageId!))
+      : query(attRef, orderByChild("clockIn"));
 
-    if (startDate && endDate) {
+    if (!isGarageScope && startDate && endDate) {
       constrainedRef = query(constrainedRef, startAt(startDate), endAt(endDate));
-    } else if (startDate) {
+    } else if (!isGarageScope && startDate) {
       constrainedRef = query(constrainedRef, startAt(startDate));
-    } else if (endDate) {
+    } else if (!isGarageScope && endDate) {
       constrainedRef = query(constrainedRef, endAt(endDate));
     }
 
@@ -43,7 +57,15 @@ export function useAttendanceRange(
       constrainedRef,
       (snap) => {
         const data = snap.val() as Record<string, Omit<AttendanceRecord, "id">> | null;
-        setRecords(data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : []);
+        const allRecords = data ? Object.entries(data).map(([id, r]) => ({ ...r, id })) : [];
+        const filtered = isGarageScope
+          ? allRecords.filter((record) => {
+              if (startDate && record.clockIn < startDate) return false;
+              if (endDate && record.clockIn > endDate) return false;
+              return true;
+            })
+          : allRecords;
+        setRecords(filtered);
         setLoading(false);
         setError(null);
       },
@@ -54,7 +76,7 @@ export function useAttendanceRange(
     );
 
     return () => unsub();
-  }, [startDate, endDate]);
+  }, [endDate, startDate, userGarageId, userRole]);
 
   return { records, loading, error };
 }

@@ -84,10 +84,13 @@ function fromLocalDatetimeValue(local: string) {
 
 export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileModalProps) {
   useModalBehavior(true, onClose);
-  const { records: driverRecords, hasMore, loadMore } = useDriverAttendance(driver.id);
+  const { permissions } = useAuth();
+  const canViewAttendanceHistory = permissions.canClockDriver || permissions.canViewReports;
+  const { records: driverRecords, hasMore, loadMore } = useDriverAttendance(
+    canViewAttendanceHistory ? driver.id : null
+  );
   const latestRecord = driverRecords[0] ?? null;
   const hasOpenExit = latestRecord && !latestRecord.clockOut;
-  const { permissions } = useAuth();
   const canClock = permissions.canClockDriver;
 
   const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
@@ -155,6 +158,7 @@ export function DriverProfileModal({ driver, bikeName, onClose }: DriverProfileM
   function handleExit() {
     addAttendanceRecord({
       driverId: driver.id,
+      garageId: driver.garageId,
       clockIn: fromLocalDatetimeValue(exitDate),
       ordersDelivered: 0,
       rating: latestRating,

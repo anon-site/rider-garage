@@ -28,7 +28,7 @@ import {
   parseImportJSON,
   parseImportExcel,
   type DataScope,
-  type SiteData,
+  type ImportSiteData,
   type ImportResult,
   type ExtendedSiteData,
 } from "@/lib/data-io";
@@ -329,7 +329,7 @@ function ExportPanel({ data }: { data: ExtendedSiteData }) {
    IMPORT PANEL
 ───────────────────────────────────────── */
 type ImportPanelProps = {
-  onImport: (data: Partial<SiteData>) => void;
+  onImport: (data: Partial<ImportSiteData>) => void;
 };
 
 function ImportPanel({ onImport }: ImportPanelProps) {
@@ -337,7 +337,7 @@ function ImportPanel({ onImport }: ImportPanelProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [pendingData, setPendingData] = useState<Partial<SiteData> | null>(null);
+  const [pendingData, setPendingData] = useState<Partial<ImportSiteData> | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -512,7 +512,7 @@ function ImportPanel({ onImport }: ImportPanelProps) {
 type ActiveTab = "export" | "import";
 
 type ImportExportSectionProps = {
-  onImport: (data: Partial<SiteData>) => void;
+  onImport: (data: Partial<ImportSiteData>) => void;
 };
 
 export function ImportExportSection({ onImport }: ImportExportSectionProps) {

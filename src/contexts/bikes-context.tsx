@@ -8,9 +8,10 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { ref, onValue, set, update, remove, get } from "firebase/database";
+import { ref, onValue, set, update, remove, get, query, orderByChild, equalTo } from "firebase/database";
 import { db } from "@/lib/firebase";
 import type { Bike } from "@/types/bike";
+import { useAuth } from "@/contexts/auth-context";
 
 function stripUndefined<T extends object>(obj: T): Partial<T> {
   return Object.fromEntries(
@@ -43,16 +44,27 @@ const BikesContext = createContext<BikesContextValue | null>(null);
 export function BikesProvider({ children }: { children: ReactNode }) {
   const [bikes, setBikes] = useState<Bike[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const bikesRef = ref(db, "bikes");
+    if (user?.role === "observer") {
+      setBikes([]);
+      setLoading(false);
+      return;
+    }
+
+    const bikesRef =
+      user?.role === "garage" && user.garageId
+        ? query(ref(db, "bikes"), orderByChild("garageId"), equalTo(user.garageId))
+        : ref(db, "bikes");
+
     const unsub = onValue(bikesRef, (snap) => {
       const data = snap.val() as Record<string, Omit<Bike, "id">> | null;
       setBikes(data ? Object.entries(data).map(([id, b]) => ({ ...b, id })) : []);
       setLoading(false);
     });
     return () => unsub();
-  }, []);
+  }, [user?.garageId, user?.role]);
 
   const addBike = useCallback(async (bike: Omit<Bike, "id">, customId?: string): Promise<string> => {
     const bikeId = customId || generateBikeId(bikes.map(b => b.id));

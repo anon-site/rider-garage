@@ -19,14 +19,20 @@ export type CustomPermissions = {
   canViewSettings?: boolean;
 };
 
-export type User = {
+/** User profile stored in Firebase — no password on client. */
+export type PublicUser = {
   id: string;
   name: string;
   username: string;
-  password: string;
   email: string;
   phone: string;
   role: RoleId;
   garageId?: string;
   customPermissions?: CustomPermissions | null;
+  usernameLower?: string;
+};
+
+/** Server-only shape when creating/updating credentials. */
+export type User = PublicUser & {
+  password?: string;
 };

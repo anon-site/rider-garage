@@ -1,6 +1,7 @@
 export type AttendanceRecord = {
   id: string;
   driverId: string;
+  garageId?: string;
   clockIn: string; // ISO datetime
   clockOut?: string; // ISO datetime
   ordersDelivered: number;

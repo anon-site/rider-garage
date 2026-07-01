@@ -1,6 +1,8 @@
 import type { Driver } from "@/types/driver";
 import type { Bike } from "@/types/bike";
-import type { User } from "@/types/user";
+import type { PublicUser } from "@/types/user";
+
+export type ImportUser = PublicUser & { password: string };
 import type { Garage } from "@/types/garage";
 import type { AttendanceRecord } from "@/types/attendance";
 
@@ -12,9 +14,13 @@ export type DataScope = "drivers" | "bikes" | "users" | "garages" | "attendance"
 export type SiteData = {
   drivers: Driver[];
   bikes: Bike[];
-  users: User[];
+  users: PublicUser[];
   garages: Garage[];
   attendance: AttendanceRecord[];
+};
+
+export type ImportSiteData = Omit<SiteData, "users"> & {
+  users?: ImportUser[];
 };
 
 export type ExtendedSiteData = SiteData & {
@@ -75,7 +81,7 @@ function bikesToRows(bikes: Bike[], driverMap?: Record<string, string>) {
     }));
 }
 
-function usersToRows(users: User[]) {
+function usersToRows(users: PublicUser[]) {
   return [...users]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((u) => ({
@@ -281,7 +287,7 @@ export function exportCSV(data: SiteData, scope: DataScope) {
 ─────────────────────────────────────────── */
 export type ImportResult = {
   ok: boolean;
-  data?: Partial<SiteData>;
+  data?: Partial<ImportSiteData>;
   error?: string;
   summary?: Record<string, number>;
 };
@@ -289,7 +295,7 @@ export type ImportResult = {
 export function parseImportJSON(text: string): ImportResult {
   try {
     const parsed = JSON.parse(text);
-    const result: Partial<SiteData> = {};
+    const result: Partial<ImportSiteData> = {};
     const summary: Record<string, number> = {};
 
     if (Array.isArray(parsed.drivers)) { result.drivers = parsed.drivers; summary.drivers = parsed.drivers.length; }
@@ -312,7 +318,7 @@ export async function parseImportExcel(arrayBuffer: ArrayBuffer): Promise<Import
   try {
     const XLSX = await import("xlsx");
     const wb = XLSX.read(arrayBuffer, { type: "array" });
-    const result: Partial<SiteData> = {};
+    const result: Partial<ImportSiteData> = {};
     const summary: Record<string, number> = {};
 
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -377,7 +383,7 @@ export async function parseImportExcel(arrayBuffer: ArrayBuffer): Promise<Import
     const usersRows = getSheetRows("Users");
     if (usersRows.length > 0) {
       const rows = usersRows.filter(r => r.ID && !String(r.ID).startsWith("Total:"));
-      const users: User[] = rows.map((r) => {
+      const users: ImportUser[] = rows.map((r) => {
         const rawRole = String(r.Role || "observer").toLowerCase();
         const role = rawRole.includes("admin") ? "admin" : rawRole.includes("super") ? "supervisor" : rawRole.includes("manag") || rawRole === "garage" ? "garage" : "observer";
         return {

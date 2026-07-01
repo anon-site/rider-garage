@@ -1,38 +1,51 @@
 {
   "rules": {
+    "userCredentials": {
+      ".read": false,
+      ".write": false
+    },
+    "usernameIndex": {
+      ".read": false,
+      ".write": false
+    },
+    "users": {
+      ".indexOn": ["role", "garageId", "usernameLower"],
+      ".read": "auth != null && auth.token.role == 'admin'",
+      "$userId": {
+        ".read": "auth != null && (auth.token.role == 'admin' || auth.token.userId == $userId)",
+        ".write": "auth != null && auth.token.role == 'admin'",
+        "password": {
+          ".read": false,
+          ".write": false
+        }
+      }
+    },
     "attendance": {
-      ".indexOn": ["driverId", "clockIn", "clockOut"],
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".indexOn": ["driverId", "clockIn", "clockOut", "garageId"],
+      ".read": "auth != null && (auth.token.role == 'admin' || auth.token.role == 'supervisor' || (auth.token.role == 'garage' && query.orderByChild == 'garageId' && query.equalTo == auth.token.garageId))",
+      "$recordId": {
+        ".write": "auth != null && (auth.token.role == 'admin' || (auth.token.role == 'garage' && ((data.exists() ? data.child('garageId').val() : newData.child('garageId').val()) == auth.token.garageId) && ((newData.exists() ? newData.child('garageId').val() : data.child('garageId').val()) == auth.token.garageId)))"
+      }
     },
     "drivers": {
       ".indexOn": ["garageId", "bikeId", "deliveryCategoryIds"],
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".read": "auth != null && (auth.token.role == 'admin' || auth.token.role == 'supervisor' || (auth.token.role == 'garage' && query.orderByChild == 'garageId' && query.equalTo == auth.token.garageId))",
+      ".write": "auth != null && auth.token.role == 'admin'"
     },
     "bikes": {
       ".indexOn": ["garageId", "driverId"],
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".read": "auth != null && (auth.token.role == 'admin' || auth.token.role == 'supervisor' || (auth.token.role == 'garage' && query.orderByChild == 'garageId' && query.equalTo == auth.token.garageId))",
+      ".write": "auth != null && auth.token.role == 'admin'"
     },
     "garages": {
       ".indexOn": ["managerId"],
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "users": {
-      ".indexOn": ["role", "garageId"],
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".read": "auth != null && (auth.token.role == 'admin' || auth.token.role == 'supervisor' || (auth.token.role == 'garage' && query.orderByChild == 'managerId' && query.equalTo == auth.token.userId))",
+      ".write": "auth != null && auth.token.role == 'admin'"
     },
     "deliveryCategories": {
       ".indexOn": ["priority"],
       ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "$other": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null && auth.token.role == 'admin'"
     }
   }
 }

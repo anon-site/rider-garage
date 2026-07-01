@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Pencil, Trash2, Mail, Phone, Store, User as UserIcon, AtSign, ShieldCheck, Fingerprint, Crown, Eye, Wrench, MapPin, Bike as BikeIcon, Users } from "lucide-react";
-import type { User, RoleId, CustomPermissions } from "@/types/user";
+import type { PublicUser, RoleId, CustomPermissions } from "@/types/user";
 import { ROLES } from "@/types/user";
 import { useGarages } from "@/contexts/control-panel-context";
 import { useBikes } from "@/contexts/bikes-context";
@@ -38,8 +38,8 @@ const PERM_ICONS: Record<keyof CustomPermissions, typeof Eye> = {
 type ViewMode = "list" | "grid";
 
 type UserListProps = {
-  users: User[];
-  onEdit: (user: User) => void;
+  users: PublicUser[];
+  onEdit: (user: PublicUser) => void;
   onDelete: (id: string) => void;
   viewMode?: ViewMode;
 };

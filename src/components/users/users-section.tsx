@@ -7,14 +7,14 @@ import { UserList } from "./user-list";
 import { AddUserModal } from "./add-user-modal";
 import { EditUserModal } from "./edit-user-modal";
 import { ROLES } from "@/types/user";
-import type { User } from "@/types/user";
+import type { PublicUser } from "@/types/user";
 
 type ViewMode = "list" | "grid";
 
 export function UsersSection() {
   const { users, addUser, updateUser, changeUserId, deleteUser } = useUsers();
   const [showAdd, setShowAdd] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<PublicUser | null>(null);
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
 
